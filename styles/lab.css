@@ -1,0 +1,195 @@
+/* DEAL LAB (V3 experiment): the grade stamp in the signing room, the grade chips
+   on the tape and the book (par and hindsight). Only lab runs render these. */
+.lab-grade { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px; margin: 0 0 12px; }
+.lab-grade[hidden] { display: none; }
+.lab-stamp { font-size: clamp(26px, 4vw, 36px); background: var(--paper); mix-blend-mode: normal; }
+.lab-stamp.g-steal, .lab-stamp.g-sharp { --stamp-color: var(--spot); }
+.lab-stamp.g-good, .lab-stamp.g-fair { --stamp-color: var(--ink); }
+.lab-pts { font-size: clamp(22px, 3.4vw, 30px); color: var(--brass-light); }
+.lab-line { flex-basis: 100%; letter-spacing: .06em; }
+.lab-note { flex-basis: 100%; color: var(--terminal); }
+
+.lab-chip { display: inline-block; padding: 0 6px; border: 2px solid currentColor; font-size: .8em; letter-spacing: .05em; color: var(--ink); }
+.lab-chip.g-steal, .lab-chip.g-sharp { color: var(--spot); }
+.lab-chip.g-soft, .lab-chip.g-over, .lab-chip.g-off { color: var(--stamp); }
+.lab-chip-pts { font-weight: 700; }
+
+.lab-book { max-width: 760px; margin: 18px auto 0; padding: 18px 20px; overflow-wrap: anywhere; }
+.lab-book p { margin: 6px 0; }
+.lb-h { margin-bottom: 8px; }
+.lb-vs { color: var(--stamp); }
+.lb-vs.win { color: var(--spot); }
+.lb-lever { font-style: italic; }
+.lb-hind { list-style: none; padding: 0; margin: 10px 0 6px; }
+.lb-hind li { margin: 4px 0; }
+.lb-hind .ui { display: inline-block; min-width: 92px; font-size: .8em; letter-spacing: .08em; }
+
+/* The lab's main page: the ad's page alone, one primary action. */
+.spread.solo { grid-template-columns: minmax(0, 680px); justify-content: center; }
+.page.home { min-height: 0; box-shadow: var(--shadow-paper); }
+.home-go { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 26px 0 8px; }
+.home-go .start { font-size: clamp(20px, 3vw, 26px); padding: 16px 34px; letter-spacing: .08em; }
+.home-lab { font-size: 12px; letter-spacing: .08em; color: var(--ink-soft); text-align: center; }
+.home-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; margin-top: 14px; }
+
+/* The lab's tape: play again sits right under the score. */
+.lab-again { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 760px; margin: 14px auto 0; }
+.rs-versus[hidden] { display: none; }
+
+/* The seller's mood on the lot sheet (Deal Lab). */
+.ls-mood { display: inline-block; margin-top: 6px; padding: 2px 8px; font-size: 12px; letter-spacing: .08em; border: 1.5px solid currentColor; border-radius: 3px; color: var(--ink-soft); background: rgba(255,255,255,.5); }
+.ls-mood[hidden] { display: none; }
+.ls-mood.ok { color: var(--spot); }
+.ls-mood.warn { color: var(--amber-dim); }
+.ls-mood.bad, .ls-mood.hot { color: var(--stamp); }
+.ls-mood.hot { animation: moodPulse 1s ease-in-out infinite; }
+@keyframes moodPulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .ls-mood.hot { animation: none; } }
+.offer .offer-tag { display: block; font-size: 11px; letter-spacing: .12em; color: var(--amber); line-height: 1; }
+
+/* The real cost under TAKE, and the drop badge on the seller's bubble (Deal Lab). */
+.cost-line { font-size: 13px; letter-spacing: .03em; padding: 6px 10px; border-left: 3px solid var(--amber); background: rgba(0,0,0,.18); color: var(--paper); }
+.cost-line.ok { border-left-color: var(--terminal); }
+.cost-line.no { border-left-color: var(--stamp); }
+.cost-line b { letter-spacing: .06em; }
+.ls-bubble { position: relative; }
+.ls-drop { position: absolute; right: -10px; top: -14px; padding: 2px 7px; background: var(--terminal); color: var(--glass); font-size: 13px; font-weight: 700; border-radius: 3px; animation: dropIn .5s var(--ease-slam) both; }
+@keyframes dropIn { 0% { transform: scale(1.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ls-drop { animation: none; } }
+.lb-next { padding: 8px 10px; border-left: 3px solid var(--spot); background: rgba(36,83,63,.08); }
+.lb-next .ui, .lb-story .ui { display: inline-block; min-width: 92px; font-size: .8em; letter-spacing: .08em; }
+
+/* BANK OR PUSH (Deal Lab): the card when the need sheet fills, and the push on the tape. */
+.bp-scrim { position: fixed; inset: 0; z-index: 620; display: grid; place-items: center; padding: 16px; overflow-y: auto; background: rgba(15, 10, 6, .72); animation: fadeIn .2s both; }
+.bp-card { width: min(760px, 100%); padding: clamp(16px, 3vw, 26px); border: 2px solid var(--ink); box-shadow: var(--shadow-paper), var(--shadow-hard); animation: dropIn .4s var(--ease-slam) both; }
+.bp-kicker { font-size: 12px; letter-spacing: .14em; color: var(--spot); }
+.bp-h { margin: 4px 0 14px; font-size: clamp(30px, 5.4vw, 52px); }
+.bp-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 16px; }
+.bp-cols section { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 12px 14px; border: 1.5px solid var(--ink); background: rgba(255, 255, 255, .45); }
+.bp-cols p { margin: 0; font-size: 15px; line-height: 1.4; }
+.bp-label { font-size: 11px; letter-spacing: .12em; }
+.bp-num { font-size: clamp(38px, 6vw, 56px); line-height: 1; }
+.bp-cols .btn { margin-top: auto; align-self: stretch; }
+.bp-seller { display: flex; gap: 10px; align-items: flex-start; }
+.bp-fig { flex: 0 0 52px; width: 52px; height: 62px; }
+.bp-fig .fig { width: 100%; height: 100%; }
+.bp-shout { display: block; margin-top: 4px; font: 900 14px/1.15 var(--font-headline); text-transform: uppercase; }
+.bp-rules { list-style: none; margin: 0; padding: 0; font-size: 14px; line-height: 1.4; }
+.bp-rules li { padding: 4px 0 4px 10px; border-left: 3px solid var(--terminal-dim); }
+.bp-rules li.no { border-left-color: var(--stamp); }
+.lab-stamp.g-push { --stamp-color: var(--spot); }
+.lb-push { padding: 8px 10px; border-left: 3px solid var(--ink-soft); }
+.lb-push.win { border-left-color: var(--spot); }
+.lb-push.loss { border-left-color: var(--stamp); }
+.lb-push .ui { display: inline-block; min-width: 92px; font-size: .8em; letter-spacing: .08em; }
+@media (max-width: 640px) {
+  .bp-cols { grid-template-columns: minmax(0, 1fr); }
+  .bp-scrim { place-items: start center; }
+}
+
+/* A long tenant's offer on the lot sheet: two packages, each signable as quoted. */
+.offer-card { flex-wrap: wrap; gap: 6px; padding: 6px 8px; border: 1px dashed var(--brass); }
+.oc-pick { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; align-items: center; flex: 1 1 180px; text-align: left; padding: 5px 8px;
+  font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--ink); border-left: 4px solid var(--granite); cursor: pointer; }
+.oc-pick b { font-size: 14px; }
+.oc-pick span { grid-column: 1; font-size: 12px; color: var(--ink-soft); }
+.oc-pick i { grid-column: 2; grid-row: 1 / span 2; font-style: normal; font-weight: 700; font-size: 12px; padding: 3px 6px; background: var(--spot); color: var(--spot-ink); }
+.oc-pick.ok { border-left-color: var(--spot); } .oc-pick.warn { border-left-color: var(--brass); } .oc-pick.no { border-left-color: var(--stamp); }
+.oc-pick:hover, .oc-pick:focus-visible { background: var(--marble); }
+.oc-or { flex-basis: 100%; font-size: 11px; color: var(--brass-light); }
+
+/* THE TRADING ECONOMY (Deal Lab): spares and booked margin on the position card, buyers in the
+   Market Pulse, the sell sheet, and the trading desk on the tape. */
+.pos-extra { margin-top: 6px; font-size: 12px; letter-spacing: .06em; }
+.pos-extra b.neg, .econ .neg, .sell-math .neg { color: var(--stamp); }
+.sell-math .pos { color: var(--spot); }
+.pulse-row.buyer { border-left-color: var(--brass); background: #FFF8E6; }
+.pt-buyer { color: var(--amber-dim); }
+.sell-card { width: min(640px, 100%); }
+.sell-card .bp-kicker { display: flex; align-items: center; gap: 8px; }
+.sell-card .sell-x { margin-left: auto; }
+.sell-say { margin: 0 0 10px; font-size: 16px; }
+.sell-hold, .sell-math { margin: 8px 0; font-size: 15px; line-height: 1.4; }
+.sell-math.small { font-size: 13px; color: var(--ink-soft); }
+.sell-done { margin: 8px 0; font-size: clamp(22px, 4vw, 30px); }
+.sell-card .act-row, .sell-card .num-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0; }
+.sell-card .offer { display: inline-block; min-width: 72px; padding: 6px 10px; text-align: center; font: 700 18px/1 var(--font-mono, monospace); background: var(--glass); color: var(--terminal); }
+.sell-card .sell-back { margin-top: 6px; }
+.econ { max-width: 760px; margin: 18px auto 0; padding: 18px 20px; }
+.econ-big { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 6px 0 12px; }
+.econ-big > div { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1.5px solid var(--ink); background: rgba(255,255,255,.45); }
+.econ-big .ui { font-size: 11px; letter-spacing: .12em; }
+.econ-big b { font-size: clamp(30px, 6vw, 46px); line-height: 1; }
+.econ-big small { font-size: 12px; color: var(--ink-soft); }
+.econ-ledger { list-style: none; margin: 0 0 10px; padding: 0; font-size: 14px; }
+.econ-ledger li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px dotted var(--ink-soft); }
+.econ-ledger li.net { border-bottom: 0; border-top: 2px solid var(--ink); font-weight: 700; }
+.econ-call { margin: 6px 0; padding: 6px 10px; border-left: 3px solid var(--spot); }
+.econ-call.bad { border-left-color: var(--stamp); }
+.econ-call .ui { display: inline-block; min-width: 110px; font-size: .8em; letter-spacing: .08em; }
+@media (max-width: 640px) { .econ-big { grid-template-columns: 1fr; } }
+.econ-totals { margin: 0 0 10px; font-size: 12px; color: var(--ink-soft); }
+
+/* THE TYCOON (V6). GPU badges: a label always, color as a second cue (H100 slate, H200 teal,
+   B200 violet), each with its role in the title. Fit tags say MATCH / WORKS / WRONG TYPE in words. */
+.gpu-badge { display: inline-block; padding: 0 5px; border-radius: 3px; font: 700 0.85em/1.35 var(--font-mono, monospace); letter-spacing: .04em; color: #fff; vertical-align: baseline; }
+.gpu-badge.g-h100 { background: #3F5368; }
+.gpu-badge.g-h200 { background: #1F6E6A; }
+.gpu-badge.g-b200 { background: #5B3F8C; }
+.gpu-badge.g-other { background: var(--granite-dark); }
+.fit-tag { display: inline-block; padding: 0 4px; font: normal 700 10px/1.5 var(--font-ui, inherit); letter-spacing: .06em; border: 1px solid currentColor; }
+.fit-tag.fit-match { color: var(--spot); }
+.fit-tag.fit-works { color: var(--amber-dim); }
+.fit-tag.fit-wrong { color: var(--stamp); }
+.ty-prices { line-height: 1.8; }
+
+/* The running Tycoon Score on the floor. */
+.tybar { margin: 0 16px 8px; padding: 8px 12px; border: 1px solid var(--ink); display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; }
+.tybar .ty-total { grid-row: span 2; display: flex; align-items: baseline; gap: 8px; }
+.tybar .ty-total .ui { font-size: 11px; letter-spacing: .12em; }
+.tybar .ty-n { font-size: clamp(26px, 4.5vw, 38px); line-height: 1; }
+.ty-delta.up { color: var(--spot); font-weight: 700; } .ty-delta.down { color: var(--stamp); font-weight: 700; }
+.ty-parts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11px; letter-spacing: .08em; }
+.ty-part b { font-size: 13px; } .ty-part i { font-style: normal; color: var(--ink-soft); }
+.ty-part.profit b { color: #2E6B3F; } .ty-part.clout b { color: #8A6418; } .ty-part.cp b { color: #3F5368; }
+.ty-bar { display: flex; height: 8px; background: rgba(0,0,0,.08); overflow: hidden; }
+.ty-bar .seg { display: block; height: 100%; }
+.ty-bar .seg.profit { background: #2E6B3F; } .ty-bar .seg.clout { background: #C9A040; } .ty-bar .seg.cp { background: #3F5368; }
+.ty-bar .seg.neg { background: repeating-linear-gradient(45deg, var(--stamp) 0 4px, #D9665C 4px 8px); }
+.tybar .ty-barwrap { grid-column: 2; }
+.tybar .ty-why { grid-column: 1 / -1; font-size: 11px; min-height: 1.2em; color: var(--ink-soft); }
+.tybar.jump .ty-n { animation: tyJump .6s var(--ease-slam, ease-out); }
+@keyframes tyJump { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .tybar.jump .ty-n { animation: none; } }
+@media (max-width: 640px) { .tybar { margin-inline: 8px; grid-template-columns: 1fr; } .tybar .ty-total { grid-row: auto; } .tybar .ty-barwrap { grid-column: 1; } }
+
+/* The quarter report and the final score. */
+.cycle-screen { max-width: 820px; margin: 0 auto; padding: 24px 16px 40px; color: var(--paper); }
+.cy-kicker { font-size: 12px; letter-spacing: .12em; color: var(--brass-light); }
+.cy-hl { font-size: clamp(40px, 9vw, 84px); margin: 4px 0 8px; line-height: .95; }
+.cy-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.cy-score .ui { font-size: 12px; letter-spacing: .12em; color: var(--brass-light); }
+.cy-score b { font-size: clamp(40px, 8vw, 64px); line-height: 1; }
+.cy-delta.up { color: var(--terminal); } .cy-delta.down { color: #F08A80; }
+.cycle-screen .ty-parts { margin: 8px 0; color: var(--paper); }
+.cycle-screen .ty-part b { color: var(--paper); } .cycle-screen .ty-part i { color: var(--brass-light); }
+.cycle-screen .ty-bar { height: 10px; background: rgba(255,255,255,.15); }
+.cy-final { margin: 10px 0 0; font-size: 15px; }
+.cy-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.cy-sec { margin: 0 0 14px; padding: 16px 18px; color: var(--ink); }
+.cy-lines { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.cy-lines li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px dotted var(--ink-soft); }
+.cy-lines b.neg { color: var(--stamp); }
+.cy-sus { list-style: none; margin: 0; padding: 0; }
+.cy-su { padding: 8px 0; border-bottom: 1px dotted var(--ink-soft); }
+.cy-su.gone { opacity: .6; }
+.cy-su .small { font-size: 13px; margin-top: 3px; }
+.cy-st { float: right; font-size: 11px; letter-spacing: .1em; }
+.cy-hist { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cy-hist th, .cy-hist td { text-align: right; padding: 3px 6px; border-bottom: 1px dotted var(--ink-soft); }
+.cy-hist th:first-child, .cy-hist td:first-child { text-align: left; }
+.econ-ledger b { white-space: nowrap; }
+.sell-sig { margin: -4px 0 8px; font-size: 13px; color: var(--ink-soft); }
+.cy-hold { align-items: center; }
+.cy-hold .btn { flex: 0 0 auto; font-size: 12px; padding: 4px 8px; }
+.cy-word { margin-top: 8px; line-height: 1.8; }
