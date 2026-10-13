@@ -61,6 +61,11 @@ input[type=number] { width: 80px; }
 .welcome { max-width: 760px; margin: 5vh auto; }.welcome h1 { font-size: clamp(36px, 6vw, 60px); }
 .welcome ol { line-height: 1.8; padding-left: 24px; }
 .portfolio-item { border-top: 1px solid #60725a; padding-top: 12px; }
+.inventory-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 12px; }
+.inventory-grid > div { border-left: 3px solid #abc589; padding-left: 12px; }
+.buyer-floor .panel { border-left: 4px solid #ddbd7d; }
+.hsc-transition { border-top: 1px solid #65745b; padding-top: 16px; }
+@media(max-width: 550px) { .inventory-grid { grid-template-columns: 1fr; gap: 8px; }.inventory-grid p { display: inline; margin-right: 8px; }.inventory-grid small { display: block; } }
 .report { max-width: 850px; margin: auto; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .rizz-panel { padding: 16px; background: #14281b; border: 1px solid #abc589; border-radius: 7px; margin: 16px 0; }

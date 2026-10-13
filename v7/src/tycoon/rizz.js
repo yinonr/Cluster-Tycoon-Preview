@@ -43,7 +43,11 @@ export function resolveRizz(g, position, interrupted = false) {
   const p = entry.params, distance = Math.max(0, Math.abs(position - 0.5) - p.width / 2);
   const tier = interrupted ? 'severe' : distance <= 1e-12 ? 'hit' : distance <= 0.08 ? 'near' : distance <= 0.22 ? 'miss' : 'severe';
   let trust = 0, clout = 0, walked = false;
-  if (tier === 'hit') n.price = Math.max(l.floor, n.price - p.concession);
+  const accuracy = Math.max(0, 1 - Math.abs(position - 0.5) / (p.width / 2));
+  const precision = tier !== 'hit' ? null : accuracy >= 0.8 - 1e-12 ? 'perfect' : accuracy >= 0.4 - 1e-12 ? 'strong' : 'edge';
+  const multiplier = precision ? { edge: 0.4, strong: 0.7, perfect: 1 }[precision] : 0;
+  const reward = precision ? Math.max(1, Math.floor(p.concession * multiplier)) : 0;
+  if (tier === 'hit') n.price = Math.max(l.floor, n.price - reward);
   else if (p.attempt === 1) trust = tier === 'severe' ? -1 : 0;
   else if (p.attempt === 2) {
     trust = { near: -1, miss: -2, severe: -4 }[tier];
@@ -57,9 +61,9 @@ export function resolveRizz(g, position, interrupted = false) {
   const beforeTrust = f.trust;
   f.trust = Math.max(-12, Math.min(12, f.trust + trust));
   trust = f.trust - beforeTrust; g.clout += clout;
-  Object.assign(entry, { status: 'resolved', position, distance, tier, interrupted, after: n.price, trust, clout, walked });
+  Object.assign(entry, { status: 'resolved', position, distance, tier, accuracy, precision, multiplier, reward, interrupted, after: n.price, trust, clout, walked });
   n.running = null;
-  const outcome = tier === 'hit' ? `RIZZ HIT · ${entry.before - n.price}¢/GPU-hour saved. Bank the deal or risk the next attempt.` : walked ? 'CATASTROPHIC OVER-RIZZ · supplier walked. This lot is gone.' : tier === 'near' ? 'NEAR MISS · ' + (p.attempt === 1 ? 'your quote is safe.' : 'some or all Rizz gains lost.') : 'MISSED · ' + (p.attempt === 1 ? 'your quote is safe.' : 'negotiated gains lost.');
+  const outcome = tier === 'hit' ? `${precision === 'perfect' ? 'BULLSEYE · PERFECT RIZZ' : precision.toUpperCase() + ' RIZZ HIT'} · ${entry.before - n.price}¢/GPU-hour saved (${Math.round(multiplier * 100)}% reward). Bank the deal or risk the next attempt.` : walked ? 'CATASTROPHIC OVER-RIZZ · supplier walked. This lot is gone.' : tier === 'near' ? 'NEAR MISS · ' + (p.attempt === 1 ? 'your quote is safe.' : 'some or all Rizz gains lost.') : 'MISSED · ' + (p.attempt === 1 ? 'your quote is safe.' : 'negotiated gains lost.');
   notice(g, `${interrupted ? 'Interrupted attempt settled as a severe miss. ' : ''}${outcome} Trust ${trust >= 0 ? '+' : ''}${trust}${clout ? ` · Clout ${clout}` : ''}.`, tier === 'hit' ? 'good' : 'bad');
   return true;
 }

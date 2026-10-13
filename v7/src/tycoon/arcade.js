@@ -6,8 +6,9 @@ import { HOURS_PER_MONTH } from '../data/gpus.js';
 import { newGame, settleQuarter, emptySummary, gameScore, paperValue } from './game.js';
 import { supplierOf } from './suppliers.js';
 import { powerOf } from './gpu.js';
+import { makeBuyers } from './arcade-buyers.js';
 
-export const V7 = { key: 'hsc-tycoon-v7', version: 7, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
+export const V7 = { key: 'hsc-tycoon-v71', version: 71, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
 export const cents = (qty, rate) => qty * rate * V7.hours; // rate: cents/GPU-hour
 export const remaining = o => o.qty - o.delivered;
 export const inventoryCost = g => g.arcade.inventory.reduce((n, x) => n + x.left * x.unitCost, 0);
@@ -38,6 +39,7 @@ export function openQuarter(g) {
   if (!anchor) return false;
   a.anchor = anchor.id;
   Object.assign(a, { time: 0, active: null, confirm: null, lots: [], orders: [], inventory: [], deliveries: [], purchases: [], completions: [], message: null, startCash: cash(g), startProfit: g.profit });
+  a.buyers = makeBuyers(g.seed, g.q); a.sales = [];
   const clients = [anchor, ...g.startups.filter(s => s !== anchor && s.alive && !s.exited)].slice(0, g.q <= 2 ? 1 : 3);
   for (const [i, s] of clients.entries()) {
     const gpu = s.work === 'train' ? 'B200' : s.work === 'memory' ? 'H200' : 'H100';
@@ -180,6 +182,8 @@ export function closeQuarter(g) {
   g.cash = Math.round((g.cash + cashRemainder) * 100) / 100;
   g.hist.at(-1).cash = g.cash; g.report.cashAfter = g.cash;
   const record = { q: quarter, profit: g.profit - a.startProfit, cash: cash(g), lost, bought: a.purchases.reduce((n, p) => n + p.qty, 0), delivered: a.deliveries.reduce((n, d) => n + d.qty, 0), orders: a.orders.map(o => ({ ...o })), completions: [...a.completions], score: gameScore(g), startups: g.report.startups, lines: g.report.lines.filter(l => l.kind === 'equity' || /acquired|shut down/.test(l.text)) };
+  record.outsideSold = a.sales.reduce((n, s) => n + s.qty, 0);
+  record.outsideProfit = a.sales.reduce((n, s) => n + s.revenue - s.cost, 0);
   a.history.push(record);
   // Persist zero paid inventory. Unsold rights have no guaranteed sublet or recovery.
   for (const l of a.lots) if (l.status === 'open') l.status = 'expired';
