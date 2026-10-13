@@ -94,7 +94,7 @@ const ctx = {
   // Venture Mode. The company lives in its own save ('hsc-venture-v1'); a
   // venture never calls newRun or firstRun and never reaches results.js.
   // THE TYCOON (V6): an ongoing game, one quarter per floor (src/tycoon/). Never official, never recorded.
-  tycoon: createTycoonStore(),
+  tycoon: createTycoonStore({ marketVersion: 62 }),
   newTycoon({ seed = null } = {}) {
     ctx.tycoon.newGame(seed ?? newSeed(), ctx.player);
     return ctx.newQuarter();

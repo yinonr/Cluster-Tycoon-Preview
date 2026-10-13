@@ -60,13 +60,15 @@ export function createPulse(node, { market: m, mandate: md, run, mode, onPick, o
     const buyers = (mode.pulseBuyers ? mode.pulseBuyers(run) : []).map((b) => {
       const left = Math.max(0, b.endsAt - m.t);
       const ask = b.state === 'final' ? b.final : b.bid;
+      const extra = mode.buyerPulse ? mode.buyerPulse(run, b) : '';
+      const due = b.state === 'due';
       return {
-        key: `${b.id}|${b.state}|${ask}|${b.endsAt}`,
+        key: `${b.id}|${b.state}|${ask}|${b.endsAt}|${b.qty}|${b.gpu}|${b.delivery}|${extra}`,
         html: `<li><button class="pulse-row buyer" type="button" data-buyer="${esc(b.id)}">
         <span class="pr-what"><b>${esc((b.kind || 'buyer').toUpperCase())}</b> ${esc(b.firm)}</span>
-        <span class="pr-ask">wants <b>${int(b.qty)}</b> ${badge(b.gpu)} at <b>${usd(ask)}</b>${b.stake > 0 ? ` <i class="pt">YOU OWN ${(100 * b.stake).toFixed(1)}%</i>` : b.equityOk ? ' <i class="pt">EQUITY OK</i>' : ''}</span>
+        <span class="pr-ask">wants <b>${int(b.qty)}</b> ${badge(b.gpu)}${due ? '' : ` at <b>${usd(ask)}</b>`}${b.stake > 0 ? ` <i class="pt">YOU OWN ${(100 * b.stake).toFixed(1)}%</i>` : b.equityOk ? ' <i class="pt">EQUITY OK</i>' : ''}</span>
         <span class="pr-terms">${b.minTerm}+ mo${b.delivery > 30 ? ' · any delivery' : ''}</span>
-        <span class="pr-tags"><i class="pt pt-buyer" data-until="${b.endsAt}" data-label="LEAVES">LEAVES ${mmss(left)}</i></span>
+        ${extra}${b.state === 'open' || b.state === 'final' || due ? `<span class="pr-tags"><i class="pt pt-buyer" data-until="${due ? b.at : b.endsAt}" data-label="${due ? 'ARRIVES' : 'LEAVES'}">${due ? 'ARRIVES' : 'LEAVES'} ${mmss(left)}</i></span>` : ''}
       </button></li>`,
       };
     });

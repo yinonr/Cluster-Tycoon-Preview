@@ -41,6 +41,7 @@ import { ledger, dealLedger, priceOf, scheduleBuyers, spareLeft, ECON, money } f
 import { demandOf } from './demand.js';
 import { WORK, GPU_LIST, fitOf, powerOf, valueAt } from './gpu.js';
 import { look } from '../modes/buyer.js';
+import { saleVersion, planRevision, reviseBuyer, addSpotSupply, customerDelivery } from './sale-market.js';
 
 export const TY = {
   key: 'hsc-tycoon-v1',
@@ -68,18 +69,20 @@ const lerp = (a, b, u) => a + (b - a) * u;
 const H = ECON.hours;
 
 // ---- A new game -------------------------------------------------------------------------
-export function newGame(seed, player = {}) {
+export function newGame(seed, player = {}, { marketVersion = 61 } = {}) {
   const r = stream(seed, 'tycoon', 'start');
   const pool = r.shuffle(BUYER_COMPANIES);
   const archs = ['steady', 'breakout', 'rocket', r.pick(['steady', 'breakout', 'rocket'])];
   const names = r.shuffle(FIRST_NAMES);
   const startups = archs.map((arch, i) => makeStartup(r, arch, pool[i], names[i], `s${i + 1}`));
-  return {
+  const game = {
     v: TY.v, seed, player: { name: player.name || '', firm: player.firm || 'Your desk' },
     q: 1, phase: 'ready', seq: 1,
     cash: TY.cash0, profit: 0, clout: 0, cpUnits: 0,
     book: [], flows: [], firms: {}, startups, holdings: [], hist: [], report: null, draft: null, cur: null, events: [],
   };
+  if (marketVersion === 62) game.marketVersion = 62;
+  return game;
 }
 
 function makeStartup(r, arch, c, contact, id) {
@@ -138,6 +141,7 @@ export function setupQuarter(run, game) {
   const u = { bwAsk: r.next(), bwRoom: r.next(), bwQty: r.next(), jit: [r.next(), r.next(), r.next(), r.next()], room: [r.next(), r.next(), r.next(), r.next()] };
   const prime = m.lots.find((l) => l.archetype === 'prime');
   const Q = prime ? prime.qty : 512, step = Q / 4;
+  if (saleVersion(game)) addSpotSupply(run, game, Q, prime ? prime.site : m.lots[0].site);
   const alive = game.startups.filter((s) => s.alive && !s.exited);
   // The anchor: the startup with the biggest need whose work takes this floor's GPU.
   const anchor = alive.filter((s) => WORK[s.work].accepts.includes(md.gpu)).sort((a, b) => b.size - a.size)[0] || null;
@@ -182,8 +186,8 @@ export function setupQuarter(run, game) {
   const coming = pool.filter((c) => c.come);
   const taken = new Set(m.characters.map((c) => c.name));
   const contacts = FIRST_NAMES.filter((x) => !taken.has(x));
-  const gap = Math.max(15, Math.floor(170 / Math.max(1, coming.length)));
-  let at = 40;
+  const gap = saleVersion(game) ? Math.floor(140 / Math.max(1, coming.length - 1)) : Math.max(15, Math.floor(170 / Math.max(1, coming.length)));
+  let at = saleVersion(game) ? 25 : 40;
   const buyers = coming.map((c, i) => {
     const s = c.s || null;
     const first = s && s.trust >= TY.trustedClient;
@@ -191,16 +195,19 @@ export function setupQuarter(run, game) {
       id: s ? `eco${s.id}` : `${c.kind}${i}`, kind: c.kind, client: s ? s.id : null,
       firm: s ? s.name : c.name, sector: s ? s.sector : c.kind === 'lab' ? 'research lab' : 'compute broker',
       name: s ? s.contact : contacts[(i * 5) % contacts.length] || 'Sam', gpu: c.gpu,
-      qty: c.qty, minTerm: c.minTerm, delivery: c.delivery, u: c.u, room: c.room, window: c.window,
+      qty: c.qty, minTerm: c.minTerm, delivery: c.delivery, u: c.u, room: c.room, window: saleVersion(game) ? Math.max(c.window, c.kind === 'broker' ? 50 : 70) : c.window,
       at: first ? 20 + 5 * i : Math.round(at + 10 * u.jit[i % 4]), state: 'due',
       // Equity: a startup short of cash offers it; one you already own a piece of takes more.
       equityOk: !!s && (s.cash < s.burn * 3 || s.stake > 0), stake: s ? s.stake : 0, val: s ? s.val : 0,
       signal: s ? signalOf(s) : null,
+      ...(saleVersion(game) ? { trusted: !!first, work: s ? s.work : c.work || 'serve', reliability: s?.trust >= 3 ? 'Trusted customer · steadier request' : c.kind === 'lab' ? 'Established lab · lower revision risk' : s && s.cash < s.burn * 3 ? 'Short runway · funding risk' : c.kind === 'broker' ? 'Broker demand · can change quickly' : 'Independent startup · unsigned request' } : {}),
     };
+    if (saleVersion(game)) b.revisionPlan = planRevision(game.seed, game.q, b, s, Q / 8);
     if (!first) at += gap;
     return b;
   });
   scheduleBuyers(run, buyers);
+  if (saleVersion(game)) for (const b of buyers) if (b.revisionPlan) m.at(b.revisionPlan.at, () => reviseBuyer(run, b));
   run.tyHeat = heat;
   run.tyPool = pool.length;
   // The compute you hold from earlier quarters: on this floor's books as spares you can sell.
@@ -218,7 +225,7 @@ export function summarizeQuarter(run, game) {
   const clientWork = (id) => (startupById(game, id) || {}).work || md.work || 'serve';
   const contracts = [];
   for (const d of deals) if (d.alloc > 0) contracts.push({ client: md.client || null, gpu: d.gpu, qty: d.alloc, months: md.minTerm, price: priceOf(md, d.gpu), eff: d.eff, work: md.work || 'serve' });
-  for (const s of run.labSales || []) for (const leg of s.legs || []) contracts.push({ client: s.client || null, gpu: leg.gpu, qty: leg.qty, months: leg.term, price: s.equity ? 0 : s.price, eff: leg.eff, work: clientWork(s.client), equity: !!s.equity });
+  for (const s of run.labSales || []) for (const leg of s.legs || []) contracts.push({ client: s.client || null, gpu: leg.gpu, qty: leg.qty, months: leg.term, price: s.equity ? 0 : s.price, eff: leg.eff, work: s.work || clientWork(s.client), equity: !!s.equity });
   const firms = {};
   for (const d of deals) if (!d.auction) firms[d.firm] = (firms[d.firm] || 0) + 1;
   // Held capacity sold this quarter: its gain over the sublet it was booked at (an equity sale
@@ -233,6 +240,7 @@ export function summarizeQuarter(run, game) {
     heldSales: held.map((h) => ({ id: h.id, sold: h.sold })),
     newHold: deals.filter((d) => spareLeft(d) > 0 && d.term > 3).map((d) => ({ gpu: d.gpu, qty: spareLeft(d), eff: d.eff, months: d.term - 3, firm: d.firm })),
     firms, backOuts: (run.tyBackOuts || []).slice(), sales: (run.labSales || []).length, bought: L.bought, spare: L.spare,
+    ...(saleVersion(game) ? { buyerChanges: (run.buyerChanges || []).slice() } : {}),
   };
 }
 
@@ -262,6 +270,7 @@ export function settleQuarter(game, sum) {
   const before = gameScore(game);
   const cashBefore = game.cash;
   const rep = { q, lines: [], before, cashBefore, startups: [], perks: [] };
+  if (saleVersion(game)) for (const change of sum.buyerChanges || []) note(rep, 'market', `${change.buyer}: ${change.text}`);
   const addClout = (pts, text, kind = 'clout') => { game.clout += pts; note(rep, kind, text, pts); };
 
   // 1. The floor's deals, booked at signing (the floor's ledger).
@@ -311,11 +320,15 @@ export function settleQuarter(game, sum) {
     const pct = Math.floor(sum.fill * 100);
     if (sum.fill >= 0.999) { anchor.trust += 1; addClout(TY.clout.filled, `${anchor.name}'s order: filled`); }
     else if (sum.fill >= 0.5) addClout(TY.clout.half, `${anchor.name}'s order: ${pct}% filled`);
-    else { anchor.trust -= 1; addClout(TY.clout.missed, `${anchor.name}'s order: ${pct}% filled. A missed order`); }
+    else {
+      if (!saleVersion(game)) anchor.trust -= 1;
+      addClout(TY.clout.missed, `${anchor.name}'s order: ${pct}% filled. A missed order`);
+    }
   }
 
   // 4. Deliveries: one quarter of every live contract (a client who has failed gets nothing).
   const fed = {};
+  const fedQty = {};
   const deliveredClout = {};
   for (const c of game.book) {
     if (c.status !== 'active') continue;
@@ -327,6 +340,7 @@ export function settleQuarter(game, sum) {
     rep.cp = (rep.cp || 0) + units;
     if (s) {
       fed[s.id] = (fed[s.id] || 0) + units;
+      fedQty[s.id] = (fedQty[s.id] || 0) + c.qty;
       deliveredClout[s.id] = Math.min(TY.clout.deliverCap, (deliveredClout[s.id] || 0) + TY.clout.deliver);
     }
     if (c.done >= c.total) c.status = 'done';
@@ -347,12 +361,22 @@ export function settleQuarter(game, sum) {
     const rr = stream(game.seed, 'startup', s.id, q);
     const u1 = rr.next(), u2 = rr.next(), u3 = rr.next(), u4 = rr.next();
     const need = Math.max(1, s.size * 1000 * 3);
-    const boost = Math.min(1, (fed[s.id] || 0) / need); // the right compute, delivered, helps
+    const boost = saleVersion(game) ? customerDelivery(s, fed[s.id] || 0, fedQty[s.id] || 0).boost : Math.min(1, (fed[s.id] || 0) / need); // the right compute, delivered, helps
     let g = lerp(A.g[0], A.g[1], 0.6 * u1 + 0.4 * s.quality) + 0.06 * boost;
     const runway = s.cash / Math.max(1, s.burn);
     // No one fails in their first quarter: you get a quarter of signals before the risk is live.
     const pFail = q === 1 ? 0 : A.fail * (1.6 - s.quality) * (runway < 1 ? 1.8 : 1) * (1 - 0.4 * boost);
     const line = { name: s.name, id: s.id, arch: s.arch };
+    if (saleVersion(game)) {
+      const delivered = customerDelivery(s, fed[s.id] || 0, fedQty[s.id] || 0);
+      s.service = s.service || { quarters: 0, gpuMonths: 0, units: 0 };
+      s.service.gpuMonths += (fedQty[s.id] || 0) * 3;
+      s.service.units += fed[s.id] || 0;
+      s.service.last = delivered.text;
+      if (fedQty[s.id] > 0) { s.service.quarters++; s.trust += 1; }
+      line.delivery = delivered.text;
+      if (s.stake > 0) line.ownershipBefore = s.stake;
+    }
     if (u3 < pFail) {
       s.alive = false;
       line.status = 'SHUT DOWN';
@@ -385,7 +409,10 @@ export function settleQuarter(game, sum) {
       // A round from other investors: new shares at their valuation dilute every holder, you too.
       const raise = g > 0.2 || (runway < 2 && u4 < 0.5) ? Math.round(s.val * 0.15) : 0;
       s.cash = Math.round(s.cash - s.burn + raise);
-      if (raise) { s.stake = (s.stake * s.val) / (s.val + raise); s.val += raise; }
+      if (raise) {
+        s.stake = (s.stake * s.val) / (s.val + raise); s.val += raise;
+        if (saleVersion(game) && s.stake > 0) note(rep, 'equity', `${s.name} raised ${money(raise).slice(1)}. Ownership diluted to ${(s.stake * 100).toFixed(2)}%; paper value is not cash.`);
+      }
       s.burn = Math.round((s.val * A.burn) / 4);
       line.status = g > 0.2 ? 'GROWING FAST' : g > 0.05 ? 'GROWING' : g >= -0.02 ? 'FLAT' : 'SHRINKING';
       if (!line.text) line.text = `Usage ${g >= 0 ? 'up' : 'down'} ${Math.abs(Math.round(g * 100))}% last quarter. Runway ${Math.max(0, Math.round(s.cash / Math.max(1, s.burn)))} quarters.`;
@@ -432,20 +459,21 @@ export const checkpointScore = (game) => (game.hist.length >= TY.checkpoint ? ga
 export const commitments = (game) => game.book.filter((c) => c.status === 'active').reduce((t, c) => t + c.qty * Math.max(0, c.eff) * 3 * H * (c.total - c.done), 0);
 
 // ---- The store: one game, saved under a versioned key -------------------------------------
-function load() {
+function load(key) {
   try {
-    const raw = localStorage.getItem(TY.key);
+    const raw = localStorage.getItem(key);
     const g = raw ? JSON.parse(raw) : null;
     return g && g.v === TY.v && Array.isArray(g.startups) && typeof g.q === 'number' ? g : null;
   } catch { return null; }
 }
 
-export function createTycoonStore() {
-  let state = load();
-  const save = () => { try { if (state) localStorage.setItem(TY.key, JSON.stringify(state)); } catch { /* storage blocked: the game plays on in memory */ } };
+export function createTycoonStore({ marketVersion = 61 } = {}) {
+  const key = marketVersion === 62 ? 'hsc-tycoon-v62' : TY.key;
+  let state = load(key);
+  const save = () => { try { if (state) localStorage.setItem(key, JSON.stringify(state)); } catch { /* storage blocked: the game plays on in memory */ } };
   return {
     get state() { return state; },
-    newGame(seed, player) { state = newGame(seed, player); save(); return state; },
+    newGame(seed, player) { state = newGame(seed, player, { marketVersion }); save(); return state; },
     // The floor opens: from here a reload settles the quarter with what was signed.
     startQuarter() { if (state) { state.phase = 'floor'; state.draft = null; save(); } },
     draft(sum) { if (state && state.phase === 'floor' && sum && sum.q === state.q) { state.draft = sum; save(); } },
@@ -454,7 +482,7 @@ export function createTycoonStore() {
     end() { if (state && state.phase !== 'over') { state.phase = 'over'; save(); } return state; },
     // SUBLET THE REST: a holding leaves the portfolio at the sublet it's booked at (no score change, no more carry).
     dispose(id) { if (state && state.phase === 'report' && state.holdings) { state.holdings = state.holdings.filter((h) => h.id !== id); save(); } return state; },
-    clear() { state = null; try { localStorage.removeItem(TY.key); } catch { /* nothing to clear */ } },
+    clear() { state = null; try { localStorage.removeItem(key); } catch { /* nothing to clear */ } },
   };
 }
 

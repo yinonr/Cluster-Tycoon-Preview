@@ -43,7 +43,7 @@ export default function floor(root, ctx) {
   const keeps = venture || !!mode.keepsTrading;
 
   root.innerHTML = `
-    <div class="floor-screen">
+    <div class="floor-screen${run.tycoon?.marketVersion === 62 ? ' tycoon' : ''}">
       <div class="crawl crt amber" aria-hidden="true"></div>
       <div class="wall">
         <aside class="need-card paper">
@@ -123,13 +123,21 @@ export default function floor(root, ctx) {
 
   // The Deal Lab's aftermarket: a buyer on the floor, and your spares (economy.js).
   let sell = null;
+  const persistBuyerChange = run.onBuyerChanged;
+  if (persistBuyerChange) run.onBuyerChanged = () => {
+    persistBuyerChange(); sheet?.refresh(); sell?.update(); pulse?.refresh();
+  };
   function openSell(b) {
     if (ended || paused || !mode.aftermarket) return;
+    if (b.state === 'due') return;
+    mode.onBuyerTalk?.(run, b);
     hideTip();
     intel?.close();
     if (sheet) { sheet.close(); sheet = null; }
     sell?.close();
-    sell = openSellSheet(overlay, { ctx, run, buyer: b, onClose: () => { sell = null; }, onSold: (sale) => { mode.onSale?.(run, sale); paintPosition(); pulse?.refresh(); tbar?.update(`${sale.equity ? 'Equity from' : 'Sold to'} ${sale.buyer}`); } });
+    sell = openSellSheet(overlay, { ctx, run, buyer: b, onClose: () => { sell = null; },
+      onSource: (lot) => { run.resaleBuyerId = b.id; onSelect(m.character(lot.sellerId), lot, true); },
+      onSold: (sale) => { mode.onSale?.(run, sale); paintPosition(); pulse?.refresh(); tbar?.update(`${sale.equity ? 'Equity from' : 'Sold to'} ${sale.buyer}`); } });
   }
 
   function hideTip() {
@@ -138,8 +146,9 @@ export default function floor(root, ctx) {
     $(root, '.floor-tip').classList.add('gone');
   }
 
-  function onSelect(c, lot) {
+  function onSelect(c, lot, resale = false) {
     if (ended || paused) return;
+    if (run.tycoon?.marketVersion === 62) run.resaleLotId = resale && lot ? lot.id : null;
     hideTip();
     intel?.close();
     sell?.close();

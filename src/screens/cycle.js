@@ -32,6 +32,7 @@ export default function cycle(root, ctx) {
     return `<li class="cy-su ${live ? '' : 'gone'}">
       <div class="cy-su-h"><b>${esc(s.name)}</b> <span class="muted">${esc(s.sector)} · ${esc(ARCH_LABEL[s.arch])}</span> <span class="cy-st ui">${esc(r ? r.status : live ? '' : s.exited ? 'ACQUIRED' : 'SHUT DOWN')}</span></div>
       ${r && r.text ? `<div class="small">${esc(r.text)}</div>` : ''}
+      ${s.service ? `<div class="small cy-service"><b>${!live ? 'RELATIONSHIP ENDED' : s.cash < s.burn * 2 ? 'SHORT RUNWAY · AT RISK' : s.trust >= TY.trustedClient ? 'TRUSTED CUSTOMER' : s.service.quarters ? 'SUPPLIED CUSTOMER' : 'NO SIGNED SERVICE'}</b> · ${int(s.service.gpuMonths)} GPU-months delivered over ${s.service.quarters} quarters.<br>${esc(s.service.last)}</div>` : ''}
       ${live ? `<div class="small">Needs: ${esc(WORK[s.work].label)}, ${s.months}-month terms · best fit ${badge(fitG)} at about ${usd(pricesFor(s, bench)[fitG])}${s.trust >= TY.trustedClient ? ' · <b>trusts you: comes to you first</b>' : ''}</div>` : ''}
       ${s.stake > 0 ? `<div class="small">Your stake <b>${(s.stake * 100).toFixed(2)}%</b> · paper value ${money(s.stake * s.val).slice(1)} (not in your score until they exit)</div>` : ''}
     </li>`;

@@ -137,6 +137,14 @@
 .gpu-badge.g-h200 { background: #1F6E6A; }
 .gpu-badge.g-b200 { background: #5B3F8C; }
 .gpu-badge.g-other { background: var(--granite-dark); }
+/* V6.2: larger GPU labels only on the Tycoon path; text remains the primary cue. */
+.floor-screen.tycoon .gpu-badge, .cycle-screen .gpu-badge { padding: 2px 7px; font-size: 1em; border: 1px solid rgba(255,255,255,.35); }
+.pr-gap { display: block; font-size: 11px; font-weight: 700; line-height: 1.5; color: var(--ink); }
+.sale-opportunity { border-left: 3px solid var(--brass); padding-left: 10px; margin: 8px 0; }
+.sale-source { display: block; width: 100%; min-height: 44px; margin: 6px 0; white-space: normal; text-align: left; }
+.sale-revision { border: 1px solid var(--brass); padding: 8px; font-weight: 700; }
+.cy-service { margin: 6px 0; padding-left: 8px; border-left: 3px solid var(--brass); }
+.floor-screen.tycoon .leave { position: relative; z-index: 451; min-height: 44px; background: var(--ink); }
 .fit-tag { display: inline-block; padding: 0 4px; font: normal 700 10px/1.5 var(--font-ui, inherit); letter-spacing: .06em; border: 1px solid currentColor; }
 .fit-tag.fit-match { color: var(--spot); }
 .fit-tag.fit-works { color: var(--amber-dim); }

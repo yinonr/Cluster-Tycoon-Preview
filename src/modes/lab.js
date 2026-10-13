@@ -354,7 +354,7 @@ export const labMode = {
     const md = run.mandate;
     const m = run.market;
     // The trading economy: GPUs that serve the order go to it, up to what it still needs; the rest are spare.
-    const counted = run.econ && !servesOrder(md, deal) ? 0 : Math.min(deal.qty, this.need(run));
+    const counted = (run.tycoon?.marketVersion === 62 && deal.resale) || (run.econ && !servesOrder(md, deal)) ? 0 : Math.min(deal.qty, this.need(run));
     if (run.econ) Object.assign(deal, { alloc: counted, sold: 0, saleRev: 0 });
     if (deal.real == null) Object.assign(deal, (({ real, strand, excess }) => ({ real, strand, excess }))(realCost(run, deal, counted)));
     const g = run.econ && !counted ? { id: 'spec', label: 'FOR RESALE' } : gradeOf(md, deal);

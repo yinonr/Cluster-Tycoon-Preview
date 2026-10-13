@@ -4,7 +4,7 @@
 // from Notion). Venture Mode and today's official floor stay one click away.
 
 import { BRAND } from '../config.js';
-import { $, esc, dotted } from '../util.js';
+import { $, esc } from '../util.js';
 import { FACADE } from './ad.js';
 
 export default function home(root, ctx) {
@@ -18,11 +18,11 @@ export default function home(root, ctx) {
       <article class="page page-ad paper home">
         ${BRAND.logoSrc ? `<img class="ad-logo" src="${esc(BRAND.logoSrc)}" alt="${esc(BRAND.name)}">` : ''}
         ${FACADE}
-        <h1 class="ad-hl hl">${esc(BRAND.adHeadline)}</h1>
-        ${BRAND.adBody.map((p) => `<p class="ad-body">${esc(p)}</p>`).join('')}
+        <p class="ad-body">Imagine if compute buyers, sellers, and the money were all in one room.</p>
+        <h1 class="ad-hl hl">Could you become the next Cluster Tycoon?</h1>
         <div class="ad-sign">
           <span class="wordmark hl-cond">${esc(BRAND.wordmark)}</span>
-          <span class="ad-where caps">${dotted([BRAND.venue, BRAND.city, BRAND.eventDate || BRAND.eventMonth])}</span>
+          <span class="ad-where caps">THE ART OF THE SALE · V6.2 PREVIEW</span>
         </div>
         <div class="home-go">
           <button class="btn big spot start" type="button">${tyLive ? `CONTINUE · QUARTER ${ty.q}` : 'START TRADING'}</button>

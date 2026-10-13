@@ -5,9 +5,10 @@
 
 import { labMode } from '../modes/lab.js';
 import { setupQuarter, summarizeQuarter, liveQuarter, gameScore, scoreOf, TY } from './game.js';
-import { dealLedger, priceOf, money, ledger } from '../modes/economy.js';
+import { dealLedger, priceOf, money, ledger, askOf, buyerLive } from '../modes/economy.js';
 import { WORK, badge, fitTag, fitOf, powerOf } from './gpu.js';
 import { usd, int, esc } from '../util.js';
+import { saleVersion, buyerStage, opportunity } from './sale-market.js';
 
 const persist = (run) => { if (run.tyStore) run.tyStore.draft(summarizeQuarter(run, run.tycoon)); };
 
@@ -27,6 +28,7 @@ export const tycoonMode = {
     run.tycoon = opts.game;
     run.tyStore = opts.store || null;
     setupQuarter(run, opts.game);
+    if (saleVersion(opts.game)) run.onBuyerChanged = () => persist(run);
     return run;
   },
 
@@ -35,6 +37,54 @@ export const tycoonMode = {
 
   recordDeal(run, deal) { labMode.recordDeal.call(this, run, deal); persist(run); },
   onSale(run) { persist(run); },
+  onBuyerTalk(run, b) { if (saleVersion(run.tycoon) && b.state !== 'sold') b.negotiating = true; },
+  pulseBuyers(run) {
+    if (!saleVersion(run.tycoon)) return labMode.pulseBuyers.call(this, run);
+    return (run.labBuyers || []).filter((b) => b.state === 'open' || b.state === 'final' || (b.state === 'due' && b.at - run.market.t <= 35) || (b.state === 'cancelled' && run.market.t - b.changedAt < 15) || (b.state === 'sold' && run.market.t - b.sale.t < 15));
+  },
+  buyerPulse(run, b) {
+    if (!saleVersion(run.tycoon)) return '';
+    if (b.state === 'due') return `<span class="pr-gap">INTERESTED · arriving soon · unsigned</span>`;
+    if (b.state === 'sold') return '<span class="pr-gap">SIGNED · capacity committed</span>';
+    if (b.state === 'cancelled') return '<span class="pr-gap">WITHDRAWN · no contract</span>';
+    const o = opportunity(run, b);
+    return `<span class="pr-gap">${buyerStage(b)} · HAVE ${int(o.have)} / ${int(b.qty)} · MISSING ${int(o.missing)}${b.revisionId ? ' · REVISED' : ''}</span>`;
+  },
+  lotDeal(run, lot, options) {
+    const d = labMode.lotDeal.call(this, run, lot, options);
+    if (saleVersion(run.tycoon) && run.resaleLotId === lot.id) d.resale = true;
+    return d;
+  },
+  defaultTerm(lot, run) {
+    const b = saleVersion(run.tycoon) && run.resaleLotId === lot.id && run.labBuyers.find((b) => b.id === run.resaleBuyerId);
+    return b ? lot.terms.find((t) => t >= b.minTerm) || lot.baseTerm : labMode.defaultTerm.call(this, lot, run);
+  },
+  defaultQty(lot, run) {
+    const b = saleVersion(run.tycoon) && run.resaleLotId === lot.id && run.labBuyers.find((b) => b.id === run.resaleBuyerId);
+    if (!b || !lot.divisible) return labMode.defaultQty.call(this, lot, run);
+    const missing = opportunity(run, b).missing;
+    return Math.min(lot.qty, Math.max(lot.minQty, Math.ceil(missing / lot.step) * lot.step));
+  },
+  checks(run, spec) {
+    const c = labMode.checks.call(this, run, spec);
+    const b = saleVersion(run.tycoon) && run.resaleLotId && run.labBuyers.find((b) => b.id === run.resaleBuyerId);
+    if (!b) return c;
+    c.real = c.eff;
+    c.items = c.items.filter((x) => x.id === 'budget');
+    c.items.unshift({ id: 'chip', ok: spec.gpu === b.gpu, label: `${spec.gpu} for ${b.firm} · buying spare capacity` },
+      { id: 'delivery', ok: spec.delivery <= b.delivery, label: `Delivery ${spec.delivery}d / buyer ${b.delivery}d` },
+      { id: 'term', ok: spec.term >= b.minTerm, label: `${spec.term} months / buyer ${b.minTerm}+` },
+      { id: 'price', ok: buyerLive(b) && c.eff <= askOf(b), label: buyerLive(b) ? `${usd(c.eff)}/hr supply; buyer currently bids ${usd(askOf(b))} · unsigned` : 'Buyer is no longer available; this is speculative inventory' });
+    return c;
+  },
+  costLine(run, spec) {
+    const b = saleVersion(run.tycoon) && run.resaleLotId && run.labBuyers.find((b) => b.id === run.resaleBuyerId);
+    if (!b) return labMode.costLine.call(this, run, spec);
+    const c = this.checks(run, spec), fits = buyerLive(b) && spec.gpu === b.gpu && spec.term >= b.minTerm && spec.delivery <= b.delivery;
+    const saleQty = fits ? Math.min(spec.qty, opportunity(run, b).missing) : 0, extra = spec.qty - saleQty;
+    const net = (saleQty * (askOf(b) - c.eff) - extra * 0.12) * spec.term * 730;
+    return `<div class="ctl-row cost-line warn"><b>RESALE · ${money(spec.qty * c.eff * spec.term * 730).slice(1)} supplier commitment</b> · ${buyerLive(b) ? 'if this buyer signs' : 'buyer unavailable; sublet baseline'}: ${money(net)} over supply cost. ${extra ? `${int(extra)} extra GPUs sublet at a loss. ` : ''}No client allocation. Interest can change; unsold capacity carries next quarter.</div>`;
+  },
   onBackOut(run, lot) { (run.tyBackOuts = run.tyBackOuts || []).push({ firm: lot.firm }); persist(run); },
 
   // The signing stamp: the grade, and what this deal adds to the Tycoon Score.
@@ -76,6 +126,8 @@ export const tycoonMode = {
   },
   // The lot sheet's product line: the GPU's badge and how it fits the client's work.
   prodLine(run, lot) {
+    const b = saleVersion(run.tycoon) && run.resaleLotId === lot.id && run.labBuyers.find((b) => b.id === run.resaleBuyerId);
+    if (b) return `${int(lot.qty)} × ${badge(lot.gpu)} ${fitTag(fitOf(b.work || 'serve', lot.gpu, run.market.bench))} <small>SPARES FOR ${esc(b.firm)} · unsigned interest</small>`;
     const md = run.mandate;
     const fit = md.accept.includes(lot.gpu) ? fitOf(md.work || 'serve', lot.gpu, run.market.bench) : 'wrong';
     return `${int(lot.qty)} × ${badge(lot.gpu)}${lot.divisible ? ` (min ${int(lot.minQty)})` : ' · whole block'} ${fitTag(fit)} <small>for ${esc(md.company)}</small>`;

@@ -213,7 +213,8 @@ function settle(run, b, price, { equity = false } = {}) {
     if (k <= 0) break;
     d.sold = (d.sold || 0) + k;
     d.saleRev = (d.saleRev || 0) + (equity ? 0 : k * price * d.term * H);
-    legs.push({ qty: k, term: d.term, eff: d.eff, gpu: d.gpu, held: !!d.held });
+    legs.push({ qty: k, term: d.term, eff: d.eff, gpu: d.gpu, held: !!d.held,
+      ...(run.tycoon?.marketVersion === 62 ? { source: d.id || d.lotId, delivery: d.delivery } : {}) });
     left -= k;
   }
   b.state = 'sold';
@@ -222,6 +223,7 @@ function settle(run, b, price, { equity = false } = {}) {
   const stake = equity ? { before, after, pct: round2(100 * after), val: b.val, worth: math.rev } : null;
   const sale = { buyer: b.firm, client: b.client || null, name: b.name, gpu: b.gpu, qty, price, t: run.market.t, legs, ...math, ...(equity ? { rev: 0, vsCost: -math.cost, vsSublet: -(math.rev - math.vsSublet), equity: stake } : {}) };
   b.sale = sale;
+  if (run.tycoon?.marketVersion === 62) sale.work = b.work || 'serve';
   (run.labSales = run.labSales || []).push(sale);
   run.market.bulletin(equity
     ? { headline: `EQUITY · ${int(qty)} ${b.gpu} TO ${b.firm.toUpperCase()}`, sub: `You'll own ${stake.pct}% of the company${before ? ` (from ${round2(100 * before)}%)` : ''}. No cash: worth something only if they make it.`, tone: 'flat' }
