@@ -10,7 +10,7 @@ import { investment, makeVCOffers } from './arcade-vc.js';
 import { openingNegotiation, counteroffer } from './arcade-negotiation.js';
 import { makeBuyers } from './arcade-buyers.js';
 
-export const V7 = { key: 'hsc-tycoon-v72', version: 72, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
+export const V7 = { key: 'hsc-tycoon-v74', version: 74, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
 export const cents = (qty, rate) => qty * rate * V7.hours; // rate: cents/GPU-hour
 export const remaining = o => o.qty - o.delivered;
 export const inventoryCost = g => g.arcade.inventory.reduce((n, x) => n + x.left * x.unitCost, 0);
@@ -41,12 +41,12 @@ export function openQuarter(g) {
   if (!anchor) return false;
   a.anchor = anchor.id;
   Object.assign(a, { time: 0, active: null, confirm: null, lots: [], orders: [], inventory: [], deliveries: [], purchases: [], completions: [], message: null, startCash: cash(g), startProfit: g.profit });
-  a.buyers = makeBuyers(g.seed, g.q); a.sales = [];
+  a.buyers = makeBuyers(g.seed, g.q, g.startups); a.sales = [];
   const clients = [anchor, ...g.startups.filter(s => s !== anchor && s.alive && !s.exited)].slice(0, g.q <= 2 ? 1 : 3);
   for (const [i, s] of clients.entries()) {
     const gpu = s.work === 'train' ? 'B200' : s.work === 'memory' ? 'H200' : 'H100';
     const rate = { H100: 258, H200: 329, B200: 510 }[gpu] + r.int(-4, 4);
-    a.orders.push({ id: `q${g.q}-${s.id}`, client: s.id, name: s.name, gpu, qty: i === 0 ? 24 + Math.min(24, (g.q - 1) * 4) : 8 + 4 * i, delivered: 0, rate, milestone: false });
+    a.orders.push({ id: `q${g.q}-${s.id}`, client: s.id, name: s.name, gpu, qty: i === 0 ? 24 + Math.min(24, (g.q - 1) * 4) : 8 + 4 * i, delivered: 0, rate, milestone: false, critical: (g.q+i)%3===0 });
   }
   for (const s of g.startups) {
     const o = a.orders.find(o => o.client === s.id);
@@ -62,7 +62,11 @@ export function openQuarter(g) {
     const ask = i === 0 ? base : base + r.int(-18, 35);
     const at = i < 3 ? 0 : (i - 2) * 14;
     const flash = i >= 3 && i % 3 === 0;
-    a.lots.push({ id: `q${g.q}-l${i}`, firm, profile: profile.name, gpu: type, qty, ask, floor: ask - r.int(35, 60), at, until: Math.min(V7.seconds, at + (flash ? 24 : 115)), flash, cooldown: 0, status: 'open', negotiation: null });
+    const ordinaryRoom = r.int(35, 60);
+    // Scarce, fixed stock liquidation. Independent draws preserve ordinary supply.
+    const liquidation = i >= 3 && stream(g.seed, 'v74-liquidation', g.q, i).next() < .09;
+    const room = liquidation ? Math.floor(ask * .48) : ordinaryRoom;
+    a.lots.push({ id: `q${g.q}-l${i}`, firm, profile: profile.name, gpu: type, qty, ask, floor: ask - room, liquidation, at, until: Math.min(V7.seconds, at + (flash ? 24 : 115)), flash, cooldown: 0, status: 'open', negotiation: null });
   }
   a.vcOffers = makeVCOffers(g);
   g.phase = 'floor';

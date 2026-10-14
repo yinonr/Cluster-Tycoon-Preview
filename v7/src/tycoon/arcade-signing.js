@@ -9,12 +9,12 @@ export function prepareSigning(g, kind, qty) {
   if (kind === 'purchase') {
     const l = activeLot(g), n = l?.negotiation;
     if (!n || n.closed || n.running) return false;
-    doc = { kind, counterparty: l.firm, gpu: l.gpu, qty: l.qty, rate: n.price, total: cents(l.qty, n.price) };
+    doc = { kind, counterparty: l.firm, gpu: l.gpu, qty: l.qty, rate: n.price, total: cents(l.qty, n.price), savings:cents(l.qty,l.ask-n.price) };
   } else if (kind === 'buyer') {
     const d = saleQuote(g, a.confirm?.buyerId, qty);
     if (!d) return false;
     const b = a.buyers.find(b => b.id === d.buyerId);
-    doc = { kind, counterparty: b.name, gpu: b.gpu, qty, rate: b.rate, total: d.revenue };
+    doc = { kind, counterparty: b.name, gpu: b.gpu, qty, rate: b.rate, total: d.revenue, cost:d.cost };
   } else if (kind === 'secondary') {
     const d=secondaryQuote(g,a.confirm?.vcId,qty);if(!d)return false;
     doc={kind,counterparty:d.counterparty,gpu:`% of ${d.company} ownership`,qty:Number((d.sold*100).toFixed(6)),bps:qty,rate:d.bidVal,total:d.proceeds};

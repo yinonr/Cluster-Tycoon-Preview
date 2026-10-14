@@ -1,3 +1,4 @@
+import { startupInfluence, recordFortune } from './arcade-fortunes.js';
 // THE TYCOON (V6, Deal Lab): an ongoing market, one quarter per trading floor.
 //
 // A game carries cash, a book of service contracts (compute you deliver to startups),
@@ -363,12 +364,13 @@ export function settleQuarter(game, sum) {
     const A = ARCH[s.arch];
     const rr = stream(game.seed, 'startup', s.id, q);
     const u1 = rr.next(), u2 = rr.next(), u3 = rr.next(), u4 = rr.next();
+    const effect74 = startupInfluence(game,s);
     const need = Math.max(1, s.size * 1000 * 3);
     const boost = saleVersion(game) ? customerDelivery(s, fed[s.id] || 0, fedQty[s.id] || 0).boost : Math.min(1, (fed[s.id] || 0) / need); // the right compute, delivered, helps
-    let g = lerp(A.g[0], A.g[1], 0.6 * u1 + 0.4 * s.quality) + 0.06 * boost;
+    let g = lerp(A.g[0], A.g[1], 0.6 * u1 + 0.4 * s.quality) + 0.06 * boost + (effect74?.growth || 0);
     const runway = s.cash / Math.max(1, s.burn);
     // No one fails in their first quarter: you get a quarter of signals before the risk is live.
-    const pFail = q === 1 ? 0 : A.fail * (1.6 - s.quality) * (runway < 1 ? 1.8 : 1) * (1 - 0.4 * boost);
+    const pFail = q === 1 ? 0 : A.fail * (1.6 - s.quality) * (runway < 1 ? 1.8 : 1) * (1 - 0.4 * boost) * (effect74?.failFactor ?? 1);
     const line = { name: s.name, id: s.id, arch: s.arch };
     if (saleVersion(game)) {
       const delivered = customerDelivery(s, fed[s.id] || 0, fedQty[s.id] || 0);
@@ -399,7 +401,7 @@ export function settleQuarter(game, sum) {
       s.stake = 0;
     } else {
       if (A.jump && u2 < A.jump * (1 + boost)) {
-        g = 0.8 + 0.8 * u2 / A.jump;
+        g = 0.8 + 0.8 * u2 / A.jump + (effect74?.growth || 0);
         s.work = 'train';
         s.size = round2(s.size * 1.5);
         line.milestone = true;
@@ -410,7 +412,7 @@ export function settleQuarter(game, sum) {
       s.size = round2(Math.max(0.4, Math.min(3, s.size * (1 + 0.8 * g))));
       if (s.arch === 'rocket' && s.work === 'serve' && s.size > 1.5) { s.work = 'memory'; line.text = 'Launched long-context features: now needs high-memory GPUs.'; }
       // A round from other investors: new shares at their valuation dilute every holder, you too.
-      const raise = g > 0.2 || (runway < 2 && u4 < 0.5) ? Math.round(s.val * 0.15) : 0;
+      const raise = g > 0.2 || effect74?.funding || (runway < 2 && u4 < 0.5) ? Math.round(s.val * 0.15) : 0;
       s.cash = Math.round(s.cash - s.burn + raise);
       if (raise) {
         s.stake = (s.stake * s.val) / (s.val + raise); s.val += raise;
@@ -433,6 +435,7 @@ export function settleQuarter(game, sum) {
         }
       }
     }
+    recordFortune(game,s,line,effect74);
     line.stake = s.stake;
     line.paper = Math.round(s.stake * s.val);
     rep.startups.push(line);

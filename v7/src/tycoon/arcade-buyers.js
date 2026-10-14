@@ -3,13 +3,17 @@ import { stream } from '../util.js';
 import { BROKERS, LABS } from './demand.js';
 import { cents, cash, owned, notice } from './arcade.js';
 
-export function makeBuyers(seed, q) {
-  const r = stream(seed, 'v71-buyers', q);
-  return Array.from({ length: q < 3 ? 4 : 7 }, (_, i) => {
-    const gpu = ['H100', 'H200', 'B200'][i % 3], qty = r.pick([4, 6, 8]);
-    const rate = { H100: 250, H200: 310, B200: 470 }[gpu] + r.int(-35, 35);
-    const at = 10 + i * (q < 3 ? 48 : 29), flash = i % 3 === 1;
-    return { id: `q${q}-b${i}`, name: i % 2 ? LABS[i % LABS.length].name : BROKERS[i % BROKERS.length], gpu, qty, filled: 0, rate, budget: cents(qty, rate), at, until: Math.min(240, at + (flash ? 32 : 66)), flash };
+export function makeBuyers(seed, q, startups = []) {
+  const r = stream(seed, 'v74-buyers', q);
+  const growing = startups.filter(s=>s.alive&&!s.exited&&s.lastGrowth>.2);
+  return Array.from({ length: q < 3 ? 10 : 14 }, (_, i) => {
+    const trend = growing.length && i%4===3 ? growing[i%growing.length].work : null;
+    const gpu = trend ? {serve:'H100',memory:'H200',train:'B200'}[trend] : ['H100', 'H200', 'B200'][i % 3];
+    const qty = i===0 ? 4 : r.pick([2, 4, 6, 8, 12]);
+    const premium = r.next()<.16;
+    const rate = { H100: 250, H200: 310, B200: 470 }[gpu] + r.int(-40, 38) + (premium ? 45 : 0);
+    const at = 4 + i * (q < 3 ? 22 : 16), flash = premium || i % 3 === 1;
+    return { id: `q${q}-b${i}`, name: i % 2 ? LABS[i % LABS.length].name : BROKERS[i % BROKERS.length], gpu, qty, filled: 0, rate, budget: cents(qty, rate), at, until: Math.min(240, at + (flash ? 32 : 66)), flash, premium, reason:trend?'Demand follows growing startup workloads':'Independent spot demand' };
   });
 }
 export const buyerLive = (g, b) => g.phase === 'floor' && b.at <= g.arcade.time && g.arcade.time < b.until && b.filled < b.qty && b.budget >= cents(1, b.rate);

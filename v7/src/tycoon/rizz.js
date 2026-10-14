@@ -13,7 +13,7 @@ export function rizzParameters(g, lot) {
     width: [0.26, 0.15, 0.075][attempt - 1] * (1 + help),
     speed: [0.68, 1.08, 1.55][attempt - 1] / (1 + help) * (assist ? 0.55 : 1),
     phase: stream(g.seed, 'v7-rizz', lot.id, attempt).range(0, 2),
-    concession: Math.min(n.price - lot.floor, Math.max(1, Math.floor((lot.ask - lot.floor) * [0.45, 0.20, 0.08][attempt - 1] * (assist ? 0.65 : 1)))),
+    concession: Math.min(n.price - lot.floor, Math.max(1, Math.floor((lot.ask - lot.floor) * [0.18, 0.32, 0.50][attempt - 1] * (assist ? 0.65 : 1)))),
   };
 }
 
@@ -21,6 +21,12 @@ export function markerAt(params, elapsedMs) {
   if (!Number.isFinite(elapsedMs) || elapsedMs < 0) return null;
   const u = (params.phase + elapsedMs / 1000 * params.speed) % 2;
   return u <= 1 ? u : 2 - u;
+}
+
+// Highest reachable non-walkout price on the next miss; shared with the stakes UI.
+export function failurePrice(l,attempt) {
+  const n=l.negotiation;
+  return attempt===1?Math.min(l.ask,n.price+Math.max(1,Math.ceil((l.ask-l.floor)*.10))):attempt===2?Math.max(n.price,n.base):l.ask;
 }
 
 export function startRizz(g) {
@@ -48,7 +54,11 @@ export function resolveRizz(g, position, interrupted = false) {
   const multiplier = precision ? { edge: 0.4, strong: 0.7, perfect: 1 }[precision] : 0;
   const reward = precision ? Math.max(1, Math.floor(p.concession * multiplier)) : 0;
   if (tier === 'hit') n.price = Math.max(l.floor, n.price - reward);
-  else if (p.attempt === 1) trust = tier === 'severe' ? -1 : 0;
+  else if (p.attempt === 1) {
+    trust = tier === 'severe' ? -1 : 0;
+    // A bad first read gives back some haggling gains; at ask, it costs Trust.
+    if (tier !== 'near') n.price = Math.min(l.ask, n.price + Math.max(1, Math.ceil((l.ask-l.floor)*.10)));
+  }
   else if (p.attempt === 2) {
     trust = { near: -1, miss: -2, severe: -4 }[tier];
     n.price = Math.max(n.price, tier === 'near' ? Math.ceil((n.price + n.base) / 2) : n.base);
@@ -63,7 +73,8 @@ export function resolveRizz(g, position, interrupted = false) {
   trust = f.trust - beforeTrust; g.clout += clout;
   Object.assign(entry, { status: 'resolved', position, distance, tier, accuracy, precision, multiplier, reward, interrupted, after: n.price, trust, clout, walked });
   n.running = null;
-  const outcome = tier === 'hit' ? `${precision === 'perfect' ? 'BULLSEYE · PERFECT RIZZ' : precision.toUpperCase() + ' RIZZ HIT'} · ${new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(cents(l.qty,entry.before-n.price)/100)} SAVED (${Math.round(multiplier * 100)}% reward). Bank the deal or risk the next attempt.` : walked ? 'CATASTROPHIC OVER-RIZZ · supplier walked. This lot is gone.' : tier === 'near' ? 'NEAR MISS · ' + (p.attempt === 1 ? 'your quote is safe.' : 'some or all Rizz gains lost.') : 'MISSED · ' + (p.attempt === 1 ? 'your quote is safe.' : 'negotiated gains lost.');
+  n.tape.push({speaker:l.firm, outcome:walked?'walk':tier==='hit'?'accept':'hold', text:walked?'Too far. This deal is gone.':tier==='hit'?`You got me. $${(n.price/100).toFixed(2)}. Bank it?`:`No. $${(n.price/100).toFixed(2)} is my quote now.`});
+  const outcome = tier === 'hit' ? `${precision === 'perfect' ? 'BULLSEYE · PERFECT RIZZ' : precision.toUpperCase() + ' RIZZ HIT'} · ${new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(cents(l.qty,entry.before-n.price)/100)} SAVED (${Math.round(multiplier * 100)}% reward). Bank the deal or risk the next attempt.` : walked ? 'CATASTROPHIC OVER-RIZZ · supplier walked. This lot is gone.' : tier === 'near' ? 'NEAR MISS · ' + (p.attempt === 1 ? 'your quote is safe.' : 'some or all Rizz gains lost.') : 'MISSED · quote and relationship at risk.';
   notice(g, `${interrupted ? 'Interrupted attempt settled as a severe miss. ' : ''}${outcome} ${tier !== 'hit' && n.price > entry.before ? `Concessions lost: $${(cents(l.qty,n.price-entry.before)/100).toFixed(2)}. ` : ''}Trust ${trust >= 0 ? '+' : ''}${trust}${clout ? ` · Clout ${clout}` : ''}.`, tier === 'hit' ? 'good' : 'bad');
   return true;
 }

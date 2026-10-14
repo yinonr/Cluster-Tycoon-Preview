@@ -28,7 +28,7 @@ export function arcadeStore(storage) {
       state = JSON.parse(raw);
       if (!validSave(state)) throw Error('Unsupported or damaged V7 save');
     }
-  } catch { state = null; error = 'Cannot read this V7.2 save. It has been preserved. Restore a valid save or clear only hsc-tycoon-v72 in browser storage.'; }
+  } catch { state = null; error = 'Cannot read this V7.4 save. It has been preserved. Restore a valid save or clear only hsc-tycoon-v74 in browser storage.'; }
   function commit(next) {
     if (error) return false;
     try {
