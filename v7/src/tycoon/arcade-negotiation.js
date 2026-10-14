@@ -2,7 +2,7 @@ import { stream } from '../util.js';
 import { activeLot, notice } from './arcade.js';
 export function openingNegotiation(g,l) {
   const r=stream(g.seed,'v72-patience',l.id), firm=r.next()<.28;
-  return { price:l.ask, base:l.ask, haggles:0, attempts:[], running:null, closed:false, patience:firm?2:3, posture:firm?'firm':'flexible', tape:[{speaker:l.firm,text:firm?'This quote is firm. Pushing for a discount costs Trust.':'Bring me your number. I have room, but not all afternoon.'}] };
+  return { ...(g.arcade.version===76?{rapport:'cold'}:{}), price:l.ask, base:l.ask, haggles:0, attempts:[], running:null, closed:false, patience:firm?2:3, posture:firm?'firm':'flexible', tape:[{speaker:l.firm,text:firm?'This quote is firm. Pushing for a discount costs Trust.':'Bring me your number. I have room, but not all afternoon.'}] };
 }
 export function counteroffer(g, offer) {
   const l=activeLot(g), n=l?.negotiation;
@@ -18,6 +18,15 @@ export function counteroffer(g, offer) {
   else if(before-offer<=Math.max(1,Math.floor(room*.20))){n.price=offer;outcome='accept';text='That is a serious number. Agreed.';}
   else {n.price=Math.max(l.floor,before-Math.max(1,Math.min(Math.floor(room*.18),Math.floor((before-offer)/2))));outcome='counter';text=`Meet me at $${(n.price/100).toFixed(2)}. That is a real quote.`;}
   if(!n.patience&&!n.closed)text+=' Final price. Sign, try Rizz, or walk.';
+  if(g.arcade.version===76){
+    // Per-offer pressure, never cumulative pennies. No bonus stacks; lowballs
+    // leave lasting irritation for this lot even if a later quote improves.
+    if(offer<l.floor||before-offer>room*.85)n.rapport='irritated';
+    else if(n.rapport!=='irritated'){
+      if(outcome==='hold')n.rapport='guarded';
+      else if(n.price<before&&before-offer>=Math.max(3,Math.ceil(room*.12)))n.rapport='receptive';
+    }
+  }
   n.base=n.price;
   n.tape.push({speaker:l.firm,text,outcome,before,after:n.price,patience:n.patience});
   notice(g,text,outcome==='walk'?'bad':n.price<before?'good':'plain');return true;

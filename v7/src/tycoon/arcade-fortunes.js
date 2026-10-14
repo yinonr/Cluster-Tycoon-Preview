@@ -2,7 +2,7 @@
 import { stream } from '../util.js';
 const stages=['Prototype','Pilot','Launch','Scaling','Breakthrough'];
 export function startupInfluence(game,s) {
-  if(game.arcade?.version!==74)return null;
+  if(![74,76].includes(game.arcade?.version))return null;
   const o=game.arcade.orders.find(o=>o.client===s.id);
   if(!o)return null;
   const p=s.v74 ||= {level:0,streak:0,met:0,missed:0,stage:'Prototype'};

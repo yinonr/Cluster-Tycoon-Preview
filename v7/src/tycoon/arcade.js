@@ -10,7 +10,7 @@ import { investment, makeVCOffers } from './arcade-vc.js';
 import { openingNegotiation, counteroffer } from './arcade-negotiation.js';
 import { makeBuyers } from './arcade-buyers.js';
 
-export const V7 = { key: 'hsc-tycoon-v74', version: 74, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
+export const V7 = { key: 'hsc-tycoon-v76', version: 76, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
 export const cents = (qty, rate) => qty * rate * V7.hours; // rate: cents/GPU-hour
 export const remaining = o => o.qty - o.delivered;
 export const inventoryCost = g => g.arcade.inventory.reduce((n, x) => n + x.left * x.unitCost, 0);

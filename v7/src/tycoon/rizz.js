@@ -2,6 +2,8 @@
 import { stream } from '../util.js';
 import { activeLot, notice, cents } from './arcade.js';
 
+export const RAPPORT_WIDTH = Object.freeze({cold:1,receptive:1.12,guarded:.90,irritated:.82});
+
 export function rizzParameters(g, lot) {
   const n = lot.negotiation, attempt = n.attempts.length + 1;
   if (attempt > 3) return null;
@@ -9,8 +11,9 @@ export function rizzParameters(g, lot) {
   // Capped help: even max relationships leave tier 3 narrower/faster than tier 2.
   const help = Math.max(0, Math.min(0.25, trust * 0.015 + Math.max(0, g.clout) * 0.0003));
   const assist = !!g.arcade.assistance;
-  return { attempt, trust, clout: g.clout, assist,
-    width: [0.26, 0.15, 0.075][attempt - 1] * (1 + help),
+  const rapport=g.arcade.version===76?(n.rapport||'cold'):'cold';
+  return { attempt, trust, clout: g.clout, assist, rapport,
+    width: [0.26, 0.15, 0.075][attempt - 1] * (1 + help) * RAPPORT_WIDTH[rapport],
     speed: [0.68, 1.08, 1.55][attempt - 1] / (1 + help) * (assist ? 0.55 : 1),
     phase: stream(g.seed, 'v7-rizz', lot.id, attempt).range(0, 2),
     concession: Math.min(n.price - lot.floor, Math.max(1, Math.floor((lot.ask - lot.floor) * [0.18, 0.32, 0.50][attempt - 1] * (assist ? 0.65 : 1)))),
