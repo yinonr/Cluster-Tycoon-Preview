@@ -5,9 +5,11 @@ function validSave(g) {
   return a?.version === V7.version && Number.isSafeInteger(a.rev) && a.rev >= 0 &&
     ['floor', 'report', 'over'].includes(g.phase) && Number.isSafeInteger(g.q) && g.q > 0 &&
     [g.cash, g.profit, g.clout, g.cpUnits, a.time].every(Number.isFinite) &&
-    Array.isArray(g.startups) && g.startups.length > 0 && g.startups.every(s => typeof s.id === 'string' && typeof s.name === 'string' && [s.val, s.stake, s.cash].every(Number.isFinite)) &&
+    Array.isArray(g.startups) && g.startups.length > 0 && g.startups.every(s => typeof s.id === 'string' && typeof s.name === 'string' && [s.val, s.stake, s.cash].every(Number.isFinite) && s.stake>=0 && s.stake<=1) &&
     Array.isArray(g.book) && Array.isArray(g.hist) && g.firms && typeof g.firms === 'object' &&
-    ['lots', 'orders', 'inventory', 'deliveries', 'purchases', 'completions', 'history', 'buyers', 'sales'].every(k => Array.isArray(a[k])) &&
+    ['lots', 'orders', 'inventory', 'deliveries', 'purchases', 'completions', 'history', 'buyers', 'sales', 'receipts', 'vcOffers', 'secondarySales', 'equityLifecycle'].every(k => Array.isArray(a[k])) &&
+    a.investments && Object.values(a.investments).every(i=>['basis','invested','allocated','proceeds','serial','offered','closedBasis'].every(k=>Number.isSafeInteger(i[k])&&i[k]>=0)&&i.invested===i.basis+i.allocated+i.closedBasis) &&
+    a.vcOffers.every(b=>Number.isSafeInteger(b.budget)&&b.budget>=0&&Number.isSafeInteger(b.bidVal)&&b.bidVal>0&&b.stake>0&&b.stake<=1) &&
     a.buyers.every(b => Number.isSafeInteger(b.qty) && Number.isSafeInteger(b.filled) && b.filled >= 0 && b.filled <= b.qty && Number.isSafeInteger(b.budget) && b.budget >= 0 && Number.isSafeInteger(b.rate) && b.rate > 0) &&
     a.orders.length > 0 && a.orders.every(o => typeof o.id === 'string' && g.startups.some(s => s.id === o.client) && Number.isSafeInteger(o.qty) && Number.isSafeInteger(o.delivered) && o.delivered >= 0 && o.delivered <= o.qty && Number.isSafeInteger(o.rate) && o.rate > 0) &&
     a.lots.length > 0 && a.lots.every(l => typeof l.id === 'string' && typeof l.firm === 'string' && Number.isSafeInteger(l.qty) && l.qty > 0 && Number.isFinite(l.ask) && Number.isFinite(l.floor) && l.floor > 0 && l.ask >= l.floor && ['open', 'sold', 'expired', 'walked'].includes(l.status) && (!l.negotiation || (Array.isArray(l.negotiation.attempts) && l.negotiation.attempts.length <= 3 && Number.isFinite(l.negotiation.price) && l.negotiation.price >= l.floor && l.negotiation.price <= l.ask))) &&
@@ -26,7 +28,7 @@ export function arcadeStore(storage) {
       state = JSON.parse(raw);
       if (!validSave(state)) throw Error('Unsupported or damaged V7 save');
     }
-  } catch { state = null; error = 'Cannot read this V7.1 save. It has been preserved. Restore a valid save or clear only hsc-tycoon-v71 in browser storage.'; }
+  } catch { state = null; error = 'Cannot read this V7.2 save. It has been preserved. Restore a valid save or clear only hsc-tycoon-v72 in browser storage.'; }
   function commit(next) {
     if (error) return false;
     try {

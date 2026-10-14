@@ -6,9 +6,11 @@ import { HOURS_PER_MONTH } from '../data/gpus.js';
 import { newGame, settleQuarter, emptySummary, gameScore, paperValue } from './game.js';
 import { supplierOf } from './suppliers.js';
 import { powerOf } from './gpu.js';
+import { investment, makeVCOffers } from './arcade-vc.js';
+import { openingNegotiation, counteroffer } from './arcade-negotiation.js';
 import { makeBuyers } from './arcade-buyers.js';
 
-export const V7 = { key: 'hsc-tycoon-v71', version: 71, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
+export const V7 = { key: 'hsc-tycoon-v72', version: 72, cash: 6500000, seconds: 240, months: 3, hours: HOURS_PER_MONTH * 3 };
 export const cents = (qty, rate) => qty * rate * V7.hours; // rate: cents/GPU-hour
 export const remaining = o => o.qty - o.delivered;
 export const inventoryCost = g => g.arcade.inventory.reduce((n, x) => n + x.left * x.unitCost, 0);
@@ -26,7 +28,7 @@ export function createArcade(seed) {
   g.cash = V7.cash / 100;
   // Scrappy startup scale; retain the existing archetypes, cash runway and cap tables.
   for (const s of g.startups) for (const field of ['val', 'val0', 'cash', 'burn']) s[field] = Math.round(s[field] / 25);
-  g.arcade = { version: V7.version, rev: 0, anchor: g.startups[0].id, history: [], assistance: false };
+  g.arcade = { version: V7.version, rev: 0, anchor: g.startups[0].id, history: [], receipts: [], signing: null, investments: {}, secondarySales: [], equityLifecycle: [], vcOffers: [], assistance: false };
   openQuarter(g);
   return g;
 }
@@ -62,6 +64,7 @@ export function openQuarter(g) {
     const flash = i >= 3 && i % 3 === 0;
     a.lots.push({ id: `q${g.q}-l${i}`, firm, profile: profile.name, gpu: type, qty, ask, floor: ask - r.int(35, 60), at, until: Math.min(V7.seconds, at + (flash ? 24 : 115)), flash, cooldown: 0, status: 'open', negotiation: null });
   }
+  a.vcOffers = makeVCOffers(g);
   g.phase = 'floor';
   notice(g, `Start with ${anchor.name}: buy a small matching lot, then deliver for cash to fund your next deal.`);
   return true;
@@ -77,8 +80,8 @@ export function advance(g, dt) {
 
 export function claim(g, id) {
   const l = g.arcade.lots.find(x => x.id === id);
-  if (g.arcade.active || g.arcade.confirm || !l || !available(g, l)) return false;
-  l.negotiation ||= { price: l.ask, base: l.ask, haggles: 0, attempts: [], running: null, closed: false };
+  if (g.arcade.signing || g.arcade.active || g.arcade.confirm || !l || !available(g, l)) return false;
+  l.negotiation ||= openingNegotiation(g,l);
   if (l.negotiation.closed) return false;
   g.arcade.active = id;
   notice(g, 'Opportunity claimed. No money spent. The floor is paused while you decide.');
@@ -87,7 +90,7 @@ export function claim(g, id) {
 
 export function leave(g) {
   const l = activeLot(g);
-  if (!l || l.negotiation.running) return false;
+  if (g.arcade.signing || !l || l.negotiation.running) return false;
   // Reopening keeps quotes and attempts; cooling off consumes live floor time.
   l.cooldown = g.arcade.time + 5;
   g.arcade.active = null;
@@ -95,14 +98,7 @@ export function leave(g) {
   return true;
 }
 
-export function haggle(g) {
-  const l = activeLot(g), n = l?.negotiation;
-  if (!n || n.closed || n.running || n.attempts.length || n.haggles >= 2) return false;
-  const cut = Math.max(1, Math.floor((l.ask - l.floor) * [0.18, 0.12][n.haggles]));
-  n.price = Math.max(l.floor, n.price - cut); n.base = n.price; n.haggles++;
-  notice(g, `${l.firm} meets your counter. A firm quote; you can sign now or try Rizz.`, 'good');
-  return true;
-}
+export const haggle = counteroffer;
 
 export function buy(g) {
   const l = activeLot(g), n = l?.negotiation;
@@ -154,7 +150,7 @@ export function deliver(g) {
   // Equity is expensed supply, never realized cash or paper profit.
   g.profit = (Math.round(g.profit * 100) + d.revenue - d.cost) / 100;
   if (d.payment === 'cash') s.cash -= d.value / 100;
-  else { s.stake = d.stake; s.val += d.value / 100; }
+  else { s.stake = d.stake; s.val += d.value / 100; const inv=investment(g,s.id); inv.basis+=d.cost; inv.invested+=d.cost; inv.serial++; }
   g.arcade.deliveries.push({ ...d, client: s.id, gpu: o.gpu, work: s.work });
   if (!remaining(o) && !o.milestone) {
     o.milestone = true; s.trust++; g.clout += 40;
@@ -177,9 +173,19 @@ export function closeQuarter(g) {
   for (const o of a.orders.filter(o => o.delivered)) summary.contracts.push({ client: o.client, gpu: o.gpu, qty: o.delivered, months: 3, price: 0, eff: 0, work: byClient(g, o.client).work });
   const quarter = g.q;
   const cashRemainder = g.cash - Math.round(g.cash);
+  const beforeSettlement = cash(g);
   settleQuarter(g, summary);
   // Legacy settlement rounds cash to dollars; V7 invoices retain every cent.
   g.cash = Math.round((g.cash + cashRemainder) * 100) / 100;
+  let exitBasis=0, failedBasis=0;
+  for(const s of g.startups) {
+    const inv=a.investments[s.id];
+    if(inv && inv.basis && (!s.alive || s.exited)) {
+      if(s.exited)exitBasis+=inv.basis;else failedBasis+=inv.basis;
+      inv.closedBasis+=inv.basis;inv.basis=0;
+    }
+  }
+  a.equityLifecycle.push({q:quarter,exitProceeds:cash(g)-beforeSettlement,exitBasis,failedBasis});
   g.hist.at(-1).cash = g.cash; g.report.cashAfter = g.cash;
   const record = { q: quarter, profit: g.profit - a.startProfit, cash: cash(g), lost, bought: a.purchases.reduce((n, p) => n + p.qty, 0), delivered: a.deliveries.reduce((n, d) => n + d.qty, 0), orders: a.orders.map(o => ({ ...o })), completions: [...a.completions], score: gameScore(g), startups: g.report.startups, lines: g.report.lines.filter(l => l.kind === 'equity' || /acquired|shut down/.test(l.text)) };
   record.outsideSold = a.sales.reduce((n, s) => n + s.qty, 0);

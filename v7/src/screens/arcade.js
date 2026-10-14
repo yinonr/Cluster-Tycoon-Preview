@@ -1,3 +1,8 @@
+import { capitalDesk, vcReview, vcMath } from '../ui/arcade-vc.js';
+import { vcLive, reviewVC } from '../tycoon/arcade-vc.js';
+import { hall, contract } from '../ui/arcade-hall.js';
+import { prepareSigning, signTrade } from '../tycoon/arcade-signing.js';
+import { createAudio } from '../audio.js';
 import { esc, newSeed } from '../util.js';
 import { BRAND } from '../config.js';
 import { buyerLive, saleQuote, reviewBuyer, sellBuyer } from '../tycoon/arcade-buyers.js';
@@ -6,6 +11,7 @@ import { V7, advance, available, activeLot, cash, cashCapacity, cents, claim, ha
 import { arcadeStore } from '../tycoon/arcade-store.js';
 import { rizzParameters, markerAt, startRizz, resolveRizz, recoverRizz } from '../tycoon/rizz.js';
 
+let audio = null, sound = null;
 const root = document.querySelector('#arcade');
 let storage;
 try { storage = window.localStorage; } catch { storage = { getItem() { throw Error('Storage blocked'); } }; }
@@ -17,7 +23,7 @@ const btn = (action, label, extra = '') => `<button type="button" data-action="$
 let last = performance.now(), lastPaint = '', returnFocus = null;
 let meterStart = 0, meterFrame = 0, meterKey = null;
 const act = fn => { const ok = store.act(fn); if (ok || store.error) render(); return ok; };
-const head = () => `<header class="masthead"><div><p class="eyebrow">Haight Street Compute · V7.1 playtest</p><h1>Cluster Tycoon</h1></div><span class="eyebrow">The Trading Arcade</span></header>`;
+const head = () => `<header class="masthead"><div><p class="eyebrow">Haight Street Compute · V7.2 playtest</p><h1>Cluster Tycoon</h1></div><span class="eyebrow">The Art of the Deal</span><button data-action="sound" class="quiet">Sound: ${sound ? 'on' : 'off'}</button></header>`;
 
 function orderCard(g, o) {
   const qty = Math.min(remaining(o), owned(g, o.gpu));
@@ -56,10 +62,21 @@ function paintSale() {
   root.querySelector('[data-sale-math]').innerHTML = d ? `<div class="economics"><span>Prepaid cost of these GPUs</span><strong>${money(d.cost)}</strong><span>Buyer cash payment</span><strong>${money(d.revenue)}</strong><span>Realized profit / loss</span><strong>${money(d.revenue - d.cost)}</strong><span>Cash after sale</span><strong>${money(cash(g) + d.revenue)}</strong></div><p>${o ? `${esc(o.name)} alternative: ${money(cents(Math.min(d.qty, cashCapacity(g, o)), o.rate))} funded cash for up to ${Math.min(d.qty, cashCapacity(g, o))} GPUs, or equity; advances its order.` : 'No matching startup order.'}</p>` : '<p>Choose a whole quantity within your available inventory and the buyer’s remaining demand.</p>';
   root.querySelector('[data-action="sell-buyer"]').disabled = !d;
 }
+function paintVC() {
+  const input=root.querySelector('[data-vc-percent]');if(!input)return;
+  const m=vcMath(store.state,Math.round(Number(input.value)*100),money);
+  root.querySelector('[data-vc-math]').innerHTML=m.html;root.querySelector('[data-action="sell-vc"]').disabled=!m.valid;
+}
+function paintCounter() {
+  const input=root.querySelector('[data-counter]'); if(!input)return;
+  const l=activeLot(store.state), offer=Number(input.value), valid=Number.isSafeInteger(offer)&&offer>0&&offer<=l.negotiation.price;
+  root.querySelector('[data-counter-total]').textContent=valid ? `Your proposed total: ${money(cents(l.qty,offer))}. Seller must agree first.` : 'Enter a whole number of cents within the current quote.';
+  root.querySelector('[data-action="haggle"]').disabled=!valid;
+}
 function floor(g) {
   const a = g.arcade, next = a.lots.find(l => l.status === 'open' && l.at > a.time);
   const lots = a.lots.filter(l => available(g, l));
-  return `${head()}<div class="stats"><div class="stat">Cash available<b>${money(cash(g))}</b></div><div class="stat">Realized profit<b>${money(Math.round(g.profit * 100))}</b></div><div class="stat">Quarter ${g.q}<b data-clock>${Math.ceil(V7.seconds - a.time)}s</b></div><div class="stat">Clout · Tycoon Score<b>${g.clout} · ${score(g).total}</b></div></div><div class="message ${a.message?.tone || ''}" role="status">${esc(a.message?.text || '')}</div>${inventory(g)}<div class="columns"><section>${buyers(g)}<div class="row"><h2>Supply floor</h2><small data-floor-state>${a.active || a.confirm ? 'PAUSED · take your time' : 'LIVE · claim to pause'}</small></div><p class="muted">Claiming costs nothing. Compare the whole lot’s cost with the order it can fill.</p><div class="lots">${lots.map(l => lotCard(g, l)).join('') || '<p>No open lots right now. Your inventory can still be delivered.</p>'}</div><p class="muted" data-next>${next ? `Next release in ${Math.ceil(next.at - a.time)}s of floor time.` : 'All releases are on the board. Supply is finite.'}</p><details><summary>How your money and compute work</summary>Each purchase is a three-month compute-service block, paid in full. Transfer GPUs to a startup for immediate cash payment or shares. No future supplier payments, borrowing, or guaranteed sublets. Unused rights expire at the bell and their full cost becomes a loss. Pending demand is not cash. Inventory at cost: ${money(inventoryCost(g))}. Unpaid commitments: $0.</details><div class="actions">${btn('finish-review', 'Finish quarter', 'class="quiet"')}</div></section><aside class="orders">${a.orders.map(o => orderCard(g, o)).join('')}<details class="panel"><summary>Portfolio · ${money(Math.round(portfolio(g) * 100))} paper value</summary><p>Shares are speculative. They do not count as cash or realized profit.</p>${g.startups.filter(s => s.stake).map(s => `<div class="portfolio-item"><b>${esc(s.name)}</b><p>${(s.stake * 100).toFixed(3)}% ownership · ${esc(signalOf(s))}</p></div>`).join('') || '<p>Deliver compute for equity to begin your portfolio.</p>'}</details></aside></div>`;
+  return `${head()}<div class="stats"><div class="stat">Cash available<b>${money(cash(g))}</b></div><div class="stat">Realized profit<b>${money(Math.round(g.profit * 100))}</b></div><div class="stat">Quarter ${g.q}<b data-clock>${Math.ceil(V7.seconds - a.time)}s</b></div><div class="stat">Clout · Tycoon Score<b>${g.clout} · ${score(g).total}</b></div></div><div class="message ${a.message?.tone || ''}" role="status">${esc(a.message?.text || '')}</div>${hall(g)}${inventory(g)}<div class="columns"><section>${buyers(g)}<div class="row"><h2>Supply floor</h2><small data-floor-state>${a.active || a.confirm ? 'PAUSED · take your time' : 'LIVE · claim to pause'}</small></div><p class="muted">Claiming costs nothing. Compare the whole lot’s cost with the order it can fill.</p><div class="lots">${lots.map(l => lotCard(g, l)).join('') || '<p>No open lots right now. Your inventory can still be delivered.</p>'}</div><p class="muted" data-next>${next ? `Next release in ${Math.ceil(next.at - a.time)}s of floor time.` : 'All releases are on the board. Supply is finite.'}</p><details><summary>How your money and compute work</summary>Each purchase is a three-month compute-service block, paid in full. Transfer GPUs to a startup for immediate cash payment or shares. No future supplier payments, borrowing, or guaranteed sublets. Unused rights expire at the bell and their full cost becomes a loss. Pending demand is not cash. Inventory at cost: ${money(inventoryCost(g))}. Unpaid commitments: $0.</details><div class="actions">${btn('finish-review', 'Finish quarter', 'class="quiet"')}</div></section><aside class="orders">${a.orders.map(o => orderCard(g, o)).join('')}${capitalDesk(g,money)}<details class="panel"><summary>Portfolio · ${money(Math.round(portfolio(g) * 100))} paper value</summary><p>Shares are speculative. They do not count as cash or realized profit.</p>${g.startups.filter(s => s.stake).map(s => `<div class="portfolio-item"><b>${esc(s.name)}</b><p>${(s.stake * 100).toFixed(3)}% ownership · ${esc(signalOf(s))}</p></div>`).join('') || '<p>Deliver compute for equity to begin your portfolio.</p>'}</details></aside></div>`;
 }
 
 function rizzPanel(g, l) {
@@ -74,13 +91,15 @@ function rizzPanel(g, l) {
 function negotiation(g, l) {
   const n = l.negotiation, cost = cents(l.qty, n.price), f = g.firms[l.firm];
   const o = cashOrder(g, l), cover = o ? Math.min(l.qty, Math.max(0, cashCapacity(g, o) - owned(g, o.gpu))) : 0;
-  return `<div class="modal-content"><p class="eyebrow">Claimed · floor paused · no purchase yet</p><h2 id="dialog-title">${esc(l.firm)}</h2><p>${badge(l.gpu)} <b>${l.qty} GPUs</b> · Trust ${f?.trust || 0}</p><p class="total">${money(cost)}</p><p>Total purchase cost · all three months paid</p><div class="economics"><span>Cash available</span><strong>${money(cash(g))}</strong><span>Cash after signing</span><strong class="${cost > cash(g) ? 'bad' : ''}">${money(cash(g) - cost)}</strong><span>Uncovered cash-order fit</span><strong>${cover} / ${l.qty} GPUs</strong><span>Expected cash-delivery profit</span><strong>${money((o ? cents(cover, o.rate) : 0) - cost)}</strong></div><p class="muted">${cover ? `Payment requires a separate delivery to ${esc(o.name)} after buying. ${l.qty - cover ? `${l.qty - cover} GPUs are not covered by this startup cash order.` : ''}` : (o ? 'Existing inventory or the startup cash budget limits cash sales. Equity is speculative and brings in no cash.' : 'No uncovered startup cash order. Compare outside buyers before buying; unused capacity loses its full cost.')}</p><div class="message ${g.arcade.message?.tone || ''}" role="status">${esc(g.arcade.message?.text || '')}</div><div class="actions">${btn('haggle', `Counteroffer${n.haggles ? ` (${2 - n.haggles} left)` : ''}`, n.haggles >= 2 || n.attempts.length || n.running || n.closed ? 'disabled' : '')}</div>${rizzPanel(g, l)}<details><summary>Supplier & contract reference</summary>${esc(l.profile)}. ${money(n.price)} per GPU-hour × ${V7.hours} hours × ${l.qty} GPUs. Fixed three-month service rights; immediately assignable, fully paid. No remaining liability or finance fee.</details></div><div class="actions modal-footer">${btn('buy', `Sign & pay · ${money(cost)}`, `class="primary" ${cost > cash(g) || n.running || n.closed ? 'disabled' : ''}`)}${btn('leave', 'Back to floor', `class="quiet" ${n.running ? 'disabled' : ''}`)}</div>`;
+  return `<div class="modal-content"><p class="eyebrow">Claimed · floor paused · no purchase yet</p><h2 id="dialog-title">${esc(l.firm)}</h2><p>${badge(l.gpu)} <b>${l.qty} GPUs</b> · Trust ${f?.trust || 0}</p><p class="total">${money(cost)}</p><p>Total purchase cost · all three months paid</p><div class="economics"><span>Cash available</span><strong>${money(cash(g))}</strong><span>Cash after signing</span><strong class="${cost > cash(g) ? 'bad' : ''}">${money(cash(g) - cost)}</strong><span>Uncovered cash-order fit</span><strong>${cover} / ${l.qty} GPUs</strong><span>Expected cash-delivery profit</span><strong>${money((o ? cents(cover, o.rate) : 0) - cost)}</strong></div><p class="muted">${cover ? `Payment requires a separate delivery to ${esc(o.name)} after buying. ${l.qty - cover ? `${l.qty - cover} GPUs are not covered by this startup cash order.` : ''}` : (o ? 'Existing inventory or the startup cash budget limits cash sales. Equity is speculative and brings in no cash.' : 'No uncovered startup cash order. Compare outside buyers before buying; unused capacity loses its full cost.')}</p><div class="message ${g.arcade.message?.tone || ''}" role="status">${esc(g.arcade.message?.text || '')}</div><section class="negotiation-tape" aria-label="Negotiation tape" aria-live="polite">${n.tape.map(t => `<p><b>${esc(t.speaker)}</b> ${esc(t.text)}</p>`).join('')}</section><p>${esc(n.posture)} posture · ${n.patience} counteroffers of patience left</p><fieldset class="counter-controls" ${!n.patience || n.attempts.length || n.running || n.closed ? 'disabled' : ''}><legend>YOUR NUMBER · cents per GPU-hour</legend><input data-counter aria-label="Your counteroffer in cents per GPU-hour" type="number" min="1" max="${n.price}" step="1" value="${Math.max(1,n.price-8)}"><div class="actions">${[-5,-1,1,5].map(v=>btn('step-counter',`${v>0?'+':''}${v}¢`,`data-step="${v}"`)).join('')}${btn('haggle','COUNTER')}</div><p data-counter-total></p></fieldset>${rizzPanel(g, l)}<details><summary>Supplier & contract reference</summary>${esc(l.profile)}. ${money(n.price)} per GPU-hour × ${V7.hours} hours × ${l.qty} GPUs. Fixed three-month service rights; immediately assignable, fully paid. No remaining liability or finance fee.</details></div><div class="actions modal-footer">${btn('buy', `Sign & pay · ${money(cost)}`, `class="primary" ${cost > cash(g) || n.running || n.closed ? 'disabled' : ''}`)}${btn('leave', 'Back to floor', `class="quiet" ${n.running ? 'disabled' : ''}`)}</div>`;
 }
 
 function confirmation(g) {
   const c = g.arcade.confirm;
+  if (c.vcId) return vcReview(g,c.vcId,money);
+  if (c.receipt) return contract(c.receipt, money, true);
   if (c.buyerId) return buyerConfirmation(g, c.buyerId);
-  if (c.restart) return `<h2 id="dialog-title">Start a fresh broker run?</h2><p>This replaces your current V7.1 run. Earlier version saves are preserved.</p><div class="actions">${btn('restart', 'Start fresh', 'class="danger"')}${btn('cancel', 'Keep this run')}</div>`;
+  if (c.restart) return `<h2 id="dialog-title">Start a fresh broker run?</h2><p>This replaces your current V7.2 run. Earlier version saves are preserved.</p><div class="actions">${btn('restart', 'Start fresh', 'class="danger"')}${btn('cancel', 'Keep this run')}</div>`;
   if (c.finish) return `<h2 id="dialog-title">Close this quarter?</h2><p>Unsold inventory expires with no refund. ${money(inventoryCost(g))} will become a realized loss.</p><div class="actions">${btn('finish', 'Close quarter', 'class="danger"')}${btn('cancel', 'Keep trading')}</div>`;
   const d = deliveryQuote(g, c.orderId, c.qty, c.payment), o = g.arcade.orders.find(o => o.id === c.orderId);
   if (!d) return `<h2 id="dialog-title">Delivery unavailable</h2>${btn('cancel', 'Back to floor')}`;
@@ -89,7 +108,7 @@ function confirmation(g) {
 
 function report(g) {
   const r = g.arcade.history.at(-1);
-  return `${head()}<section class="report panel"><p class="eyebrow">Quarter ${r.q} · books closed</p><h2>${r.orders[0].milestone ? 'You powered their next step.' : 'Every deal leaves a mark.'}</h2><div class="stats"><div class="stat">Quarter profit<b>${money(Math.round(r.profit * 100))}</b></div><div class="stat">Cash available<b>${money(cash(g))}</b></div><div class="stat">Delivered<b>${r.delivered} GPUs</b></div><div class="stat">Expired inventory loss<b>${money(r.lost)}</b></div></div>${r.orders.map(o => `<p><b>${esc(o.name)}</b> · ${o.delivered}/${o.qty} ${o.gpu} delivered${o.milestone ? ' · ORDER COMPLETE · Clout +40' : ''}</p>`).join('')}<p>Outside buyers: ${r.outsideSold} GPUs sold · ${money(r.outsideProfit)} realized sale profit.</p>${inventory(g)}<h3>Your startups</h3>${r.startups.map(s => `<article class="portfolio-item"><p><b>${esc(s.name)} · ${esc(s.status)}</b></p><p>${esc(s.text)} ${esc(s.delivery || '')}</p>${s.stake ? `<p>${(s.stake * 100).toFixed(3)}% ownership · ${money(Math.round(s.paper * 100))} paper value</p>` : ''}</article>`).join('')}${r.lines.map(l => `<p>${esc(l.text)}</p>`).join('')}<p>Tycoon Score ${score(g).total} = profit ${score(g).profit} + Clout ${score(g).clout} + compute ${score(g).cp}. Paper equity is excluded.</p><p class="muted">Next quarter: new finite supply. ${g.q <= 2 ? 'Build your anchor relationship before the wider market opens in Q3.' : 'Compare opportunities across startup customers.'}</p><p class="hsc-transition"><b>${esc(BRAND.name)}</b> · ${esc(BRAND.adBody[0])}</p>${btn('next', `Open quarter ${g.q}`, 'class="primary"')} ${btn('restart-review', 'New broker run', 'class="quiet"')}</section>`;
+  return `${head()}<section class="report panel"><p class="eyebrow">Quarter ${r.q} · books closed</p><h2>${r.orders[0].milestone ? 'You powered their next step.' : 'Every deal leaves a mark.'}</h2><div class="stats"><div class="stat">Quarter profit<b>${money(Math.round(r.profit * 100))}</b></div><div class="stat">Cash available<b>${money(cash(g))}</b></div><div class="stat">Delivered<b>${r.delivered} GPUs</b></div><div class="stat">Expired inventory loss<b>${money(r.lost)}</b></div></div>${r.orders.map(o => `<p><b>${esc(o.name)}</b> · ${o.delivered}/${o.qty} ${o.gpu} delivered${o.milestone ? ' · ORDER COMPLETE · Clout +40' : ''}</p>`).join('')}<p>Outside buyers: ${r.outsideSold} GPUs sold · ${money(r.outsideProfit)} realized sale profit.</p>${inventory(g)}<p>Secondary cash this quarter: ${money(g.arcade.secondarySales.filter(s=>s.q===r.q).reduce((n,s)=>n+s.proceeds,0))}. Equity remains speculative; see the financial desk next quarter.</p><h3>Your startups</h3>${r.startups.map(s => `<article class="portfolio-item"><p><b>${esc(s.name)} · ${esc(s.status)}</b></p><p>${esc(s.text)} ${esc(s.delivery || '')}</p>${s.stake ? `<p>${(s.stake * 100).toFixed(3)}% ownership · ${money(Math.round(s.paper * 100))} paper value</p>` : ''}</article>`).join('')}${r.lines.map(l => `<p>${esc(l.text)}</p>`).join('')}<p>Tycoon Score ${score(g).total} = profit ${score(g).profit} + Clout ${score(g).clout} + compute ${score(g).cp}. Paper equity is excluded.</p><p class="muted">Next quarter: new finite supply. ${g.q <= 2 ? 'Build your anchor relationship before the wider market opens in Q3.' : 'Compare opportunities across startup customers.'}</p><p class="hsc-transition"><b>${esc(BRAND.name)}</b> · ${esc(BRAND.adBody[0])}</p>${btn('next', `Open quarter ${g.q}`, 'class="primary"')} ${btn('restart-review', 'New broker run', 'class="quiet"')}</section>`;
 }
 
 function render() {
@@ -97,9 +116,9 @@ function render() {
   const focused = document.activeElement?.dataset?.action;
   const g = store.state;
   if (store.error) { root.innerHTML = `<div class="shell"><h1>Trading paused</h1><p role="alert">${esc(store.error)}</p></div>`; return; }
-  if (!g) { root.innerHTML = `<div class="shell">${head()}<section class="welcome panel"><p class="eyebrow">Start small. Make the next deal count.</p><h1>Could you become the next Cluster Tycoon?</h1><p>Imagine if compute buyers, sellers, and the money were all in one room.</p><ol><li>Claim a small GPU lot. The floor pauses while you negotiate.</li><li>Find a good price and sign. Deliver part of your startup’s order.</li><li>Take cash for the next deal, or equity in their future.</li></ol><p>You start with $65,000 and one startup to supply. Your V7.1 progress saves separately on this device.</p>${btn('start', 'Start trading', 'class="primary"')}<p class="muted">Existing game: <a href="lab.html">V6.4 / Daily Floor / Venture</a></p></section></div>`; return; }
-  root.innerHTML = `<div class="shell">${g.phase === 'floor' ? floor(g) : report(g)}</div>${activeLot(g) || g.arcade.confirm ? `<div class="modal-shade"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title">${activeLot(g) ? negotiation(g, activeLot(g)) : `<div class="modal-content">${confirmation(g)}</div>`}</section></div>` : ''}`;
-  paintSale();
+  if (!g) { root.innerHTML = `<div class="shell">${head()}<section class="welcome panel"><p class="eyebrow">Start small. Make the next deal count.</p><h1>Could you become the next Cluster Tycoon?</h1><p>Imagine if compute buyers, sellers, and the money were all in one room.</p><ol><li>Claim a small GPU lot. The floor pauses while you negotiate.</li><li>Find a good price and sign. Deliver part of your startup’s order.</li><li>Take cash for the next deal, or equity in their future.</li></ol><p>You start with $65,000 and one startup to supply. Your V7.2 progress saves separately on this device.</p>${btn('start', 'START TRADING', 'class="primary"')}<p class="muted">Existing game: <a href="lab.html">V6.4 / Daily Floor / Venture</a></p></section></div>`; return; }
+  root.innerHTML = `<div class="shell">${g.phase === 'floor' ? floor(g) : report(g)}</div>${activeLot(g) || g.arcade.confirm ? `<div class="modal-shade"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title">${g.arcade.signing ? `<div class="modal-content">${contract(g.arcade.signing, money)}</div>` : activeLot(g) ? negotiation(g, activeLot(g)) : `<div class="modal-content">${confirmation(g)}</div>`}</section></div>` : ''}`;
+  paintSale(); paintCounter(); paintVC();
   const modal = root.querySelector('.modal');
   root.querySelector('.shell').inert = !!modal;
   if (modal) (modal.querySelector('[data-action="stop-rizz"]') || modal.querySelector(`[data-action="${focused}"]:not(:disabled)`) || modal.querySelector('button:not(:disabled)'))?.focus({ preventScroll: true });
@@ -116,20 +135,27 @@ function render() {
   } else { meterKey = null; if (focused === 'stop-rizz') root.querySelector('.rizz-panel, .rizz-result')?.scrollIntoView({ block: 'nearest' }); }
 }
 
-const visibleKey = g => [...g.arcade.lots.filter(l => available(g, l)), ...g.arcade.buyers.filter(b => buyerLive(g, b))].map(x => x.id).join(',');
+const visibleKey = g => [...g.arcade.lots.filter(l => available(g, l)), ...g.arcade.buyers.filter(b => buyerLive(g, b)), ...g.arcade.vcOffers.filter(b=>vcLive(g,b))].map(x => x.id).join(',');
 root.addEventListener('click', e => {
   const b = e.target.closest('button[data-action]'); if (!b || b.disabled) return;
   const action = b.dataset.action;
   if (action === 'start') { const p = new URLSearchParams(location.search).get('seed'); store.start(p && /^\d+$/.test(p) ? Number(p) >>> 0 : newSeed()); if (matchMedia('(prefers-reduced-motion: reduce)').matches) store.act(g => { g.arcade.assistance = true; return true; }); render(); return; }
   if (action === 'claim') { returnFocus = `[data-action="claim"][data-id="${b.dataset.id}"]`; act(g => claim(g, b.dataset.id)); }
-  else if (action === 'haggle') act(haggle);
+  else if (action === 'haggle') { const offer=Number(root.querySelector('[data-counter]').value); act(g=>haggle(g,offer)); }
+  else if (action === 'step-counter') { const input=root.querySelector('[data-counter]'); input.value=Math.max(1,Math.min(Number(input.max),Number(input.value)+Number(b.dataset.step))); paintCounter(); }
   else if (action === 'start-rizz') act(startRizz);
   else if (action === 'stop-rizz') stopMeter();
-  else if (action === 'buy') act(buy);
+  else if (action === 'buy') { if (act(g => prepareSigning(g, 'purchase'))) sound?.printer(.35); }
+  else if (action === 'sign-it') { if (act(signTrade)) { sound?.scratch(.35); const playing=sound; setTimeout(()=>{if(playing&&sound===playing&&store.state.arcade.confirm?.receipt){playing.stamp();playing.bell({strikes:1});}},matchMedia('(prefers-reduced-motion: reduce)').matches?0:450); } }
+  else if (action === 'cancel-sign') act(g => { g.arcade.signing = null; return true; });
+  else if (action === 'capital') { root.querySelector('#capital-desk')?.scrollIntoView({ block: 'center' }); }
+  else if (action === 'sound') { sound = sound ? null : (audio ||= createAudio()); b.textContent = sound ? 'Sound: on' : 'Sound: off'; }
   else if (action === 'leave') act(leave);
   else if (action === 'prepare') { const card = b.closest('[data-order]'); returnFocus = `[data-action="prepare"][data-id="${b.dataset.id}"]`; act(g => { if (prepareDelivery(g, b.dataset.id, Number(card.querySelector('input').value), card.querySelector('select').value)) return true; notice(g, 'Delivery unavailable: use a whole GPU quantity within your inventory and the order. For cash, stay within the startup’s cash budget, or choose equity.', 'bad'); return true; }); }
+  else if (action === 'review-vc') act(g=>reviewVC(g,b.dataset.id));
+  else if (action === 'sell-vc') {const bps=Math.round(Number(root.querySelector('[data-vc-percent]').value)*100);if(act(g=>prepareSigning(g,'secondary',bps)))sound?.printer(.35);}
   else if (action === 'review-buyer') act(g => reviewBuyer(g, b.dataset.id));
-  else if (action === 'sell-buyer') { const qty = Number(root.querySelector('[data-sale-qty]').value); act(g => sellBuyer(g, qty)); }
+  else if (action === 'sell-buyer') { const qty = Number(root.querySelector('[data-sale-qty]').value); if (act(g => prepareSigning(g, 'buyer', qty))) sound?.printer(.35); }
   else if (action === 'deliver') act(deliver);
   else if (action === 'cancel') act(g => { g.arcade.confirm = null; return true; });
   else if (action === 'finish-review') act(g => { if (g.arcade.active || g.arcade.confirm) return false; g.arcade.confirm = { finish: true }; return true; });
@@ -145,13 +171,13 @@ function stopMeter() {
   const pos = markerAt(entry.params, performance.now() - meterStart);
   act(g => resolveRizz(g, pos));
 }
-root.addEventListener('input', e => { if (e.target.matches('[data-sale-qty]')) paintSale(); });
+root.addEventListener('input', e => { if (e.target.matches('[data-sale-qty]')) paintSale(); if(e.target.matches('[data-counter]')) paintCounter(); if(e.target.matches('[data-vc-percent]'))paintVC(); });
 root.addEventListener('change', e => { if (e.target.matches('[data-assist]')) act(g => { const n = activeLot(g)?.negotiation; if (!n || n.attempts.length) return false; g.arcade.assistance = e.target.checked; return true; }); });
 document.addEventListener('keydown', e => {
   const modal = root.querySelector('.modal'); if (!modal) return;
   if ((e.key === ' ' || e.key === 'Enter') && activeLot(store.state)?.negotiation?.running) { e.preventDefault(); if (!e.repeat) stopMeter(); return; }
-  if (e.key === 'Escape') { e.preventDefault(); if (store.state.arcade.confirm) act(g => { g.arcade.confirm = null; return true; }); else act(leave); }
-  if (e.key === 'Tab') { const all = [...modal.querySelectorAll('button:not(:disabled), input, select, summary, a')]; const first = all[0], end = all.at(-1); if (e.shiftKey && document.activeElement === first) { e.preventDefault(); end.focus(); } else if (!e.shiftKey && document.activeElement === end) { e.preventDefault(); first.focus(); } }
+  if (e.key === 'Escape') { e.preventDefault(); if (store.state.arcade.signing) act(g => { g.arcade.signing = null; return true; }); else if (store.state.arcade.confirm) act(g => { g.arcade.confirm = null; return true; }); else act(leave); }
+  if (e.key === 'Tab') { const all = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a')]; const first = all[0], end = all.at(-1); if (e.shiftKey && document.activeElement === first) { e.preventDefault(); end.focus(); } else if (!e.shiftKey && document.activeElement === end) { e.preventDefault(); first.focus(); } }
 });
 setInterval(() => {
   const now = performance.now(), dt = (now - last) / 1000; last = now;
@@ -163,6 +189,7 @@ setInterval(() => {
   root.querySelector('[data-clock]').textContent = `${Math.ceil(V7.seconds - next.arcade.time)}s`;
   for (const el of root.querySelectorAll('[data-expiry]')) el.textContent = Math.ceil(next.arcade.lots.find(l => l.id === el.dataset.expiry).until - next.arcade.time);
   for (const el of root.querySelectorAll('[data-buyer-expiry]')) el.textContent = Math.ceil(next.arcade.buyers.find(b => b.id === el.dataset.buyerExpiry).until - next.arcade.time);
+  for(const el of root.querySelectorAll('[data-vc-expiry]'))el.textContent=Math.ceil(next.arcade.vcOffers.find(b=>b.id===el.dataset.vcExpiry).until-next.arcade.time);
   const upcoming = next.arcade.lots.find(l => l.at > next.arcade.time);
   root.querySelector('[data-next]').textContent = upcoming ? `Next release in ${Math.ceil(upcoming.at - next.arcade.time)}s of floor time.` : 'All releases are on the board. Supply is finite.';
 }, 250);

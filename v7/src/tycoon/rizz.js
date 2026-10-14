@@ -1,6 +1,6 @@
 // Explicit, replayable outcomes. No random success roll; the meter position decides.
 import { stream } from '../util.js';
-import { activeLot, notice } from './arcade.js';
+import { activeLot, notice, cents } from './arcade.js';
 
 export function rizzParameters(g, lot) {
   const n = lot.negotiation, attempt = n.attempts.length + 1;
@@ -25,7 +25,7 @@ export function markerAt(params, elapsedMs) {
 
 export function startRizz(g) {
   const l = activeLot(g), n = l?.negotiation;
-  if (g.phase !== 'floor' || !n || n.closed || n.running || l.status !== 'open') return false;
+  if (g.arcade.signing || g.phase !== 'floor' || !n || n.closed || n.running || l.status !== 'open') return false;
   const params = rizzParameters(g, l);
   if (!params || params.concession <= 0) return false;
   // Consume and persist the attempt BEFORE the moving meter starts.
@@ -63,8 +63,8 @@ export function resolveRizz(g, position, interrupted = false) {
   trust = f.trust - beforeTrust; g.clout += clout;
   Object.assign(entry, { status: 'resolved', position, distance, tier, accuracy, precision, multiplier, reward, interrupted, after: n.price, trust, clout, walked });
   n.running = null;
-  const outcome = tier === 'hit' ? `${precision === 'perfect' ? 'BULLSEYE · PERFECT RIZZ' : precision.toUpperCase() + ' RIZZ HIT'} · ${entry.before - n.price}¢/GPU-hour saved (${Math.round(multiplier * 100)}% reward). Bank the deal or risk the next attempt.` : walked ? 'CATASTROPHIC OVER-RIZZ · supplier walked. This lot is gone.' : tier === 'near' ? 'NEAR MISS · ' + (p.attempt === 1 ? 'your quote is safe.' : 'some or all Rizz gains lost.') : 'MISSED · ' + (p.attempt === 1 ? 'your quote is safe.' : 'negotiated gains lost.');
-  notice(g, `${interrupted ? 'Interrupted attempt settled as a severe miss. ' : ''}${outcome} Trust ${trust >= 0 ? '+' : ''}${trust}${clout ? ` · Clout ${clout}` : ''}.`, tier === 'hit' ? 'good' : 'bad');
+  const outcome = tier === 'hit' ? `${precision === 'perfect' ? 'BULLSEYE · PERFECT RIZZ' : precision.toUpperCase() + ' RIZZ HIT'} · ${new Intl.NumberFormat('en-US', {style:'currency',currency:'USD'}).format(cents(l.qty,entry.before-n.price)/100)} SAVED (${Math.round(multiplier * 100)}% reward). Bank the deal or risk the next attempt.` : walked ? 'CATASTROPHIC OVER-RIZZ · supplier walked. This lot is gone.' : tier === 'near' ? 'NEAR MISS · ' + (p.attempt === 1 ? 'your quote is safe.' : 'some or all Rizz gains lost.') : 'MISSED · ' + (p.attempt === 1 ? 'your quote is safe.' : 'negotiated gains lost.');
+  notice(g, `${interrupted ? 'Interrupted attempt settled as a severe miss. ' : ''}${outcome} ${tier !== 'hit' && n.price > entry.before ? `Concessions lost: $${(cents(l.qty,n.price-entry.before)/100).toFixed(2)}. ` : ''}Trust ${trust >= 0 ? '+' : ''}${trust}${clout ? ` · Clout ${clout}` : ''}.`, tier === 'hit' ? 'good' : 'bad');
   return true;
 }
 

@@ -1,0 +1,30 @@
+/* Reuses the original marble hall/pit and vector people; V7-only presentation. */
+:root { background:#26221c; }
+.masthead { border-bottom:4px double #ba985e; }
+.exchange { border:3px solid #ab8b54; margin:18px 0; box-shadow:0 12px 24px #0006; }
+.exchange-board { display:grid; gap:8px; text-align:center; padding:18px; border:7px solid #4c3927; background:#141915; color:#f0cd80; font-family:monospace; letter-spacing:.12em; }
+.exchange-board small { color:#aee3b6; letter-spacing:.02em; }
+.arcade-hall { height:360px; }
+.arcade-desks { position:relative; z-index:2; display:flex; justify-content:space-around; align-items:flex-end; flex-wrap:wrap; height:100%; padding:20px; gap:8px; }
+.exchange-desk { width:145px; min-height:0; padding:0; background:transparent!important; border:0; display:grid; justify-items:center; color:#f6e4b6; }
+.hall-person { display:block; width:90px; height:108px; margin-bottom:-12px; }
+.hall-person svg { width:100%;height:100%; }
+.exchange-desk:nth-child(even) { align-self:flex-start; }
+.desk-monitor { padding:12px 6px; background:#11241d; border:5px solid #d3c4a2; font:12px monospace; color:#b0efb7; width:135px; box-shadow:0 4px 5px #0009; z-index:1; }
+.buyer .desk-monitor { color:#f7cf78; }.capital .desk-monitor { color:#c7b6f3; }
+.desk-plaque { display:block; width:145px; padding:12px 6px; background:linear-gradient(#855136,#412318); border-top:5px solid #b29254; font-size:12px; box-shadow:0 8px 5px #0007; }
+.panel, .lot { border-radius:2px; }.lot { border-bottom:5px solid #805333; }
+.arcade-printer { position:relative; background:#c0b594; color:#282820; padding:16px; border:4px outset #d6cbae; border-radius:9px 9px 0 0; font:12px monospace; text-align:right; }
+.arcade-printer i { display:block; height:8px; background:#171b16; margin:8px; }
+.arcade-contract { position:relative; background:repeating-linear-gradient(#f5edd8 0 29px,#e3e8ce 29px 58px); color:#28251d; border-inline:12px dotted #b9b196; padding:24px; font:14px/1.6 monospace; box-shadow:0 8px 15px #0008; margin-bottom:20px; }
+.arcade-contract h3 { margin-top:14px; }.arcade-contract dl { display:grid; grid-template-columns:1fr 1.4fr; gap:10px; border-block:2px solid #30352a; padding:14px 0; }.arcade-contract dd { margin:0; overflow-wrap:anywhere; }.contract-total { font-weight:bold; font-size:22px; }
+.signature { position:relative; min-height:90px; margin-top:20px; border-bottom:1px solid #29291e; }.signature span { font:italic 32px Georgia,serif; }.trade-stamp { display:block; color:#a33226; border:4px double #a33226; padding:6px; transform:rotate(-8deg); width:max-content; max-width:100%; font-size:19px; animation:trade-stamp .25s ease-out .45s both; }
+.printing .arcade-contract { animation:paper-feed .45s ease-out; }
+@keyframes paper-feed { from { transform:translateY(-12px); opacity:.5; } }
+@keyframes trade-stamp { from { transform:scale(1.4) rotate(-8deg); opacity:0; } }
+@media(max-width:760px) { .arcade-hall {height:auto;min-height:300px;}.arcade-desks {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:12px;gap:18px;}.exchange-desk {width:100%;}.exchange-desk:nth-child(even){align-self:auto;}.hall-person{width:65px;height:78px;}.desk-plaque{max-width:100%;}.exchange-board{font-size:13px;}.arcade-contract{padding:12px;border-width:6px;}.arcade-contract dl{grid-template-columns:1fr;gap:2px;}.arcade-contract dd{margin-bottom:10px;} }
+@media(prefers-reduced-motion:reduce) { .printing .arcade-contract,.trade-stamp{animation:none;} }
+.negotiation-tape { max-height:180px; overflow:auto; padding:14px; background:repeating-linear-gradient(#0b1c15 0 3px,#10251b 3px 4px); color:#b4efbc; border:6px solid #baab8f; font:14px/1.5 monospace; }
+.negotiation-tape p:last-child { color:#ffda91; }.counter-controls { border:1px solid #ab956c; margin-top:14px; padding:12px; }.counter-controls input { width:100%; }.counter-controls .actions { gap:6px; }.counter-controls button { padding:10px; }
+.capital-desk { border-top:5px solid #a99bcb; }.capital-desk article { border-block:1px solid #8f83a7; padding:14px 0; margin-bottom:14px; }.capital-desk details { margin-top:12px; }.capital-desk input { max-width:100%; }
+.arcade-contract small { color:#595743; }.signed-stroke { display:block; width:210px; max-width:100%; height:54px; }.signed-stroke path { fill:none;stroke:#273763;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:800;stroke-dashoffset:0;animation:signature-draw .45s ease-out; }@keyframes signature-draw {from{stroke-dashoffset:800;}}@media(prefers-reduced-motion:reduce){.signed-stroke path{animation:none;}}
