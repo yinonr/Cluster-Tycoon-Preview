@@ -1,5 +1,5 @@
 import { fortuneReport } from '../ui/arcade-fortunes.js';
-import { decisionView } from '../ui/arcade-choices.js';
+import { decisionView, discoveryView, deliveryReview, selectedOutcome, accounting } from '../ui/arcade-choices.js';
 import { gpuBadge } from '../ui/arcade-gpu.js';
 import { capitalDesk, vcReview, vcMath } from '../ui/arcade-vc.js';
 import { vcLive, reviewVC } from '../tycoon/arcade-vc.js';
@@ -15,6 +15,8 @@ import { arcadeStore } from '../tycoon/arcade-store.js';
 import { rizzParameters, failurePrice, markerAt, startRizz, resolveRizz, recoverRizz } from '../tycoon/rizz.js';
 
 let audio = null, sound = null;
+// Transient presentation choices; pending economic reviews keep the V7.4 schema.
+let choosing=false, reviewQty=null;
 const root = document.querySelector('#arcade');
 let storage;
 try { storage = window.localStorage; } catch { storage = { getItem() { throw Error('Storage blocked'); } }; }
@@ -22,16 +24,17 @@ const store = arcadeStore(storage);
 if (store.state) store.act(recoverRizz);
 const money = c => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(c / 100);
 const badge = gpuBadge;
+const visibleControl = el => !!el.getClientRects().length && !el.closest('details:not([open]) > :not(summary)');
 const btn = (action, label, extra = '') => `<button type="button" data-action="${action}" ${extra}>${label}</button>`;
 let last = performance.now(), lastPaint = '', returnFocus = null;
 let meterStart = 0, meterFrame = 0, meterKey = null;
 const act = fn => { const ok = store.act(fn); if (ok || store.error) render(); return ok; };
-const head = () => `<header class="masthead"><div><p class="eyebrow">Haight Street Compute · V7.4 playtest</p><h1>Cluster Tycoon</h1></div><span class="eyebrow">Fortune Favors the Bold</span><button data-action="sound" class="quiet">Sound: ${sound ? 'on' : 'off'}</button></header>`;
+const head = () => `<header class="masthead"><div><p class="eyebrow">Haight Street Compute · V7.5 playtest</p><h1>Cluster Tycoon</h1></div><span class="eyebrow">Fortune Favors the Bold</span><button data-action="sound" class="quiet">Sound: ${sound ? 'on' : 'off'}</button></header>`;
 
 function orderCard(g, o) {
   const qty = Math.min(remaining(o), owned(g, o.gpu));
   const funded = cashCapacity(g, o), defaultQty = funded ? Math.min(qty, funded) : qty;
-  return `<article class="panel" data-order="${o.id}"><p class="eyebrow">${o.client === g.arcade.anchor ? 'Your anchor startup' : 'Startup opportunity'}</p><h2>${esc(o.name)}</h2><p>${esc(g.startups.find(s=>s.id===o.client)?.v74?.stage||"Prototype")} ${o.critical?"· CRITICAL DEADLINE: missing compute consumes runway and worsens growth/risk.":""}</p><p>${badge(o.gpu)} ${remaining(o) ? `${remaining(o)} GPUs still needed` : '<b class="good">Order complete · launch compute secured</b>'}</p><div class="progress" role="progressbar" aria-label="${esc(o.name)} order progress" aria-valuemin="0" aria-valuemax="${o.qty}" aria-valuenow="${o.delivered}"><span style="width:${100 * o.delivered / o.qty}%"></span></div><p><b>${o.delivered} / ${o.qty} delivered</b> · ${owned(g, o.gpu)} in your inventory</p><p>Order value <b>${money(cents(o.qty, o.rate))}</b><br>Cash for ${funded} more GPUs · or take equity</p>${qty ? `<div class="order-controls"><label>GPUs<input aria-label="GPUs for ${esc(o.name)}" type="number" value="${defaultQty}" min="1" max="${qty}" step="1"></label><label>Receive<select aria-label="Compensation for ${esc(o.name)}"><option value="cash" ${!funded ? 'disabled' : ''}>Cash</option><option value="equity" ${!funded ? 'selected' : ''}>Startup equity</option></select></label>${btn('prepare', 'Review delivery', `data-id="${o.id}" class="primary"`)}</div>` : `<p class="muted">${remaining(o) ? `Buy ${o.gpu}, then deliver any amount for cash or equity.` : 'Completion reward: Trust +1 · Clout +40.'}</p>`}</article>`;
+  return `<article class="panel" data-order="${o.id}"><p class="eyebrow">${o.client === g.arcade.anchor ? 'Your anchor startup' : 'Startup opportunity'}</p><h2>${esc(o.name)}</h2><p>${esc(g.startups.find(s=>s.id===o.client)?.v74?.stage||"Prototype")} ${o.critical?"· CRITICAL DEADLINE: missing compute consumes runway and worsens growth/risk.":""}</p><p>${badge(o.gpu)} ${remaining(o) ? `${remaining(o)} GPUs still needed` : '<b class="good">Order complete · launch compute secured</b>'}</p><div class="progress" role="progressbar" aria-label="${esc(o.name)} order progress" aria-valuemin="0" aria-valuemax="${o.qty}" aria-valuenow="${o.delivered}"><span style="width:${100 * o.delivered / o.qty}%"></span></div><p><b>${o.delivered} / ${o.qty} delivered</b> · ${owned(g, o.gpu)} in your inventory</p><p>Order value <b>${money(cents(o.qty, o.rate))}</b><br>Cash for ${funded} more GPUs · or take equity</p>${qty ? `<div class="order-controls"><label>GPUs<input aria-label="GPUs for ${esc(o.name)}" type="number" value="${defaultQty}" min="1" max="${qty}" step="1"></label><label>Receive<select aria-label="Compensation for ${esc(o.name)}"><option value="cash" ${!funded ? 'disabled' : ''}>Cash</option><option value="equity" ${!funded ? 'selected' : ''}>Startup equity</option></select></label>${btn('prepare', 'Review delivery', `data-id="${o.id}" class="primary"`)}</div><div class="order-outcome" data-order-preview></div>` : `<p class="muted">${remaining(o) ? `Buy ${o.gpu}, then deliver any amount for cash or equity.` : 'Completion reward: Trust +1 · Clout +40.'}</p>`}</article>`;
 }
 
 const cashOrder = (g, l) => g.arcade.orders.find(o => o.gpu === l.gpu && cashCapacity(g, o) > owned(g, o.gpu)) || g.arcade.orders.find(o => o.gpu === l.gpu && remaining(o));
@@ -54,16 +57,29 @@ function buyers(g) {
   const live = g.arcade.buyers.filter(b => buyerLive(g, b));
   return `<section class="buyer-floor" id="buyers" tabindex="-1"><h2>Buyer Desks</h2><p class="muted">Cash now, or progress and equity with your anchor. Interest is not a sale.</p>${live.map(b => `<article class="panel" data-buyer="${b.id}"><h3>${esc(b.name)}</h3><p>${badge(b.gpu)} ${b.qty - b.filled} wanted · <b>${money(cents(b.qty - b.filled, b.rate))} total payment</b></p><p>${owned(g, b.gpu)} owned · ${b.flash ? 'FLASH BUYER' : 'Regular request'} · <span data-buyer-expiry="${b.id}">${Math.ceil(b.until - g.arcade.time)}</span>s left</p>${btn('review-buyer', 'Review buyer offer', `data-id="${b.id}"`)}</article>`).join('') || '<p class="muted">No outside buyers on the floor yet. New requests arrive during the quarter.</p>'}</section>`;
 }
-function buyerConfirmation(g, id) {
-  const b = g.arcade.buyers.find(b => b.id === id), qty = Math.min(owned(g, b.gpu), b.qty - b.filled);
-  return `<p class="eyebrow">Buyer offer · floor paused</p><h2 id="dialog-title">${esc(b.name)}</h2><p>${badge(b.gpu)} ${b.qty - b.filled} still wanted · ${money(cents(b.qty - b.filled, b.rate))} maximum payment</p><label>GPUs to sell <input data-sale-qty aria-label="GPUs to sell" type="number" min="1" max="${qty}" step="1" value="${qty || 1}"></label><div data-sale-math></div><p>Each right sells once. Your anchor receives no progress from this sale; its Trust does not decrease.</p><div class="actions">${btn('sell-buyer', 'Confirm cash sale', `class="primary" ${!qty ? 'disabled' : ''}`)}${btn('cancel', 'Back to floor', 'class="quiet"')}</div>`;
+function buyerConfirmation(g,id) {
+  const b=g.arcade.buyers.find(b=>b.id===id),max=Math.min(owned(g,b.gpu),b.qty-b.filled,Math.floor(b.budget/cents(1,b.rate))),qty=Math.min(reviewQty??max,max);
+  return `<p class="eyebrow">Outside buyer · floor paused</p><h2 id="dialog-title">${esc(b.name)}</h2><p>${badge(b.gpu)} · ${b.qty-b.filled} wanted</p><label>GPUs to sell <input data-sale-qty aria-label="GPUs to sell" type="number" min="1" max="${max}" step="1" value="${qty||1}"></label><div data-sale-math></div><div class="actions confirmation-actions">${btn('sell-buyer','REVIEW SALE CONTRACT',`class="primary" ${!qty?'disabled':''}`)}${btn('cancel','Back to floor','class="quiet"')}</div>`;
 }
 function paintSale() {
-  const input = root.querySelector('[data-sale-qty]'); if (!input) return;
-  const g = store.state, d = saleQuote(g, g.arcade.confirm.buyerId, Number(input.value));
-  const o = g.arcade.orders.find(o => o.gpu === d?.gpu && remaining(o));
-  root.querySelector('[data-sale-math]').innerHTML = d ? `<div class="economics"><span>Prepaid cost of these GPUs</span><strong>${money(d.cost)}</strong><span>Buyer cash payment</span><strong>${money(d.revenue)}</strong><span>Realized profit / loss</span><strong>${money(d.revenue - d.cost)}</strong><span>Cash after sale</span><strong>${money(cash(g) + d.revenue)}</strong></div><p>${o ? `${esc(o.name)} alternative: ${money(cents(Math.min(d.qty, cashCapacity(g, o)), o.rate))} funded cash for up to ${Math.min(d.qty, cashCapacity(g, o))} GPUs, or equity; advances its order.` : 'No matching startup order.'}</p>` + decisionView(g,d.gpu,d.qty,money,null,d.buyerId) : '<p>Choose a whole quantity within your available inventory and the buyer’s remaining demand.</p>';
-  root.querySelector('[data-action="sell-buyer"]').disabled = !d;
+  const input=root.querySelector('[data-sale-qty]');if(!input)return;
+  const g=store.state,d=saleQuote(g,g.arcade.confirm.buyerId,Number(input.value));
+  root.querySelector('[data-sale-math]').innerHTML=d?`${selectedOutcome(g,d,money)}<details><summary>Compare alternatives</summary>${decisionView(g,d.gpu,d.qty,money,null,d.buyerId,null,'outside')}</details>${accounting(g,d,money)}`:'<p>No funded sale for this quantity. Choose whole GPUs within your inventory and buyer demand.</p>';
+  root.querySelector('[data-action="sell-buyer"]').disabled=!d;
+}
+function paintOrders(card=null) {
+  const g=store.state;if(!g)return;
+  for(const el of card?[card]:root.querySelectorAll('[data-order]')) {
+    const box=el.querySelector('[data-order-preview]');if(!box)continue;
+    const o=g.arcade.orders.find(o=>o.id===el.dataset.order),qty=Number(el.querySelector('input').value),payment=el.querySelector('select').value,d=deliveryQuote(g,o.id,qty,payment);
+    const open=!!box.querySelector('details[open]');
+    box.innerHTML=d?`${payment==='cash'?`<strong>${money(d.revenue)}</strong> cash · <b>${d.revenue>=d.cost?'+':'−'}${money(Math.abs(d.revenue-d.cost))} ${d.revenue>=d.cost?'profit':'loss'}</b>`:`<strong>+${((d.stake-g.startups.find(s=>s.id===o.client).stake)*100).toFixed(3)} pp</strong> ownership · no cash today`}<details ${open?'open':''}><summary>Compare options</summary>${decisionView(g,o.gpu,qty,money,null,null,o.id,payment)}</details>`:'<p>Unavailable quantity for this route. Lower the quantity or choose equity.</p>';
+    el.querySelector('[data-action="prepare"]').disabled=!d;
+  }
+}
+function choiceReview(g) {
+  const c=g.arcade.confirm,o=g.arcade.orders.find(o=>o.id===c.orderId);
+  return `<p class="eyebrow">Choose a route · floor paused</p><h2 id="dialog-title">Your ${o.gpu}, your move</h2><label>GPUs <input data-choice-qty type="number" min="1" max="${owned(g,o.gpu)}" step="1" value="${c.qty}"></label><div data-choice-options>${decisionView(g,o.gpu,c.qty,money,null,null,o.id,c.payment)}</div><div class="actions confirmation-actions">${btn('return-confirm','Keep my choice','class="primary"')}${btn('cancel','Back to floor','class="quiet"')}</div>`;
 }
 function paintVC() {
   const input=root.querySelector('[data-vc-percent]');if(!input)return;
@@ -73,7 +89,7 @@ function paintVC() {
 function paintCounter() {
   const input=root.querySelector('[data-counter]'); if(!input)return;
   const l=activeLot(store.state), offer=Math.round(Number(input.value)*100), valid=Number.isFinite(Number(input.value))&&Math.abs(Number(input.value)*100-offer)<1e-7&&offer>0&&offer<=l.negotiation.price;
-  root.querySelector('[data-counter-total]').textContent=valid ? `Your proposed total: ${money(cents(l.qty,offer))}. Seller must agree first.` : 'Enter dollars per GPU-hour, to two decimal places, within the current quote.';
+  root.querySelector('[data-counter-total]').textContent=valid ? `Proposed total: ${money(cents(l.qty,offer))} · not agreed.` : 'Enter dollars per GPU-hour, to two decimal places, within the current quote.';
   root.querySelector('[data-action="haggle"]').disabled=!valid;
 }
 function floor(g) {
@@ -83,18 +99,18 @@ function floor(g) {
 }
 
 function rizzPanel(g, l) {
-  const n = l.negotiation, running = n.running && n.attempts[n.running - 1], p = running?.params || rizzParameters(g, l);
-  if (n.closed) return `<div class="rizz-result bad"><b>SUPPLIER WALKED</b><p>This lot is gone. Reliable purchases from this firm in later quarters rebuild Trust.</p></div>`;
-  if (!p || p.concession <= 0) return `<div class="rizz-result"><b>${n.attempts.length === 3 ? 'Three attempts used.' : 'Best available price reached.'}</b><p>Bank the current price or return to the floor.</p></div>`;
-  const worst=failurePrice(l,p.attempt);
-  const labels = ['Test your luck', 'Double down', 'Over-Rizz'];
-  const risk = ['Near miss: quote safe. Larger miss: up to 10% of original room returned to seller. Severe miss also costs 1 Trust.', 'Near miss: lose half your Rizz gains, −1 Trust. Larger miss: lose all Rizz gains, −2 to −4 Trust.', 'Near miss: lose Rizz gains, −3 Trust. Larger miss: lose all negotiated gains, −5 Trust. Severe miss: seller walks, −8 Trust and −20 Clout.'];
-  return `<section class="rizz-panel tier-${p.attempt}" aria-label="Rizz negotiation"><div class="row"><h3>${labels[p.attempt - 1]} · ${p.attempt} / 3</h3><span class="eyebrow">${p.attempt === 1 ? 'A little room to win.' : p.attempt === 2 ? 'Bigger upside. Your gains on the line.' : 'All or nothing.'}</span></div><p class="rizz-stakes"><b class="good">Perfect hit → ${money(cents(l.qty,n.price-p.concession))} total · save ${money(cents(l.qty, p.concession))}</b>${p.attempt > 1 ? ` · ${money(cents(l.qty, Math.max(0, n.base - n.price)))} of Rizz gains at risk` : ''}</p><p class="risk">${risk[p.attempt - 1]}</p><p>Failure quote up to: <b>${money(cents(l.qty,worst))}</b> · ${cash(g)>=cents(l.qty,worst)?"still affordable":"NOT affordable with your cash"}. Concessions at risk this attempt: <b>${money(cents(l.qty,worst-n.price))}</b>.</p><p class="muted">Trust ${p.trust} · Clout ${p.clout} · target ${Math.round(p.width * 100)}% wide · ${p.speed.toFixed(2)} bar widths/sec</p>${!n.attempts.length ? `<label class="assist"><input type="checkbox" data-assist ${g.arcade.assistance ? 'checked' : ''}> Calm pace: 45% slower, 35% smaller rewards</label>` : ''}<div class="meter" aria-hidden="true"><span class="target" style="left:${(0.5 - p.width / 2) * 100}%;width:${p.width * 100}%"></span><span class="marker" style="left:${markerAt(p, 0) * 100}%"></span></div><p class="small muted">${running ? 'Tap STOP, click, or press Space / Enter. The floor stays paused.' : 'Edge / strong / perfect: 40% / 70% / 100% reward. Aim for the center. Counteroffers need no timing.'}</p>${running ? btn('stop-rizz', 'STOP THE MARKER', 'class="stop-rizz primary"') : btn('start-rizz', `${p.attempt === 1 ? 'Try Rizz' : p.attempt === 2 ? 'Risk attempt 2' : 'Risk Over-Rizz'}`, `class="${p.attempt === 3 ? 'danger' : 'primary'}"`)}<p class="muted small">Starting consumes an attempt. Reloading mid-attempt counts as a severe miss.</p></section>`;
+  const n=l.negotiation, running=n.running&&n.attempts[n.running-1], p=running?.params||rizzParameters(g,l);
+  if(n.closed)return `<div class="rizz-result bad"><b>SUPPLIER WALKED</b><p>This lot is gone. Reliable purchases from this firm in later quarters rebuild Trust.</p></div>`;
+  if(!p||p.concession<=0)return `<div class="rizz-result"><b>${n.attempts.length===3?'Three attempts used.':'Best available price reached.'}</b><p>Bank the current price or return to the floor.</p></div>`;
+  const worst=failurePrice(l,p.attempt),labels=['Try Rizz','Double down','Over-Rizz'];
+  const risk=['Near miss: quote safe. Larger miss: up to 10% of original room returned to seller. Severe miss also costs 1 Trust.','Near miss: lose half your Rizz gains, −1 Trust. Larger miss: lose all Rizz gains, −2 to −4 Trust.','Near miss: lose Rizz gains, −3 Trust. Larger miss: lose all negotiated gains, −5 Trust. Severe miss: seller walks, −8 Trust and −20 Clout.'];
+  return `<section class="rizz-panel tier-${p.attempt} ${running?'rizz-playing':''}" aria-label="Rizz negotiation"><div class="row"><h3>${running?'Aim for the center':labels[p.attempt-1]}</h3><span class="eyebrow">Attempt ${p.attempt} / 3</span></div><p class="rizz-stakes"><b>Perfect hit: save ${money(cents(l.qty,p.concession))}${p.attempt>1?' more':''}</b></p>${running?`<div class="meter" aria-hidden="true"><span class="target" style="left:${(0.5-p.width/2)*100}%;width:${p.width*100}%"></span><span class="marker" style="left:${markerAt(p,0)*100}%"></span></div><p class="small">Tap STOP or press Space / Enter.</p>${btn('stop-rizz','STOP THE MARKER','class="stop-rizz primary"')}`:`<p class="risk">Miss: quote up to ${money(cents(l.qty,worst))}${cash(g)<cents(l.qty,worst)?' · unaffordable':''}${p.attempt===3?' · severe miss loses the lot':p.attempt===2?' · up to −4 Trust':' · severe miss −1 Trust'}.</p>${!n.attempts.length?`<label class="assist"><input type="checkbox" data-assist ${g.arcade.assistance?'checked':''}> Calm pace: slower, smaller rewards</label>`:''}${btn('start-rizz',labels[p.attempt-1].toUpperCase(),`class="${p.attempt===3?'danger':'primary'}"`)}<details><summary>Risk & timing rules</summary><p>${risk[p.attempt-1]}</p><p>Edge / strong / perfect: 40% / 70% / 100% reward. Perfect quote: ${money(cents(l.qty,n.price-p.concession))}. Up to ${money(cents(l.qty,worst-n.price))} in concessions at risk.</p><p>Trust ${p.trust} · Clout ${p.clout} · target ${Math.round(p.width*100)}% wide · ${p.speed.toFixed(2)} bar widths/sec. Calm pace: 45% slower, 35% smaller rewards.</p></details>`}<p class="small muted">Starting uses an attempt. Reloading mid-attempt is a severe miss.</p></section>`;
 }
 
-function negotiation(g, l) {
-  const n=l.negotiation, cost=cents(l.qty,n.price), response=n.tape.at(-1), reaction=n.running?'rizz':response.outcome||'opening';
-  return `<div class="modal-content negotiation-room"><p class="eyebrow">Supplier desk · floor paused</p><div class="seller-exchange reaction-${reaction}"><div class="seller-portrait">${portrait('seller',[...l.firm].reduce((n,c)=>n+c.charCodeAt(0),0))}</div><div><h2 id="dialog-title">${esc(l.firm)}</h2><p class="seller-line">${esc(n.running?'Show me what you have.':response.text)}</p><p>${badge(l.gpu)} × ${l.qty} · Trust ${g.firms[l.firm]?.trust||0}</p></div></div><div class="quote-board"><div>Opening ask<b>${money(l.ask)} / hr</b></div><div>Current quote<b>${money(n.price)} / hr</b></div><div>Whole contract<b>${money(cost)}</b></div></div><p class="liquidity">Cash after signing <b class="${cost>cash(g)?'bad':''}">${money(cash(g)-cost)}</b> · supplier minimum ${money(cents(l.qty,l.floor))}${cash(g)<cents(l.qty,l.floor)?' · Below the floor: this lot cannot rescue your cash.':''}</p>${l.liquidation?'<p class="flash-label">CAPACITY LIQUIDATION · deeper room, finite stock. Unsold rights expire.</p>':''}<div class="message ${g.arcade.message?.tone||''}" role="status">${esc(g.arcade.message?.text||'')}</div><section class="negotiation-tape" aria-label="Negotiation tape" aria-live="polite">${n.tape.slice(-5).map(t=>`<p><b>${esc(t.speaker)}</b> ${esc(t.text)}</p>`).join('')}</section><p>${esc(n.posture)} · ${n.patience} counteroffers left</p><fieldset class="counter-controls" ${!n.patience||n.attempts.length||n.running||n.closed?'disabled':''}><legend>YOUR NUMBER · $/GPU-hour</legend><input data-counter aria-label="Your counteroffer in dollars per GPU-hour" type="number" min="0.01" max="${(n.price/100).toFixed(2)}" step="0.01" value="${(Math.max(1,n.price-8)/100).toFixed(2)}"><div class="actions">${[-5,-1,1,5].map(v=>btn('step-counter',`${v>0?'+':'−'}$${(Math.abs(v)/100).toFixed(2)}`,`data-step="${v}"`)).join('')}${btn('haggle','COUNTER')}</div><p data-counter-total></p></fieldset>${rizzPanel(g,l)}${decisionView(g,l.gpu,l.qty,money,l)}<details><summary>Supplier & contract reference</summary>${esc(l.profile)}. ${money(n.price)} per GPU-hour × ${V7.hours} hours × ${l.qty} GPUs. Fixed three-month service rights; fully prepaid.</details></div><div class="actions modal-footer">${btn('buy',`BANK THE DEAL · ${money(cost)}`,`class="primary" ${cost>cash(g)||n.running||n.closed?'disabled':''}`)}${btn('leave','Back to floor',`class="quiet" ${n.running?'disabled':''}`)}</div>`;
+function negotiation(g,l) {
+  const n=l.negotiation,cost=cents(l.qty,n.price),response=n.tape.at(-1),reaction=n.running?'rizz':response.outcome||'opening',last=n.attempts.at(-1);
+  const result=last?.status==='resolved'?`<div class="rizz-feedback ${last.tier==='hit'?'good':'bad'}" role="status"><b>${last.walked?'DEAL LOST':last.tier==='hit'?`${last.precision.toUpperCase()} HIT · ${money(cents(l.qty,last.before-last.after))} SAVED`:`${last.interrupted?'INTERRUPTED · ':''}${last.tier==='near'?'NEAR MISS':'MISSED'} · ${last.after>last.before?money(cents(l.qty,last.after-last.before))+' GIVEN BACK':'QUOTE HELD'}`}</b>${last.trust||last.clout?`<small>Trust ${last.trust} ${last.clout?'· Clout '+last.clout:''}</small>`:''}</div>`:'';
+  return `<div class="modal-content negotiation-room ${n.running?'meter-stage':''}"><p class="eyebrow">Supplier desk · floor paused</p><div class="seller-exchange reaction-${reaction}"><div class="seller-portrait">${portrait('seller',[...l.firm].reduce((n,c)=>n+c.charCodeAt(0),0))}</div><div><h2 id="dialog-title">${esc(l.firm)}</h2><p class="seller-line">${esc(n.running?'Show me what you have.':response.text)}</p><p>${badge(l.gpu)} × ${l.qty} · Trust ${g.firms[l.firm]?.trust||0}</p></div></div><div class="current-deal"><span class="eyebrow">Whole contract</span><b>${money(cost)}</b><span>${money(n.price)} / GPU-hour · cash after ${money(cash(g)-cost)}</span></div>${n.running?'':`${result}${l.liquidation?'<p class="flash-label">CAPACITY LIQUIDATION · finite stock</p>':''}${!n.attempts.length&&!n.closed?`<fieldset class="counter-controls" ${!n.patience?'disabled':''}><legend>Your counter · $/GPU-hour</legend><div class="counter-entry"><input data-counter aria-label="Your counteroffer in dollars per GPU-hour" type="number" min="0.01" max="${(n.price/100).toFixed(2)}" step="0.01" value="${(Math.max(1,n.price-8)/100).toFixed(2)}">${btn('haggle','COUNTER')}</div><div class="actions counter-steps">${[-5,-1,1,5].map(v=>btn('step-counter',`${v>0?'+':'−'}$${(Math.abs(v)/100).toFixed(2)}`,`data-step="${v}"`)).join('')}<small>${n.patience} left</small></div><p data-counter-total></p></fieldset>`:''}`}${rizzPanel(g,l)}${n.running?'':`${!n.closed?discoveryView(g,l,money):''}<details class="conversation"><summary>Conversation & contract</summary><section class="negotiation-tape" aria-label="Negotiation tape">${n.tape.map(t=>`<p><b>${esc(t.speaker)}</b> ${esc(t.text)}</p>`).join('')}</section><p>${esc(n.posture)} · ${n.patience} counteroffers left. ${esc(l.profile)}.</p><p>Opening ask ${money(l.ask)} / hr · supplier minimum ${money(cents(l.qty,l.floor))}${cash(g)<cents(l.qty,l.floor)?' · Below the floor: this lot cannot rescue your cash.':''}. ${money(n.price)} per GPU-hour × ${V7.hours} hours × ${l.qty} GPUs. Fixed three-month service rights; fully prepaid.</p></details>`}</div><div class="actions modal-footer">${btn('buy',`${n.attempts.length?'BANK':'TAKE'} THE DEAL · ${money(cost)}`,`class="primary" ${cost>cash(g)||n.running||n.closed?'disabled':''}`)}${btn('leave','Walk away',`class="quiet" ${n.running?'disabled':''}`)}</div>`;
 }
 
 function confirmation(g) {
@@ -106,7 +122,7 @@ function confirmation(g) {
   if (c.finish) return `<h2 id="dialog-title">Close this quarter?</h2><p>Unsold inventory expires with no refund. ${money(inventoryCost(g))} will become a realized loss.</p><div class="actions">${btn('finish', 'Close quarter', 'class="danger"')}${btn('cancel', 'Keep trading')}</div>`;
   const d = deliveryQuote(g, c.orderId, c.qty, c.payment), o = g.arcade.orders.find(o => o.id === c.orderId);
   if (!d) return `<h2 id="dialog-title">Delivery unavailable</h2>${btn('cancel', 'Back to floor')}`;
-  return `<p class="eyebrow">Delivery confirmation · floor paused</p><h2 id="dialog-title">${esc(o.name)}</h2><p>${d.qty} ${badge(o.gpu)} · ${o.delivered + d.qty} / ${o.qty} delivered after signing</p><div class="economics"><span>Supply already paid</span><strong>${money(d.cost)}</strong><span>Cash received now</span><strong>${money(d.revenue)}</strong><span>Realized profit / loss</span><strong>${money(d.revenue - d.cost)}</strong><span>Cash after delivery</span><strong>${money(cash(g) + d.revenue)}</strong>${c.payment === 'equity' ? `<span>New total ownership</span><strong>${(d.stake * 100).toFixed(3)}%</strong>` : ''}</div><p>${c.payment === 'equity' ? 'Compute worth ' + money(d.value) + ' buys shares at the current valuation. No cash comes in. The supply cost is a realized expense; the shares may fail or eventually pay at an acquisition.' : 'Transfer these fully paid service rights and receive the cash payment now. Each GPU can be assigned once.'}</p>${decisionView(g,o.gpu,d.qty,money,null,null,o.id)}<div class="actions">${btn('deliver', `Confirm ${c.payment} delivery`, 'class="primary"')}${btn('cancel', 'Back', 'class="quiet"')}</div>`;
+  return choosing?choiceReview(g):deliveryReview(g,d,o,money);
 }
 
 function report(g) {
@@ -119,12 +135,15 @@ function render() {
   const focused = document.activeElement?.dataset?.action;
   const g = store.state;
   if (store.error) { root.innerHTML = `<div class="shell"><h1>Trading paused</h1><p role="alert">${esc(store.error)}</p></div>`; return; }
-  if (!g) { root.innerHTML = `<div class="shell">${head()}<section class="welcome panel"><p class="eyebrow">The Compute Floor · Fortune Favors the Bold</p><h1>Could you become the next Cluster Tycoon?</h1><p>Imagine if compute buyers, sellers, and the money were all in one room.</p><ol><li>Claim a small GPU lot. The floor pauses while you negotiate.</li><li>Find a good price and sign. Deliver part of your startup’s order.</li><li>Take cash for the next deal, or equity in their future.</li></ol><p>You start with $65,000 and one startup to supply. V7.4 starts a separate saved run; earlier saves stay on this device.</p>${btn('start', 'START TRADING', 'class="primary"')}<p class="muted">Existing game: <a href="lab.html">V6.4 / Daily Floor / Venture</a></p></section></div>`; return; }
+  if (!g) { root.innerHTML = `<div class="shell">${head()}<section class="welcome panel"><p class="eyebrow">The Compute Floor · Fortune Favors the Bold</p><h1>Could you become the next Cluster Tycoon?</h1><p>Imagine if compute buyers, sellers, and the money were all in one room.</p><ol><li>Claim a small GPU lot. The floor pauses while you negotiate.</li><li>Find a good price and sign. Deliver part of your startup’s order.</li><li>Take cash for the next deal, or equity in their future.</li></ol><p>You start with $65,000 and one startup to supply. Your V7.4 run continues here. Earlier version saves stay on this device.</p>${btn('start', 'START TRADING', 'class="primary"')}<p class="muted">Existing game: <a href="lab.html">V6.4 / Daily Floor / Venture</a></p></section></div>`; return; }
   root.innerHTML = `<div class="shell">${g.phase === 'floor' ? floor(g) : report(g)}</div>${activeLot(g) || g.arcade.confirm ? `<div class="modal-shade"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title">${g.arcade.signing ? `<div class="modal-content">${contract(g.arcade.signing, money)}</div>` : activeLot(g) ? negotiation(g, activeLot(g)) : `<div class="modal-content">${confirmation(g)}</div>`}</section></div>` : ''}`;
-  paintSale(); paintCounter(); paintVC();
+  paintSale(); paintCounter(); paintVC(); paintOrders();
   const modal = root.querySelector('.modal');
   root.querySelector('.shell').inert = !!modal;
-  if (modal) (modal.querySelector('[data-action="stop-rizz"]') || modal.querySelector(`[data-action="${focused}"]:not(:disabled)`) || modal.querySelector('button:not(:disabled)'))?.focus({ preventScroll: true });
+  if (modal) {
+    const buttons=[...modal.querySelectorAll('button:not(:disabled)')].filter(visibleControl);
+    (buttons.find(el=>el.dataset.action==='stop-rizz')||buttons.find(el=>el.dataset.action===focused)||buttons[0])?.focus({preventScroll:true});
+  }
   else if (returnFocus) { root.querySelector(returnFocus)?.focus({ preventScroll: true }); returnFocus = null; }
   lastPaint = g.phase === 'floor' ? visibleKey(g) : '';
   if (activeLot(g)?.negotiation.running) {
@@ -142,6 +161,12 @@ const visibleKey = g => [...g.arcade.lots.filter(l => available(g, l)), ...g.arc
 root.addEventListener('click', e => {
   const b = e.target.closest('button[data-action]'); if (!b || b.disabled) return;
   const action = b.dataset.action;
+  if(action==='change-choice'){choosing=true;render();return;}
+  if(action==='return-confirm'){choosing=false;render();return;}
+  if(action==='choose-route'){
+    const qty=Number(b.dataset.qty),route=b.dataset.route;choosing=false;reviewQty=qty;
+    act(g=>{if(g.arcade.active||g.arcade.signing||g.arcade.confirm?.receipt)return false;g.arcade.confirm=null;return route==='outside'?!!saleQuote(g,b.dataset.buyer,qty)&&reviewBuyer(g,b.dataset.buyer):prepareDelivery(g,b.dataset.orderId,qty,route);});return;
+  }
   if(action==='visit'){visit(b.dataset.target);return;}
   if(action==='skip-presentation'){b.closest('.sign-room').classList.add('accelerated');b.textContent='Animation skipped';return;}
   if (action === 'start') { const p = new URLSearchParams(location.search).get('seed'); store.start(p && /^\d+$/.test(p) ? Number(p) >>> 0 : newSeed()); if (matchMedia('(prefers-reduced-motion: reduce)').matches) store.act(g => { g.arcade.assistance = true; return true; }); render(); return; }
@@ -156,13 +181,13 @@ root.addEventListener('click', e => {
   else if (action === 'capital') visit('capital-desk');
   else if (action === 'sound') { sound = sound ? null : (audio ||= createAudio()); b.textContent = sound ? 'Sound: on' : 'Sound: off'; }
   else if (action === 'leave') act(leave);
-  else if (action === 'prepare') { const card = b.closest('[data-order]'); returnFocus = `[data-action="prepare"][data-id="${b.dataset.id}"]`; act(g => { if (prepareDelivery(g, b.dataset.id, Number(card.querySelector('input').value), card.querySelector('select').value)) return true; notice(g, 'Delivery unavailable: use a whole GPU quantity within your inventory and the order. For cash, stay within the startup’s cash budget, or choose equity.', 'bad'); return true; }); }
+  else if (action === 'prepare') { choosing=false; const card = b.closest('[data-order]'); returnFocus = `[data-action="prepare"][data-id="${b.dataset.id}"]`; act(g => { if (prepareDelivery(g, b.dataset.id, Number(card.querySelector('input').value), card.querySelector('select').value)) return true; notice(g, 'Delivery unavailable: use a whole GPU quantity within your inventory and the order. For cash, stay within the startup’s cash budget, or choose equity.', 'bad'); return true; }); }
   else if (action === 'review-vc') act(g=>reviewVC(g,b.dataset.id));
   else if (action === 'sell-vc') {const bps=Math.round(Number(root.querySelector('[data-vc-percent]').value)*100);if(act(g=>prepareSigning(g,'secondary',bps)))sound?.printer(.35);}
-  else if (action === 'review-buyer') act(g => reviewBuyer(g, b.dataset.id));
+  else if (action === 'review-buyer') {reviewQty=null;act(g => reviewBuyer(g, b.dataset.id));}
   else if (action === 'sell-buyer') { const qty = Number(root.querySelector('[data-sale-qty]').value); if (act(g => prepareSigning(g, 'buyer', qty))) sound?.printer(.35); }
   else if (action === 'deliver') act(deliver);
-  else if (action === 'cancel') {const receipt=store.state.arcade.confirm?.receipt;if(act(g => { g.arcade.confirm = null; return true; })&&receipt)visit(receipt.kind==='purchase'?'inventory':receipt.kind==='secondary'?'capital-desk':'buyers');}
+  else if (action === 'cancel') {choosing=false;reviewQty=null;const receipt=store.state.arcade.confirm?.receipt;if(act(g => { g.arcade.confirm = null; return true; })&&receipt)visit(receipt.kind==='purchase'?'inventory':receipt.kind==='secondary'?'capital-desk':'buyers');}
   else if (action === 'finish-review') act(g => { if (g.arcade.active || g.arcade.confirm) return false; g.arcade.confirm = { finish: true }; return true; });
   else if (action === 'finish') {if(act(g => { g.arcade.confirm = null; return closeQuarter(g); })&&store.state.report.startups.some(s=>s.fortune?.launch))sound?.bell({strikes:2,ring:.8});}
   else if (action === 'next') act(openQuarter);
@@ -177,13 +202,13 @@ function stopMeter() {
   const pos = markerAt(entry.params, performance.now() - meterStart);
   if(act(g => resolveRizz(g, pos))) { const e=activeLot(store.state)?.negotiation.attempts.at(-1); if(e?.walked)sound?.alert();else if(e?.precision==="perfect")sound?.bell({f:1100,ring:.5}); }
 }
-root.addEventListener('input', e => { if (e.target.matches('[data-sale-qty]')) paintSale(); if(e.target.matches('[data-counter]')) paintCounter(); if(e.target.matches('[data-vc-percent]'))paintVC(); });
+root.addEventListener('input', e => { if(e.target.matches('[data-order] input, [data-order] select'))paintOrders(e.target.closest('[data-order]')); if(e.target.matches('[data-choice-qty]')) {const g=store.state,c=g.arcade.confirm,o=g.arcade.orders.find(o=>o.id===c.orderId),qty=Number(e.target.value);root.querySelector('[data-choice-options]').innerHTML=Number.isSafeInteger(qty)&&qty>0&&qty<=owned(g,o.gpu)?decisionView(g,o.gpu,qty,money,null,null,o.id,c.payment):'<p>Choose a whole quantity within your inventory.</p>'; } if (e.target.matches('[data-sale-qty]')) paintSale(); if(e.target.matches('[data-counter]')) paintCounter(); if(e.target.matches('[data-vc-percent]'))paintVC(); });
 root.addEventListener('change', e => { if (e.target.matches('[data-assist]')) act(g => { const n = activeLot(g)?.negotiation; if (!n || n.attempts.length) return false; g.arcade.assistance = e.target.checked; return true; }); });
 document.addEventListener('keydown', e => {
   const modal = root.querySelector('.modal'); if (!modal) return;
   if ((e.key === ' ' || e.key === 'Enter') && activeLot(store.state)?.negotiation?.running) { e.preventDefault(); if (!e.repeat) stopMeter(); return; }
-  if (e.key === 'Escape') { e.preventDefault(); if (store.state.arcade.signing) act(g => { g.arcade.signing = null; return true; }); else if (store.state.arcade.confirm) act(g => { g.arcade.confirm = null; return true; }); else act(leave); }
-  if (e.key === 'Tab') { const all = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a')]; const first = all[0], end = all.at(-1); if (e.shiftKey && document.activeElement === first) { e.preventDefault(); end.focus(); } else if (!e.shiftKey && document.activeElement === end) { e.preventDefault(); first.focus(); } }
+  if (e.key === 'Escape') { e.preventDefault(); choosing=false; reviewQty=null; if (store.state.arcade.signing) act(g => { g.arcade.signing = null; return true; }); else if (store.state.arcade.confirm) act(g => { g.arcade.confirm = null; return true; }); else act(leave); }
+  if (e.key === 'Tab') { const all = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a')].filter(visibleControl); const first = all[0], end = all.at(-1); if (e.shiftKey && document.activeElement === first) { e.preventDefault(); end.focus(); } else if (!e.shiftKey && document.activeElement === end) { e.preventDefault(); first.focus(); } }
 });
 setInterval(() => {
   const now = performance.now(), dt = (now - last) / 1000; last = now;
