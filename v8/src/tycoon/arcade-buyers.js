@@ -1,0 +1,49 @@
+// Finite spot demand for the same prepaid rights. Interest is never booked revenue.
+import { stream } from '../util.js';
+import { BROKERS, LABS } from './demand.js';
+import { cents, cash, owned, notice } from './arcade.js';
+
+export function makeBuyers(seed, q, startups = []) {
+  const r = stream(seed, 'v74-buyers', q);
+  const growing = startups.filter(s=>s.alive&&!s.exited&&s.lastGrowth>.2);
+  return Array.from({ length: q < 3 ? 6 : 8 }, (_, i) => {
+    const trend = growing.length && i%4===3 ? growing[i%growing.length].work : null;
+    const gpu = trend ? {serve:'H100',memory:'H200',train:'B200'}[trend] : ['H100', 'H200', 'B200'][i % 3];
+    const qty = i===0 ? 4 : r.pick([2, 4, 6, 8, 12]);
+    const premium = r.next()<.16;
+    const rate = { H100: 250, H200: 310, B200: 470 }[gpu] + r.int(-40, 38) + (premium ? 45 : 0);
+    const at = i * 8, flash = premium || i % 3 === 1;
+    return { id: `q${q}-b${i}`, name: i % 2 ? LABS[i % LABS.length].name : BROKERS[i % BROKERS.length], gpu, qty, filled: 0, rate, budget: cents(qty, rate), at, until: Math.min(72, at + (flash ? 18 : 28)), flash, premium, reason:trend?'Demand follows growing startup workloads':'Independent spot demand' };
+  });
+}
+export const buyerLive = (g, b) => g.phase === 'floor' && b.at <= g.arcade.time && g.arcade.time < b.until && b.filled < b.qty && b.budget >= cents(1, b.rate);
+export function saleQuote(g, id, qty) {
+  const b = g.arcade.buyers.find(b => b.id === id);
+  if (!b || !buyerLive(g, b) || !Number.isSafeInteger(qty) || qty <= 0 || qty > b.qty - b.filled || qty > owned(g, b.gpu)) return null;
+  const revenue = cents(qty, b.rate);
+  if (revenue > b.budget) return null;
+  let left = qty, cost = 0; const legs = [];
+  for (const x of g.arcade.inventory.filter(x => x.gpu === b.gpu && x.left)) {
+    const take = Math.min(left, x.left); left -= take; cost += take * x.unitCost; legs.push({ id: x.id, qty: take });
+    if (!left) break;
+  }
+  return { buyerId: id, gpu: b.gpu, qty, cost, revenue, legs };
+}
+export function reviewBuyer(g, id) {
+  const b = g.arcade.buyers.find(b => b.id === id);
+  if (g.arcade.active || g.arcade.confirm || !b || !buyerLive(g, b)) return false;
+  g.arcade.confirm = { buyerId: id }; return true;
+}
+export function sellBuyer(g, qty) {
+  if (g.arcade.active || !g.arcade.confirm?.buyerId) return false;
+  const d = saleQuote(g, g.arcade.confirm.buyerId, qty);
+  if (!d) return false;
+  const b = g.arcade.buyers.find(b => b.id === d.buyerId);
+  for (const leg of d.legs) g.arcade.inventory.find(x => x.id === leg.id).left -= leg.qty;
+  b.filled += qty; b.budget -= d.revenue;
+  g.cash = (cash(g) + d.revenue) / 100;
+  g.profit = (Math.round(g.profit * 100) + d.revenue - d.cost) / 100;
+  g.arcade.sales.push(d); g.arcade.confirm = null;
+  notice(g, `${qty} ${b.gpu} sold to ${b.name}. Cash received. Your anchor order and Trust are unchanged.`, 'good');
+  return true;
+}
