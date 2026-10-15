@@ -1,5 +1,5 @@
 {
-  "commit": "c9b8c04d60dec3519fa86ed4f702f5a31c59ddaf",
+  "commit": "f2441d698a34d9d4a38dff83889fa2136de56eba",
   "entry": "index.html",
   "source_path": "v8/",
   "files": {
@@ -35,7 +35,7 @@
     "src/ui/arcade-fortunes.js": "688057aa2bb16201a9f94f6fd97cce2296d743836d8d5dc8cb88d6ca7e3ccdae",
     "src/ui/arcade-gpu.js": "a8dd6117dd335e89ff1db4ddaa74535caf969c58b9dd5b9ed0430d4a1cc4f241",
     "src/ui/arcade-hall.js": "0158fdf9cc05e775f2166b55c6ca56d5e88e61f51e176fa791b1ca6772e48ad9",
-    "src/ui/arcade-vc.js": "afb70940902931bf8864af02f2d4233fafb18636976ecbf60cdd80d4b63b74e0",
+    "src/ui/arcade-vc.js": "58fe26c6ce19466e11d924fa490a2c48328d98335ee252d6d45c98d152688ebc",
     "src/ui/character.js": "7a6f626cc352f394eb9cfe159cbdd4d0f8e7ede2573042bd059e7335097e57b2",
     "src/ui/hyperscaler.js": "1f405610615ec5af9a0e76a64971cb5963aa934565c7f638efad52557142926d",
     "src/ui/intro-art.js": "08ea92c2b08666504469893eaf9f869d5da4512723517e17920814782eef3ead",
