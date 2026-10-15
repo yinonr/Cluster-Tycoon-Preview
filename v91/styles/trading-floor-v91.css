@@ -1,15 +1,15 @@
 /* One room, mixed stable seats. Perspective belongs to architecture, never text. */
 .trading-room{border:3px solid #b29a64;background:#32271e}
-.trading-room .exchange-wall{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:20px;padding:28px 7% 26px;background:linear-gradient(90deg,#241e19 0%,transparent 15% 85%,#241e19 100%),repeating-linear-gradient(0deg,#62523d 0 53px,#4a3c2e 54px 56px);border-bottom:10px ridge #a3844e;box-shadow:inset 0 10px 30px #0008}
-.house-sign{grid-column:1/-1;text-align:center;color:#e9d6a3;border:1px solid #a78b53;padding:18px 12px;box-shadow:0 0 0 5px #312a20,inset 0 0 40px #0008;background:#28342e}
+.trading-room .exchange-wall{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:14px;padding:20px 7% 18px;background:linear-gradient(90deg,#241e19 0%,transparent 15% 85%,#241e19 100%),repeating-linear-gradient(0deg,#62523d 0 53px,#4a3c2e 54px 56px);border-bottom:10px ridge #a3844e;box-shadow:inset 0 10px 30px #0008}
+.house-sign{grid-column:1/-1;text-align:center;color:#e9d6a3;border:1px solid #a78b53;padding:12px;box-shadow:0 0 0 5px #312a20,inset 0 0 40px #0008;background:#28342e}
 .house-sign>span{font:10px monospace;letter-spacing:.3em;color:#bfb38e}
-.house-sign h2{margin:12px 0;font:500 clamp(28px,4.8vw,60px)/1.02 Georgia,serif;letter-spacing:.1em;text-shadow:1px 2px #000}
+.house-sign h2{margin:8px 0;font:500 clamp(28px,3.6vw,46px)/1.02 Georgia,serif;letter-spacing:.1em;text-shadow:1px 2px #000}
 .house-sign strong{font-size:1.26em;font-weight:500;letter-spacing:.19em}
 .trading-room .exchange-board{padding:14px;align-self:stretch;align-content:center;background:repeating-linear-gradient(#131c17 0 31px,#080f0a 32px 34px);border:5px ridge #6f5a39}
 .trading-room .board-counts{font-size:11px;letter-spacing:.08em}.trading-room .board-counts b{font-size:28px;color:#e6ce89;text-shadow:0 0 8px #bea96066}
 .trading-room .pinned-brief{transform:rotate(2deg);font-size:11px;padding:12px;gap:6px}.trading-room .pinned-brief b{font-size:16px}
 .trading-room .arcade-hall{position:relative;height:var(--room-height);padding:0;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 50% 10%,#c1a77255,transparent 65%),#514734}
-.trading-room .hall-floor{display:block;position:absolute;inset:-25% -50% -30%;background:repeating-conic-gradient(#68634d 0 25%,#3d4237 0 50%) 50%/130px 130px;transform:perspective(800px) rotateX(35deg);opacity:.7;pointer-events:none}
+.trading-room .hall-floor{display:block;position:absolute;inset:-25% -50% -30%;background:repeating-conic-gradient(#68634d 0 25%,#3d4237 0 50%) 50%/130px 130px;transform:perspective(800px) rotateX(35deg);transform-origin:50% 40%;opacity:.7;pointer-events:none}
 .room-architecture{position:absolute;inset:0;pointer-events:none;box-shadow:inset 38px 0 35px #211b16aa,inset -38px 0 35px #211b16aa}
 .room-architecture:before,.room-architecture:after{content:'';position:absolute;top:0;bottom:0;width:25px;background:repeating-linear-gradient(90deg,#564530 0 4px,#ac9568 5px 8px,#726047 9px 12px);border-inline:2px solid #3c3020;box-shadow:5px 0 10px #0006}
 .room-architecture:before{left:0}.room-architecture:after{right:0}
@@ -31,15 +31,16 @@
 .trading-room .floor-pulse button{width:auto;min-height:44px;min-width:44px;border:1px solid #8a754f;font:11px monospace}.trading-room .finance-door{display:block;min-height:44px;background:#302638}
 .charm-lock{display:flex;flex-wrap:wrap;gap:7px 12px;align-items:center;margin:12px 0}.charm-lock .charm-locked{font:700 12px monospace;color:#c3bba2;border:1px solid #766f59;padding:10px;min-height:44px;background:#333b30;cursor:help}.charm-lock small{font:11px/1.4 monospace;color:#c5bea7}
 .floor-wayfinding{z-index:15}.floor-wayfinding button{min-height:44px}
+.floor-wayfinding [data-way-clock]{color:#f4d28b;font:11px monospace;white-space:nowrap}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
-@media(min-width:1500px){.trading-room .house-sign h2{font-size:66px}}
+@media(min-width:1500px){.trading-room .house-sign h2{font-size:48px}}
 @media(max-width:1000px){
  .trading-room .exchange-wall{padding:24px 6%}.trading-room .exchange-desk,.trading-room .exchange-desk:nth-child(even){width:19%;max-width:170px}.exchange-seal{width:130px;height:100px}.trading-room .desk-monitor{font-size:10px}.trading-room .desk-plaque{font-size:11px}
 }
 @media(max-width:760px){
- .trading-room .exchange-wall{grid-template-columns:minmax(0,1fr);gap:16px;padding:22px 16px}.house-sign{padding:18px 5px}.house-sign h2{font-size:clamp(25px,6vw,43px);letter-spacing:.06em}.house-sign strong{letter-spacing:.14em}.house-sign>span{font-size:8px;letter-spacing:.12em}.trading-room .pinned-brief{transform:none;order:initial;display:flex}.trading-room .pinned-brief small{width:100%}.trading-room .board-counts{font-size:9px}.trading-room .board-counts b{font-size:25px}
+ .trading-room .exchange-wall{grid-template-columns:minmax(0,1fr);gap:12px;padding:16px}.house-sign{padding:9px 5px}.house-sign h2{font-size:clamp(24px,6vw,36px);letter-spacing:.06em}.house-sign strong{letter-spacing:.14em}.house-sign>span{font-size:8px;letter-spacing:.12em}.house-sign>span:last-child{display:none}.trading-room .pinned-brief{transform:none;order:initial;display:flex;gap:4px;padding:8px}.trading-room .pinned-brief small{width:auto;margin:0;padding:0;border:0;font-size:9px}.trading-room .pinned-brief b{font-size:13px}.trading-room .pinned-brief span{font-size:10px}.trading-room .exchange-board{padding:9px}.trading-room .board-counts{font-size:9px}.trading-room .board-counts b{font-size:22px}
  .trading-room .arcade-hall{height:var(--mobile-height)}.mixed-desks{inset:24px 0 0}.trading-room .exchange-desk,.trading-room .exchange-desk:nth-child(even){left:6%;top:var(--mobile-y);transform:none;width:42%;max-width:none;height:226px;z-index:2}.trading-room .exchange-desk[data-side="1"]{left:auto;right:6%}
  .trading-room .desk-monitor{max-width:170px;font-size:11px}.trading-room .desk-plaque,.trading-room .desk-props,.trading-room .desk-call{max-width:180px}.trading-room .desk-plaque{font-size:12px}.room-architecture:before,.room-architecture:after{width:9px}.room-aisle{inset-inline:43%}.exchange-seal{top:278px;width:76px;height:45px;border-width:4px;box-shadow:0 4px #2e2118,0 7px #8c7146}.exchange-seal b{font-size:20px}.exchange-seal span{font-size:6px}.trading-room .hall-floor{background-size:95px 95px;inset:-10% -90%;transform:perspective(1000px) rotateX(18deg)}.room-balustrade{bottom:13px}
- .trading-room .floor-pulse{display:grid;grid-template-columns:1fr 1fr}.trading-room .floor-pulse>span{grid-column:1/-1}.trading-room .floor-pulse button{width:100%;overflow-wrap:anywhere}.floor-wayfinding{grid-template-columns:repeat(4,minmax(0,1fr));position:relative;top:auto} .trading-room .exchange-desk{scroll-margin-top:12px}
+ .trading-room .floor-pulse{display:grid;grid-template-columns:1fr 1fr}.trading-room .floor-pulse>span{grid-column:1/-1}.trading-room .floor-pulse button{width:100%;overflow-wrap:anywhere}.floor-wayfinding{grid-template-columns:repeat(4,minmax(0,1fr));position:sticky;top:0} .trading-room .exchange-desk,#exchange,#inventory,#anchor,#capital-desk,#mandate{scroll-margin-top:118px}
 }
 @media(max-width:360px){.trading-room .exchange-wall{padding-inline:10px}.trading-room .exchange-desk,.trading-room .exchange-desk:nth-child(even){left:5%;width:44%}.trading-room .exchange-desk[data-side="1"]{left:auto;right:5%}.trading-room .desk-monitor{font-size:10px}.trading-room .desk-call{font-size:9px}.trading-room .desk-plaque{font-size:11px}.trading-room .desk-plaque small{font-size:9px}}

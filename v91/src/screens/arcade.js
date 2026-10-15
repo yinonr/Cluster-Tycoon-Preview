@@ -109,12 +109,12 @@ function paintCounter() {
 }
 function floor(g) {
   const a = g.arcade;
-  return `${head()}${floorNav()}<div class="wealth-banner"><span>ESTIMATED NET WORTH</span><strong>${money(fortune(g).netWorth)}</strong><span>Round ${g.q} / 18 · three months per round</span></div>${wealthLedger(g,money)}<div class="stats"><div class="stat">Cash available<b>${money(cash(g))}</b></div><div class="stat">Realized profit<b>${money(Math.round(g.profit * 100))}</b></div><div class="stat">Round ${g.q} / 18<b data-clock>${Math.ceil(V7.seconds - a.time)}s</b></div><div class="stat">Reputation<b>${g.clout} Clout</b></div></div><div class="message ${a.message?.tone || ''}" role="status">${esc(a.message?.text || '')}</div>${hall(g)}${inventory(g)}<div class="columns"><aside class="orders" id="anchor" tabindex="-1">${mandateCard(g,money)}${a.orders.map(o => orderCard(g, o)).join('')}${capitalDesk(g,money)}<details class="panel"><summary>Portfolio · ${money(Math.round(portfolio(g) * 100))} paper value</summary><p>Shares are speculative. They do not count as cash or realized profit.</p>${g.startups.filter(s => s.stake).map(s => `<div class="portfolio-item"><b>${esc(s.name)}</b><p>${(s.stake * 100).toFixed(3)}% ownership · ${esc(signalOf(s))}</p></div>`).join('') || '<p>Deliver compute for equity to begin your portfolio.</p>'}</details></aside></div>`;
+  return `${head()}${floorNav(g)}<div class="wealth-banner"><span>ESTIMATED NET WORTH</span><strong>${money(fortune(g).netWorth)}</strong><span>Round ${g.q} / 18 · three months per round</span></div>${wealthLedger(g,money)}<div class="stats"><div class="stat">Cash available<b>${money(cash(g))}</b></div><div class="stat">Realized profit<b>${money(Math.round(g.profit * 100))}</b></div><div class="stat">Round ${g.q} / 18<b data-clock>${Math.ceil(V7.seconds - a.time)}s</b></div><div class="stat">Reputation<b>${g.clout} Clout</b></div></div><div class="message ${a.message?.tone || ''}" role="status">${esc(a.message?.text || '')}</div>${hall(g)}${inventory(g)}<div class="columns"><aside class="orders" id="anchor" tabindex="-1">${mandateCard(g,money)}${a.orders.map(o => orderCard(g, o)).join('')}${capitalDesk(g,money)}<details class="panel"><summary>Portfolio · ${money(Math.round(portfolio(g) * 100))} paper value</summary><p>Shares are speculative. They do not count as cash or realized profit.</p>${g.startups.filter(s => s.stake).map(s => `<div class="portfolio-item"><b>${esc(s.name)}</b><p>${(s.stake * 100).toFixed(3)}% ownership · ${esc(signalOf(s))}</p></div>`).join('') || '<p>Deliver compute for equity to begin your portfolio.</p>'}</details></aside></div>`;
 }
 
 function rizzPanel(g, l) {
   const n=l.negotiation, running=n.running&&n.attempts[n.running-1], p=running?.params||rizzParameters(g,l);
-  if(!n.charmUnlocked&&!n.closed)return `<div class="charm-lock"><button type="button" class="charm-locked" aria-disabled="true" aria-describedby="charm-hint">🔒 UNLOCK CHARM</button><small id="charm-hint">Negotiate first · counter at least 3¢ below the quote.</small></div>`;
+  if(!n.charmUnlocked&&!n.closed)return `<div class="charm-lock"><button type="button" class="charm-locked" data-action="explain-charm" aria-disabled="true" aria-describedby="charm-hint">🔒 UNLOCK CHARM</button><small id="charm-hint">Negotiate first · counter at least 3¢ below the quote.</small></div>`;
   if(n.closed)return `<div class="rizz-result bad"><b>QUOTE CLOSED</b><p>This lot is gone. Reliable purchases from this firm in later quarters rebuild Trust.</p></div>`;
   if(!p||p.concession<=0)return `<div class="rizz-result"><b>${n.attempts.length===3?'Three attempts used.':'Best available price reached.'}</b><p>Bank the current price or return to the floor.</p></div>`;
   const worst=failurePrice(l,p.attempt),labels=['Charm Meter','Double Down','Over-Rizz'];
@@ -197,8 +197,9 @@ root.addEventListener('click', e => {
     act(g=>{if(g.arcade.active||g.arcade.signing||g.arcade.confirm?.receipt)return false;g.arcade.confirm=null;return route==='outside'?!!saleQuote(g,b.dataset.buyer,qty)&&reviewBuyer(g,b.dataset.buyer):prepareDelivery(g,b.dataset.orderId,qty,route);});return;
   }
   if(action==='visit'){visit(b.dataset.target);return;}
+  if(action==='explain-charm'){const input=root.querySelector('[data-counter]');input?.focus();input?.select();input?.scrollIntoView({block:'nearest'});return;}
   if(action==='skip-presentation'){b.closest('.sign-room').classList.add('accelerated');b.textContent='Animation skipped';return;}
-  if (action === 'start') { introStep=null; last=performance.now(); const p = new URLSearchParams(location.search).get('seed'); store.start(p && /^\d+$/.test(p) ? Number(p) >>> 0 : newSeed()); if (matchMedia('(prefers-reduced-motion: reduce)').matches) store.act(g => { g.arcade.assistance = true; return true; }); render(); return; }
+  if (action === 'start') { introStep=null; last=performance.now(); const p = new URLSearchParams(location.search).get('seed'); store.start(p && /^\d+$/.test(p) ? Number(p) >>> 0 : newSeed()); if (matchMedia('(prefers-reduced-motion: reduce)').matches) store.act(g => { g.arcade.assistance = true; return true; }); render(); visit('exchange'); return; }
   if (action === 'mandate-review') act(g=>{if(!mandateQuote(g)?.ready||g.arcade.active||g.arcade.confirm)return false;g.arcade.confirm={mandate:true};return true;});
   else if (action === 'mandate-sign') act(g=>prepareSigning(g,'mandate'));
   else if (action === 'claim') { returnFocus = `[data-slot="${b.dataset.slot}"]`; act(g => claim(g, b.dataset.id)); }
@@ -224,7 +225,7 @@ root.addEventListener('click', e => {
   else if (action === 'cancel') {choosing=false;reviewQty=null;const receipt=store.state.arcade.confirm?.receipt;if(act(g => { g.arcade.confirm = null; if(receipt?.kind==='purchase'&&g.arcade.sourcingFor){const id=g.arcade.sourcingFor;g.arcade.sourcingFor=null;reviewBuyer(g,id);} return true; })&&receipt&&!store.state.arcade.confirm)visit(receipt.kind==='purchase'?'inventory':receipt.kind==='secondary'?'capital-desk':'buyers');}
   else if (action === 'finish-review') act(g => { if (g.phase !== 'floor' || g.arcade.active || g.arcade.confirm) return false; g.arcade.confirm = { finish: true }; return true; });
   else if (action === 'finish') {if(act(g => { g.arcade.confirm = null; return closeQuarter(g); })&&store.state.report.startups.some(s=>s.fortune?.launch))sound?.bell({strikes:2,ring:.8});}
-  else if (action === 'next') act(openQuarter);
+  else if (action === 'next') {if(act(openQuarter))visit('exchange');}
   else if (action === 'restart-review') act(g => { g.arcade.confirm = { restart: true }; return true; });
   else if (action === 'restart') { store.restart(newSeed()); render(); }
 });
@@ -257,7 +258,8 @@ setInterval(() => {
   for (const el of root.querySelectorAll('[data-buyer-expiry]')) el.textContent = Math.ceil(next.arcade.buyers.find(b => b.id === el.dataset.buyerExpiry).until - next.arcade.time);
   for(const el of root.querySelectorAll('[data-vc-expiry]'))el.textContent=Math.ceil(next.arcade.vcOffers.find(b=>b.id===el.dataset.vcExpiry).until-next.arcade.time);
   for(const el of root.querySelectorAll('[data-desk-until]'))el.textContent=Math.max(0,Math.ceil(Number(el.dataset.deskUntil)-next.arcade.time));
-  const hc=root.querySelector('[data-hall-clock]');if(hc)hc.textContent=`${Math.ceil(V7.seconds-next.arcade.time)}s`;
+  for(const el of root.querySelectorAll('[data-hall-clock],[data-way-clock]'))el.textContent=`${Math.ceil(V7.seconds-next.arcade.time)}s`;
+  for(const el of root.querySelectorAll('[data-desk-cooldown]'))el.textContent=Math.max(0,Math.ceil(Number(el.dataset.deskCooldown)-next.arcade.time));
   for(const arrival of root.querySelectorAll('[data-arrival-at]'))arrival.textContent=Math.max(0,Math.ceil(Number(arrival.dataset.arrivalAt)-next.arcade.time));
   const upcoming = [...next.arcade.lots,...next.arcade.buyers].filter(x=>x.at>next.arcade.time).sort((a,b)=>a.at-b.at)[0];
   root.querySelector('[data-next]').textContent = upcoming ? `Next arrival in ${Math.ceil(upcoming.at - next.arcade.time)}s.` : 'All releases are on the board. Supply is finite.';

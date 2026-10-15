@@ -1,5 +1,5 @@
 {
-  "commit": "987ba550af4d2897fd3f53d78df1fa75c24700bc",
+  "commit": "c442d83772d2f76ecae306fcc389e32cd0dba802",
   "entry": "index.html",
   "source_path": "v91/",
   "files": {
@@ -14,7 +14,7 @@
     "src/modes/buyer.js": "6b96c4a86746000f91e119426c67cb1322c51c29e8edecbdcd1a30032f452830",
     "src/modes/economy.js": "44e1ae78e12d4edf867b8acc943b1bbcb4b278daa5734e7150462e1ccedb445e",
     "src/modes/wants.js": "374259d61b8721e0e617de67ed0aaa632b842b14a41c12caf7c621bad6b55df9",
-    "src/screens/arcade.js": "b5eeb93095cd13971f6c02e9453018a8a83645a36c47eaeaba677fcf3112a588",
+    "src/screens/arcade.js": "fc9973f6653c9d413c1dc8bed7e89d6d62728f6e3c1bb46d12e180eb6fb170e6",
     "src/tycoon/arcade-buyers.js": "7e9c252f12246a692135f840ab1cdc736a6a585d5cea061aea3f7fafc5b7d229",
     "src/tycoon/arcade-choices.js": "a773a06c095abc623a1d93f9ef626592553d2eb469ef5264fc733bcca76523f2",
     "src/tycoon/arcade-fortunes.js": "5d50a3ce87a474f0e97a004d4d794669c5f50b848fad8e5ebd22b936a0cf4033",
@@ -35,7 +35,7 @@
     "src/ui/arcade-choices.js": "747c2e318460650153bdf38fc005e8394226335986e93f3921ff34a1e5621fd3",
     "src/ui/arcade-fortunes.js": "688057aa2bb16201a9f94f6fd97cce2296d743836d8d5dc8cb88d6ca7e3ccdae",
     "src/ui/arcade-gpu.js": "a8dd6117dd335e89ff1db4ddaa74535caf969c58b9dd5b9ed0430d4a1cc4f241",
-    "src/ui/arcade-hall.js": "c386f19cace764e3cfaff5ea721f575f9437da74857e37234e6293777b2c47db",
+    "src/ui/arcade-hall.js": "4da3ef73e2f50fdc87368188ce879616d6cf7bb9507b524f311b30d0b276b879",
     "src/ui/arcade-vc.js": "58fe26c6ce19466e11d924fa490a2c48328d98335ee252d6d45c98d152688ebc",
     "src/ui/character.js": "7a6f626cc352f394eb9cfe159cbdd4d0f8e7ede2573042bd059e7335097e57b2",
     "src/ui/hyperscaler.js": "1f405610615ec5af9a0e76a64971cb5963aa934565c7f638efad52557142926d",
@@ -52,7 +52,7 @@
     "styles/exchange-v9.css": "bb81cbeba98184c847baaf4c106ca43a2ccf19e8ca19fbfd24e4e6dd6e17e2cc",
     "styles/floor.css": "e6718dcbd12f4f2b9e986b46d024333e877453a862e262843674cd97fb44cacb",
     "styles/tokens.css": "83cabe1daef24fa8ee7e6a6d892bc05c412d4e1d0ce56197aa2ba3f614b3475d",
-    "styles/trading-floor-v91.css": "edada709a0ef81bb761a9e5fb30028412d9d1d49ba13d0d8ea5add1569870987",
+    "styles/trading-floor-v91.css": "21b28e797bb35ba4135649710141656651754424a0175334c51704d64c0b7a13",
     "styles/tycoon-v77.css": "e9481f77a817ee78f91120a645fd7b938cbbb0b0f18f76f106e0116c694cf17d",
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   }
