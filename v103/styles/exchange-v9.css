@@ -1,0 +1,32 @@
+/* Working desks in stable galleries, with brass rails and warm CRTs. */
+.exchange-wall{grid-template-columns:190px minmax(0,1fr)}
+.board-house{font-size:clamp(14px,2vw,23px);letter-spacing:.08em;line-height:1.4}
+.arcade-hall{height:auto;isolation:isolate;padding:18px 14px;background:#493b2e}
+.desk-row{position:relative;z-index:2;padding:10px 0 20px;border-bottom:5px double #ac8950}
+.desk-row h2{font:700 13px monospace;color:#f3dcaa;padding:8px;background:#263529;letter-spacing:.08em;margin:0 0 12px}
+.desk-row h2 small{font:11px monospace;float:right;color:#c9c3a0}
+.arcade-desks{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:end;padding:0;gap:18px 8px;height:auto}
+.exchange-desk,.exchange-desk:nth-child(even){width:100%;align-self:end;min-width:0}
+.hall-person{width:57px;height:68px;animation:none;margin-bottom:-10px}
+.desk-monitor,.desk-plaque{width:100%;max-width:150px}
+.desk-monitor{font-size:10px;padding:8px 2px;gap:4px;min-height:60px;border-width:5px 4px 8px}
+.desk-monitor b{font-size:12px}.desk-plaque{font-size:11px;min-height:62px;padding:8px 3px;line-height:1.4;overflow-wrap:anywhere}
+.desk-plaque small{font-size:9px;margin-top:4px}.desk-call{font-size:9px;padding:4px 3px;min-height:28px;width:100%;max-width:150px;line-height:1.4}
+.desk-closed{opacity:.5}.desk-closed .hall-person{filter:grayscale(1)}
+.finance-door{min-height:130px;background:#302638;color:#e2c99d;border:3px double #a58755;font:12px monospace;display:grid;gap:12px;align-content:center}
+.floor-wayfinding{grid-template-columns:repeat(7,minmax(0,1fr))}
+.columns{display:block}.orders{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;margin-top:20px}.orders>.mandate{grid-column:1/-1}.orders>*{min-width:0}
+.current-deal{background:repeating-linear-gradient(#f2e5c5 0 27px,#e4d8bb 28px);color:#302e22;border:3px double #a48955;padding:12px}
+.current-deal>b{color:#273d2b;text-shadow:none}.current-deal .eyebrow{color:#685132}
+.charm-locked{font:12px/1.5 monospace;color:#d9c79a;padding:10px;border-left:3px solid #a68c55}
+.negotiation-room .counter-controls{border:2px solid #a58b57;background:#303a29}
+.counter-entry input{font-size:22px;font-variant-numeric:tabular-nums}.counter-steps button{min-height:44px}
+.negotiation-tape{max-height:150px}.negotiation-room .conversation{margin:12px 0}
+.buyer-deal .seller-portrait{width:65px;height:100px;flex-shrink:0}.buyer-deal .seller-exchange{display:flex;gap:16px}.buyer-deal .seller-portrait svg{width:100%;height:100%}.buyer-deal .seller-exchange h2{font-size:25px}.buyer-deal .seller-line{margin:8px 0}
+.source-list button{display:block;width:100%;text-align:left;margin:8px 0;font-size:13px}
+.buyer-deal .confirmation-actions{position:sticky;bottom:-1px;background:#173527;padding:10px 0;z-index:3}.buyer-deal .counter-controls p{font-size:12px;line-height:1.4}.buyer-deal .current-deal b{font-size:26px}
+@media(max-width:850px){.orders{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:360px){.counter-entry{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.counter-entry input,.counter-entry button{width:100%;box-sizing:border-box}}
+@media(max-width:600px){.orders{grid-template-columns:1fr}.buyer-deal .seller-exchange h2{font-size:22px}.buyer-deal .seller-exchange{gap:10px}.buyer-deal .seller-line{font-size:14px}.buyer-deal .seller-exchange p:last-child{font-size:11px}.buyer-deal .current-deal b{font-size:22px}.buyer-deal .seller-portrait{width:48px;height:78px}.counter-entry{flex-wrap:wrap}.counter-entry input{min-width:0}}
+@media(max-width:1050px){.arcade-desks{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){.exchange-wall{grid-template-columns:1fr}.arcade-hall{padding:12px 8px}.arcade-desks{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 10px}.desk-row h2 small{float:none;display:block;margin-top:4px}.desk-plaque{font-size:12px}.desk-monitor{font-size:11px}.desk-call{font-size:10px}.board-house{font-size:16px}.floor-wayfinding{grid-template-columns:repeat(4,minmax(0,1fr))}#supply,#buyers,#exchange,#inventory,#anchor,#capital-desk{scroll-margin-top:115px}}
