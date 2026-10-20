@@ -1,0 +1,15 @@
+/* V6's paper, speech and CRT cues, scoped to the V7.6 negotiation. */
+.gpu-emblem{width:18px;height:18px;vertical-align:-4px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;stroke-linecap:round}
+.seller-exchange{border-bottom:3px double #b99c58}.seller-exchange h2{font-family:Georgia,serif;letter-spacing:-.025em}
+.seller-exchange .seller-line{position:relative;background:#f0e3c0;color:#30291f;padding:7px 10px;border:1px solid #b99c58;border-radius:2px 9px 9px 9px;font-size:1.05rem;line-height:1.25;box-shadow:2px 3px 0 #080d0840}
+.seller-line:before{content:'';position:absolute;left:-9px;top:9px;border-top:8px solid #f0e3c0;border-left:9px solid transparent}
+.reaction-accept .seller-line{background:#e0edc6;color:#1b422b}.reaction-accept .seller-line:before{border-top-color:#e0edc6}
+.reaction-hold .seller-line,.reaction-walk .seller-line{background:#f0c9ab;color:#642c23}.reaction-hold .seller-line:before,.reaction-walk .seller-line:before{border-top-color:#f0c9ab}
+.seller-portrait .mouth-open{display:none}.reaction-walk .mouth-open{display:block}.reaction-walk .mouth-shut{display:none}.reaction-walk .seller-portrait{filter:sepia(.3) drop-shadow(0 0 5px #bc5435)}
+.reaction-accept .seller-portrait{filter:drop-shadow(0 0 5px #9db76d)}.reaction-accept .head{transform:rotate(-3deg);transform-origin:50px 55px}
+.current-deal>b{font-variant-numeric:tabular-nums;letter-spacing:-.025em;text-shadow:0 2px #050905}
+.rizz-panel .row{gap:6px}.rizz-panel .rapport-cue{letter-spacing:.015em;font-size:10px}.rizz-feedback{font-family:monospace;border-left:3px solid currentColor;padding:8px 10px;background:repeating-linear-gradient(0deg,#0c1d16,#0c1d16 3px,#14271d 4px)}
+.rizz-feedback.good{animation:deal-glint .28s ease-out}.rizz-result.bad{border:2px solid #dd8365;background:#3c211b;font-family:monospace}
+@keyframes deal-glint{from{box-shadow:0 0 14px #bce495}to{box-shadow:none}}
+@media(max-width:600px){.seller-exchange{gap:12px}.seller-exchange .seller-line{font-size:14px;padding:6px 8px}.negotiation-room .seller-portrait{height:100px}.negotiation-room .counter-controls{margin:8px 0}.negotiation-room .rizz-panel{margin:8px 0}}
+@media(prefers-reduced-motion:reduce){.rizz-feedback.good{animation:none}}
