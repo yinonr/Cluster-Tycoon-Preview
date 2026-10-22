@@ -1,0 +1,19 @@
+.ts-delivery { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; margin: 10px 0; }
+.strategic-status { font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.compute-schedule { font-size: 11px; line-height: 1.4; padding: 4px 8px; }
+.compute-schedule summary { cursor: pointer; min-height: 24px; }
+.compute-schedule p { margin: 4px 0; overflow-wrap: anywhere; }
+.partnership-terms { font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.partnership-terms summary { cursor: pointer; padding: 8px 0; }
+.partnership-terms p { margin: 4px 0; }
+.compute-terms { font-size: 12px; line-height: 1.4; }
+.compute-terms summary { cursor: pointer; padding: 6px 0; }
+.compute-terms p { margin: 4px 0; }
+.term-sheet .ts-hero > p { min-width: 0; }
+/* Large mixed recipes scroll inside their allocation area, never over the build rail. */
+.cards .fc-slots { flex: 1 1 auto; overflow-y: auto; margin-block: 0; }
+.cards .fc > :not(.fc-slots) { flex-shrink: 0; }
+@media (max-width: 760px) {
+  .pit-focus[data-desk="term"] .mat-vault { font-size: 12px; }
+  .fc-what { line-height: 1.35; }
+}

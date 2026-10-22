@@ -1,0 +1,182 @@
+@scope (.original-opening) {
+/* Intro screens: corner office, the ad + coupon, the house letter, the lobby. */
+
+.kicker { margin: 0; font-size: 12px; letter-spacing: .14em; }
+.muted { color: var(--ink-soft); }
+.small { font-size: 13px; }
+.draft {
+  display: inline-block; margin-left: .4em; padding: 1px 5px; vertical-align: middle;
+  font: 400 10px/1.3 var(--font-ui); letter-spacing: .04em; font-style: normal; text-transform: uppercase;
+  color: var(--stamp); border: 1px dashed var(--stamp); border-radius: 2px; background: rgba(255,255,255,.5);
+}
+.btn .draft { color: #FFD9A0; border-color: #FFD9A0; background: transparent; }
+
+/* ===== Corner office ===================================================== */
+.office {
+  position: relative; min-height: 100dvh; overflow: hidden; background: #2A1810;
+  touch-action: manipulation; -webkit-user-select: none; user-select: none; /* rapid clicks: no zoom, no text selection */
+}
+.office-window { position: absolute; inset: 0 0 40% 0; overflow: hidden; }
+.sky { position: absolute; inset: 0; background: linear-gradient(180deg, #2B2238 0%, #5E4566 34%, #C9785A 70%, #F2B36B 100%); }
+.skyline { position: absolute; left: 0; bottom: 0; width: 100%; height: 64%; }
+.mullions {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 7px), #1E1410 calc(25% - 7px) 25%);
+  box-shadow: inset 0 0 0 12px #1E1410, inset 0 -40px 60px rgba(0,0,0,.25);
+}
+.office-title { position: relative; z-index: 3; padding: 28px clamp(16px, 4vw, 40px); color: #F8ECD6; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+.office-title h1 { margin: 6px 0 0; font-size: clamp(30px, 5.2vw, 66px); max-width: 12em; }
+
+.office-desk { position: absolute; left: 0; right: 0; bottom: 0; height: 48%; }
+.desk-surface {
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(176deg, rgba(0,0,0,.06) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #7A3B27 0%, var(--mahogany) 16%, var(--mahogany-deep) 100%);
+  border-top: 8px solid #84462F;
+  box-shadow: 0 -14px 40px rgba(0,0,0,.45);
+}
+.computer {
+  position: absolute; left: 50%; bottom: 16%; transform: translateX(-50%); z-index: 2;
+  width: min(460px, 86vw); padding: 18px 18px 0; border-radius: 12px 12px 5px 5px;
+}
+.computer-screen {
+  background: radial-gradient(120% 100% at 50% 40%, #EFEFE6, #CFCFC4);
+  border-radius: 10px; padding: 14px;
+  box-shadow: inset 0 0 0 3px #8F8268, inset 0 0 26px rgba(0,0,0,.35);
+  min-height: 170px;
+}
+.computer-chin { height: 44px; display: flex; align-items: center; justify-content: flex-end; padding-right: 28px; }
+.computer-chin .slot { width: 74px; height: 6px; background: #2B2620; border-radius: 3px; }
+.proc-need { margin: 0 0 14px; font-size: 14px; text-align: center; }
+.proc-idle { display: flex; flex-direction: column; align-items: center; }
+.proc-status { font-size: 15px; text-align: center; min-height: 64px; display: grid; place-items: center; }
+.proc-status p { margin: 0; }
+.blink { animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.mac-alert { display: flex; gap: 12px; align-items: center; text-align: left; border: 2px solid #000; padding: 10px 14px; box-shadow: 2px 2px 0 #000; background: #fff; }
+.mac-alert .stop { flex: 0 0 34px; height: 34px; border-radius: 50%; background: #000; color: #fff; display: grid; place-items: center; font-weight: 900; font-size: 20px; }
+.mac-alert small { opacity: .7; }
+
+.desk-phone { position: absolute; right: 7%; bottom: 20%; width: clamp(110px, 13vw, 170px); z-index: 2; }
+.calendar {
+  position: absolute; left: 6%; bottom: 20%; z-index: 2; width: clamp(120px, 13vw, 160px);
+  padding: 20px 12px 14px; text-align: center; transform: rotate(-3deg);
+}
+.cal-ring { position: absolute; top: 6px; left: 20%; right: 20%; height: 6px; border-top: 3px dotted var(--ink); }
+.cal-month { font-size: 11px; }
+.cal-week { font-size: clamp(22px, 2.6vw, 32px); margin: 4px 0; color: var(--stamp); }
+.cal-sub { font-size: 12px; }
+
+.slips { position: absolute; inset: 0; z-index: 6; pointer-events: none; } /* the whole office can flood */
+.computer.surface { z-index: 9; animation: surface .4s var(--ease-slam) both; }
+@keyframes surface { from { transform: translateX(-50%) translateY(18px) scale(.94); } }
+.desk-phone .handset { transform-box: fill-box; transform-origin: 50% 100%; }
+.desk-phone.ringing .handset { animation: handset .09s steps(2) 4; }
+@keyframes handset { 50% { transform: translateY(-5px) rotate(-4deg); } }
+
+/* While you're on the phone, the pointer is a receiver. */
+.office.calling {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M9 3C6 3 3 6 3 10c0 10 9 19 19 19 4 0 7-3 7-6l-1-2-6-3-3 3c-4-2-7-5-9-9l3-3-3-6z' fill='%23E3D8C0' stroke='%231B1814' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") 16 16, pointer;
+}
+
+/* The tapping hand: its fingertip sits on the anchor point; each tap sends out a ring. */
+.nudge { position: absolute; z-index: 7; width: 56px; height: 56px; pointer-events: none; transform: translate(-41%, 0); }
+.nudge:not([hidden]) { animation: nudgeIn .3s var(--ease-slam) both; }
+@keyframes nudgeIn { from { opacity: 0; transform: translate(-41%, 0) scale(.6); } }
+.nudge-hand { position: absolute; inset: 0; width: 56px; height: 56px; filter: drop-shadow(3px 4px 0 rgba(0, 0, 0, .4)); animation: tap 1.15s steps(1) infinite; }
+@keyframes tap { 55%, 80% { transform: translateY(6px); } }
+.nudge-ring {
+  position: absolute; left: 23px; top: 6px; width: 40px; height: 40px; margin: -20px 0 0 -20px;
+  border: 3px solid var(--amber); border-radius: 50%; opacity: 0;
+  animation: tapRing 1.15s ease-out infinite;
+}
+@keyframes tapRing { 0%, 54% { opacity: 0; transform: scale(.3); } 56% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(2.3); } }
+.nudge-label {
+  position: absolute; left: 23px; top: 68px; transform: translateX(-50%);
+  padding: 3px 9px; white-space: nowrap; font-size: 13px; color: #F8ECD6; background: rgba(11, 9, 6, .88);
+}
+.slip {
+  position: absolute; width: clamp(170px, 17vw, 220px);
+  padding: 8px 11px 9px; background: #F7CFCB; color: var(--ink);
+  transform: rotate(var(--rot, 0deg));
+  box-shadow: 0 1px 0 rgba(0,0,0,.1), 0 10px 18px -8px rgba(0,0,0,.6);
+  font-family: var(--font-text); font-size: 12px;
+  animation: slipIn .34s var(--ease-slam) both;
+}
+@keyframes slipIn { from { transform: translateY(-40px) rotate(calc(var(--rot) * 3)) scale(1.15); opacity: 0; } }
+.slip-h { font: 900 12px/1.2 var(--font-headline); letter-spacing: .08em; border-bottom: 1.5px solid var(--ink); padding-bottom: 3px; margin-bottom: 4px; text-align: center; }
+.slip-row { font-size: 11px; }
+.slip-row b { display: inline-block; width: 40px; font-size: 9px; letter-spacing: .08em; }
+.slip-msg { font: italic 400 16px/1.2 var(--font-headline); margin: 5px 0; color: #20304F; }
+.slip-f { font-size: 9px; letter-spacing: .1em; opacity: .8; }
+.slip.bad .slip-msg { color: var(--stamp); font-weight: 700; }
+
+.tally {
+  position: absolute; z-index: 8; left: 50%; bottom: 14px; transform: translateX(-50%);
+  display: flex; gap: 18px; padding: 6px 14px; white-space: nowrap;
+  background: #0B0906; color: var(--amber); font-size: 13px; border: 1px solid #3A2A12;
+  text-shadow: 0 0 6px rgba(255,181,71,.5);
+}
+.tally b { font-weight: 400; font-size: 15px; }
+.hint { position: absolute; z-index: 8; left: 50%; bottom: 52px; transform: translateX(-50%); margin: 0; padding: 3px 10px; white-space: nowrap; color: #F8ECD6; background: rgba(11, 9, 6, .85); font-size: 13px; }
+.office .skip { position: absolute; z-index: 30; top: 14px; right: 14px; padding: 4px 10px; color: #F8ECD6; background: rgba(11, 9, 6, .85); opacity: 1; }
+
+.office-overlay {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: 24px; color: var(--paper);
+  background: radial-gradient(80% 70% at 50% 45%, rgba(40, 22, 12, .9), rgba(8, 5, 3, .97));
+  animation: fadeIn .7s both;
+}
+@keyframes fadeIn { from { opacity: 0; } }
+/* The world lines feed in at the bottom of a window that ends just below the
+   middle of the screen; older lines slide up and fade out the top. */
+.world {
+  position: absolute; z-index: 1; left: 0; right: 0; top: 0; height: 57%;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  overflow: hidden; padding-inline: 16px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 60%);
+  mask-image: linear-gradient(to bottom, transparent, #000 60%);
+}
+.world-track { will-change: transform; }
+.world p { max-width: 900px; margin: .12em auto; font-size: clamp(22px, 3.3vw, 40px); animation: lineIn .6s var(--ease-out) both; }
+.world p.loop { animation-duration: .2s; }
+@keyframes lineIn { from { opacity: 0; transform: translateY(10px); } }
+
+/* The pile-up: the same words everywhere, on paper, phone slips and screens. */
+.chorus { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.chorus.back { z-index: 0; }
+.chorus.front { z-index: 2; }
+.echo { position: absolute; white-space: nowrap; line-height: 1; opacity: var(--o); transform: rotate(var(--r)); animation: echoIn .18s ease-out backwards; }
+.echo-print { font-family: var(--font-headline); font-weight: 900; color: var(--paper); }
+.echo-slip { font-family: var(--font-headline); font-style: italic; color: #F7CFCB; }
+.echo-crt { font-family: var(--font-terminal); color: var(--amber); text-shadow: 0 0 6px rgba(255, 181, 71, .6); }
+@keyframes echoIn { from { opacity: 0; transform: rotate(var(--r)) scale(1.4); } }
+.office-overlay.frenzy .chorus { animation: jitter .1s steps(2) infinite; }
+@keyframes jitter { 50% { transform: translate(2px, -1px); } }
+
+/* The break: the headline lands and the pile falls away. */
+.office-overlay.broken .echo {
+  opacity: 0; transform: translateY(110vh) rotate(calc(var(--r) * 5));
+  transition: transform .95s cubic-bezier(.55, 0, 1, .45) var(--d), opacity .9s ease-in var(--d);
+}
+.office-overlay.broken .world {
+  opacity: 0; transform: translateY(75vh) rotate(4deg);
+  transition: transform 1s cubic-bezier(.55, 0, 1, .45) .04s, opacity .9s ease-in .04s;
+}
+.finale {
+  position: absolute; z-index: 4; inset: 0; padding: 24px 16px; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.better { visibility: hidden; margin: 0; font-size: clamp(40px, 8vw, 116px); color: var(--paper); text-shadow: 0 6px 30px rgba(0, 0, 0, .6); --rot: 0deg; }
+.better.show { visibility: visible; animation: stampIn .42s var(--ease-slam) both; }
+.mail { visibility: hidden; margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 18px; pointer-events: auto; }
+.mail.show { visibility: visible; animation: dropIn .5s var(--ease-slam) both; }
+@keyframes dropIn { from { transform: translateY(-80px) rotate(-12deg); opacity: 0; } }
+.mag { width: 240px; padding: 16px 18px; transform: rotate(-4deg); text-align: left; }
+.mag-top { font-size: 11px; }
+.mag-cover { font-size: 30px; margin-top: 6px; }
+
+
+}
