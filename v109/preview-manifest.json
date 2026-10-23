@@ -1,5 +1,5 @@
 {
-  "commit": "4963f800117711e14ad29df16c0018b960bf8da4",
+  "commit": "baae6af2fdadd5b9dab16b1e10ad9bf3f4872da7",
   "entry": "index.html",
   "source_path": "v109/",
   "files": {
@@ -31,7 +31,7 @@
     "src/ui/founding.js": "303f8d004e99eaabd1b0572c6dc0ca6d2b7aa5a5efdd149129c8b2a7b4fa98fa",
     "src/ui/offers.js": "3607723df41dcb5b2c27101d7f0c9680890c6b08944eb84746063890a640bea5",
     "src/ui/pit-charm.js": "574875cfb86e121a65a5055c365e1ca7dac559f1217262c88583bcc5b6f79f62",
-    "src/ui/pit-company.js": "542644a16ef2e9e908b1f5aa3ea21f6167860cf8aba9c4d5b7050d8637be3830",
+    "src/ui/pit-company.js": "45a9d39a569de5d3d347363c50ff42cb9be1f1bdb6aa14808c582e1afe5c40ce",
     "src/ui/pit-deals.js": "9ce27a26b05b5aa16fd141753ecbc94ebacb5ca16c4fe746a21981faed5e808d",
     "src/ui/pit-fx.js": "121766941f23a173960d3b50cd5ebb4ebed99b25c4af7d232b1f1c48bf2fa501",
     "src/ui/pit-ledger.js": "9f50866ab733d152ef3d0aa833eeffcbd2a256cbf1973f6e03392f4dafa7ffdd",
@@ -47,7 +47,7 @@
     "styles/pit-feel.css": "89988f3f48b874461cefd615906303edb244a1226dcc83fde4f3bdf5318d2a9d",
     "styles/pit-integration.css": "806fd308b2a467093a4c281cdf22b24fbc409a5ef64b774b650bf8edc6f8ea50",
     "styles/pit-stage.css": "7769dddd38caad02d5f9e475484b4391065cf17973d9ef7b75145a69964a21e1",
-    "styles/strategic.css": "78bde2040270f033d594ae67bf077328f48c6cbcbbb4b927a66bc1c8ac46ee94",
+    "styles/strategic.css": "09cf15ad9c49edf706e142ec5068b6374d6cfef2f4fe8650f83799204c0c5f71",
     "styles/tetris.css": "e8b56284f33fba05c55d038a370a09693fa68c131c0cd8e93130e71f973cff73",
     "styles/tokens.css": "4be447e292e16164969718b29ca90df3414c18732158e3f25c72eb0dc3922ac6",
     "styles/world.css": "67ad5673eecd4d49a23825f4351c1197341b6513c9e9892eb7dedbf69122f4a0",

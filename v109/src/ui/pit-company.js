@@ -45,16 +45,7 @@ export function boardCards(g) {
 // when free stock exists, otherwise it opens the market filtered to that GPU.
 export function slotsHTML(g, card, { live = true, big = false } = {}) {
   const st = cardState(g, card), built = card.status === 'built', can = live && st.live;
-  return `<div class="fc-slots ${big ? 'is-big' : ''}">${st.rows.map(r => {
-    if (!big || st.total > 8) {
-      const held = built ? r.need : r.held, missing = r.need - held;
-      const attrs = `data-card="${esc(card.id)}" data-gpu="${r.gpu}"`;
-      const have = `${gchip(r.gpu)}<b>${held}/${r.need}</b>`;
-      const need = missing ? `NEED ${missing}` : 'READY';
-      return `<span class="slot-row recipe-row ${gcls(r.gpu)}"><span class="slot-label">${r.gpu}</span>` +
-        (can && held && !built ? button('release', have, `class="recipe-held" ${attrs} aria-label="Release one ${r.gpu} from ${esc(card.name)}"`) : `<span class="recipe-held">${have}</span>`) +
-        (can && missing ? button(r.free ? 'reserve' : 'open-market', need, `class="recipe-need" ${attrs} data-filter="supply" aria-label="${r.free ? 'Reserve one' : 'Find'} ${r.gpu} for ${esc(card.name)}"`) : `<span class="recipe-need">${need}</span>`) + '</span>';
-    }
+  return `<div class="fc-slots ${big ? 'is-big' : ''} ${st.total > 8 ? 'is-dense' : ''}">${st.rows.map(r => {
     const chips = [];
     for (let i = 0; i < r.need; i++) {
       const filled = built || i < r.held, key = `data-slot="${esc(card.id)}|${r.gpu}|${i}"`;
@@ -161,7 +152,7 @@ export function companyBoard(g, ui = {}, live = true) {
 // ---- Phones: a strip of compact cards; a tap opens the card desk --------------------------
 function compactCard(g, card, live) {
   const st = cardState(g, card), built = card.status === 'built', expired = card.status === 'expired' || (card.status === 'open' && !st.live && card.until);
-  const chips = st.rows.map(r => `<span class="fcc-resource ${gcls(r.gpu)}">${gchip(r.gpu)}${r.gpu} <b>${built ? r.need : r.held}/${r.need}</b></span>`).join('');
+  const chips = st.rows.map(r => `<span class="fcc-resource ${gcls(r.gpu)}"><span>${r.gpu} <b>${built ? r.need : r.held}/${r.need}</b></span><span class="fcc-units" aria-hidden="true">${Array.from({ length: r.need }, (_, i) => `<i class="mini ${built || i < r.held ? 'is-filled' : ''}" data-slot="${esc(card.id)}|${r.gpu}|${i}"></i>`).join('')}</span></span>`).join('');
   const state = built ? `<span class="fcc-state is-built">${card.lane === 'opportunity' ? 'WON' : 'BUILT'}</span>` : expired ? '<span class="fcc-state is-expired">EXPIRED</span>' : st.ready ? '<span class="fcc-state is-ready">BUILD</span>' : `<span class="fcc-state"><b>${st.held}</b>/${st.total}</span>`;
   const inner = `<span class="fcc-lane">${esc(laneLabel(card).toUpperCase())}${card.mixed ? ' · MIXED' : ''}</span><b class="fcc-name">${esc(card.name)}</b><span class="fcc-reward">${esc(rewardLine(g, card))}</span><span class="fcc-foot"><span class="fcc-chips">${chips}</span>${state}</span>${!built && !expired && st.missing ? `<span class="fcc-deficit">NEED ${deficit(st)}</span>` : ''}${card.until && !built && !expired ? fuse(card.until, card.at, g.arcade.time) : ''}`;
   const cls = `fcc lane-${laneOf(card)} ${st.ready ? 'is-ready' : ''} ${built ? 'is-built' : ''} ${expired ? 'is-expired' : ''}`;
