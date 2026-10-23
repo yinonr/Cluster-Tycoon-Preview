@@ -1,0 +1,55 @@
+.ts-delivery { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; margin: 10px 0; }
+.strategic-status { font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.compute-schedule { font-size: 11px; line-height: 1.4; padding: 4px 8px; }
+.compute-schedule summary { cursor: pointer; min-height: 24px; }
+.compute-schedule p { margin: 4px 0; overflow-wrap: anywhere; }
+.partnership-terms { font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.partnership-terms summary { cursor: pointer; padding: 8px 0; }
+.partnership-terms p { margin: 4px 0; }
+.compute-terms { font-size: 12px; line-height: 1.4; }
+.compute-terms summary { cursor: pointer; padding: 6px 0; }
+.compute-terms p { margin: 4px 0; }
+.term-sheet .ts-hero > p { min-width: 0; }
+/* Per-unit slots stay visible: compact rows, smaller chips for large recipes. */
+.cards .fc-slots { flex: 0 0 auto; overflow: visible; margin-block: auto; gap: 2px; }
+.cards .fc > :not(.fc-slots) { flex-shrink: 0; }
+.cards .fc { gap: 3px; }
+.shelf { flex-wrap: nowrap; min-width: 0; }
+.shelf li { min-width: 0; max-width: 100%; }
+.shelf b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shelf span { flex-shrink: 0; }
+.cards .fc-blurb { display: none; }
+.cards .fc-name, .cards .fc-reward, .cards .fc-what { white-space: normal; overflow: visible; text-overflow: clip; }
+.cards .fc-what { display: block; line-height: 1.25; }
+.cards .slot-row { align-items: center; gap: 4px; }
+.cards .slot-label { padding: 0; flex-basis: 34px; font-size: 10px; }
+.cards .slot-chips { gap: 3px; }
+.cards .slot { width: 28px; height: 28px; --chip: 20px; border-radius: 4px; }
+.cards .is-dense .slot { width: 22px; height: 24px; --chip: 16px; }
+@container (min-height: 280px) {
+  .cards .fc-slots:not(.is-dense) .slot { width: 34px; height: 36px; --chip: 26px; }
+}
+@container (max-height: 240px) {
+  .cards .slot { width: 22px; height: 22px; --chip: 16px; }
+  .cards .is-dense .slot { width: 18px; height: 20px; --chip: 13px; }
+  .cards .fc-name { font-size: 15px; }
+  .cards .fc-reward { font-size: 11.5px; }
+  .cards .fc-what { font-size: 10px; }
+}
+.fc-count { font-size: 10px; min-width: 0; }
+.fc-count small { display: block; font: 700 10px/1.3 var(--font-mono); overflow-wrap: anywhere; }
+.fcc { flex-basis: 174px; }
+.fcc-name, .fcc-reward { white-space: normal; overflow: visible; text-overflow: clip; }
+.fcc-reward { display: block; }
+.fcc-foot { align-items: end; }
+.fcc-chips { display: grid; max-height: none; overflow: visible; gap: 2px; }
+.fcc-resource { display: grid; gap: 2px; color: var(--gc-deep); font: 700 10px/1.3 var(--font-mono); }
+.fcc-units { display: flex; flex-wrap: wrap; gap: 2px; max-width: 90px; }
+.fcc-units .mini { flex: 0 0 7px; width: 7px; height: 9px; }
+.fcc-deficit { font: 700 10px/1.3 var(--font-mono); }
+#pit .fc-slots.is-big.is-dense .slot { width: 32px; height: 34px; --chip: 23px; }
+#pit .fc-slots.is-big.is-dense .slot-chips { gap: 4px; }
+@media (max-width: 760px) {
+  .pit-focus[data-desk="term"] .mat-vault { font-size: 12px; }
+  .fc-what { line-height: 1.35; }
+}
