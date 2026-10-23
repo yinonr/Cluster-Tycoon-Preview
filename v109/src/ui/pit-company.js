@@ -46,6 +46,15 @@ export function boardCards(g) {
 export function slotsHTML(g, card, { live = true, big = false } = {}) {
   const st = cardState(g, card), built = card.status === 'built', can = live && st.live;
   return `<div class="fc-slots ${big ? 'is-big' : ''}">${st.rows.map(r => {
+    if (!big || st.total > 8) {
+      const held = built ? r.need : r.held, missing = r.need - held;
+      const attrs = `data-card="${esc(card.id)}" data-gpu="${r.gpu}"`;
+      const have = `${gchip(r.gpu)}<b>${held}/${r.need}</b>`;
+      const need = missing ? `NEED ${missing}` : 'READY';
+      return `<span class="slot-row recipe-row ${gcls(r.gpu)}"><span class="slot-label">${r.gpu}</span>` +
+        (can && held && !built ? button('release', have, `class="recipe-held" ${attrs} aria-label="Release one ${r.gpu} from ${esc(card.name)}"`) : `<span class="recipe-held">${have}</span>`) +
+        (can && missing ? button(r.free ? 'reserve' : 'open-market', need, `class="recipe-need" ${attrs} data-filter="supply" aria-label="${r.free ? 'Reserve one' : 'Find'} ${r.gpu} for ${esc(card.name)}"`) : `<span class="recipe-need">${need}</span>`) + '</span>';
+    }
     const chips = [];
     for (let i = 0; i < r.need; i++) {
       const filled = built || i < r.held, key = `data-slot="${esc(card.id)}|${r.gpu}|${i}"`;
@@ -61,6 +70,7 @@ export function slotsHTML(g, card, { live = true, big = false } = {}) {
 }
 
 const canFill = st => st.rows.some(r => r.held < r.need && r.free > 0);
+const deficit = st => st.rows.filter(r => r.held < r.need).map(r => `${r.need - r.held} ${r.gpu}`).join(' + ');
 function partnershipTerms(g, card) {
   if (!card.strategic) return '';
   const p = PARTNERSHIPS.find(p => p.id === card.strategic.id);
@@ -74,7 +84,7 @@ export function whatLine(card) {
   const U = FOUNDER.run;
   if (card.strategic) return `Due at this bell. ${card.mixed ? '75% integration delivers; otherwise one-round delay. ' : ''}${card.strategic.stage + 1 < card.strategic.total ? 'Next stage follows delivery; missing it ends the partnership.' : 'Final deployment; recurring customer revenue.'}`;
   if (card.lane === 'product') return `Paid at every bell · grows ${pct(FOUNDER.growth)} a round`;
-  if (card.lane === 'research') return `Training run · ${pct(U.breakthrough + (card.mixed ? U.mixedBreakthrough : 0))} breakthrough · ${pct(U.setback + (card.mixed ? U.mixedSetback : 0))} setback`;
+  if (card.lane === 'research') return `${pct(U.breakthrough + (card.mixed ? U.mixedBreakthrough : 0))} breakthrough · ${pct(U.setback + (card.mixed ? U.mixedSetback : 0))} setback`;
   if (card.lane === 'infra') return 'Free GPUs at every round open';
   if (card.kind === 'partner') return 'Investors notice a published breakthrough';
   return 'One-off prize, paid when you build it';
@@ -89,11 +99,11 @@ export function cardTile(g, card, live = true) {
   const change = b ? buildChange(g, b) : null;
   const foot = built ? `<footer class="fc-foot is-built"><span class="fc-result tone-${change.tone}"><b>${esc(change.head)}</b> ${esc(change.text)}</span></footer>`
     : expired ? `<footer class="fc-foot"><span class="fc-result">Window closed · GPUs released</span></footer>`
-    : `<footer class="fc-foot"><span class="fc-count"><b>${st.held}</b>/${st.total}</span>` +
+    : `<footer class="fc-foot"><span class="fc-count"><b>${st.held}</b>/${st.total} GPUs${st.missing ? `<small>NEED ${deficit(st)}</small>` : ''}</span>` +
       (live && st.live ? `${canFill(st) && !st.ready ? button('fill', 'Fill', `class="fc-fill" data-card="${esc(card.id)}" aria-label="Fill ${esc(card.name)} from free stock"`) : ''}${button('build', 'BUILD', `class="fc-build ${st.ready ? 'is-lit' : ''}" data-card="${esc(card.id)}" ${st.ready ? '' : 'disabled'} aria-label="${st.ready ? `Build ${esc(card.name)} now (irreversible)` : `Build ${esc(card.name)}: ${st.missing} GPUs missing`}"`)}` : '') + '</footer>';
   const stamp = built ? `<strong class="fc-stamp" aria-hidden="true">${card.lane === 'opportunity' ? 'WON' : 'BUILT'}</strong>` : expired ? '<strong class="fc-stamp is-expired" aria-hidden="true">EXPIRED</strong>' : '';
   return `<article class="fc lane-${lane} ${st.ready ? 'is-ready' : ''} ${built ? 'is-built' : ''} ${expired ? 'is-expired' : ''} ${card.mixed ? 'is-mixed' : ''}" data-card-id="${esc(card.id)}" aria-label="${esc(laneLabel(card))}: ${esc(card.name)}. ${esc(rewardLine(g, card))}. ${built ? 'Built.' : `${st.held} of ${st.total} GPUs reserved.`}">` +
-    `${head}${name}<p class="fc-blurb">${esc(card.blurb || '')}</p><p class="fc-reward">${esc(rewardLine(g, card))}</p><p class="fc-what">${esc(whatLine(card))}</p>${card.mixed && !built && !expired ? '<p class="fc-mixnote">MIXED · integration at the bell</p>' : ''}${slotsHTML(g, card, { live })}${foot}${stamp}</article>`;
+    `${head}${name}<p class="fc-blurb">${esc(card.blurb || '')}</p><p class="fc-reward">${esc(rewardLine(g, card))}</p><p class="fc-what">${esc(card.strategic ? `Due this bell${card.mixed ? ' · 75% integration or 1-round delay' : ''}` : whatLine(card))}</p>${slotsHTML(g, card, { live })}${foot}${stamp}</article>`;
 }
 
 function emptyLane(g, lane) {
@@ -151,9 +161,9 @@ export function companyBoard(g, ui = {}, live = true) {
 // ---- Phones: a strip of compact cards; a tap opens the card desk --------------------------
 function compactCard(g, card, live) {
   const st = cardState(g, card), built = card.status === 'built', expired = card.status === 'expired' || (card.status === 'open' && !st.live && card.until);
-  const chips = st.rows.map(r => Array.from({ length: r.need }, (_, i) => `<i class="mini ${gcls(r.gpu)} ${built || i < r.held ? 'is-filled' : ''}" data-slot="${esc(card.id)}|${r.gpu}|${i}"></i>`).join('')).join('');
+  const chips = st.rows.map(r => `<span class="fcc-resource ${gcls(r.gpu)}">${gchip(r.gpu)}${r.gpu} <b>${built ? r.need : r.held}/${r.need}</b></span>`).join('');
   const state = built ? `<span class="fcc-state is-built">${card.lane === 'opportunity' ? 'WON' : 'BUILT'}</span>` : expired ? '<span class="fcc-state is-expired">EXPIRED</span>' : st.ready ? '<span class="fcc-state is-ready">BUILD</span>' : `<span class="fcc-state"><b>${st.held}</b>/${st.total}</span>`;
-  const inner = `<span class="fcc-lane">${esc(laneLabel(card).toUpperCase())}${card.mixed ? ' · MIXED' : ''}</span><b class="fcc-name">${esc(card.name)}</b><span class="fcc-reward">${esc(rewardLine(g, card))}</span><span class="fcc-foot"><span class="fcc-chips" aria-hidden="true">${chips}</span>${state}</span>${card.until && !built && !expired ? fuse(card.until, card.at, g.arcade.time) : ''}`;
+  const inner = `<span class="fcc-lane">${esc(laneLabel(card).toUpperCase())}${card.mixed ? ' · MIXED' : ''}</span><b class="fcc-name">${esc(card.name)}</b><span class="fcc-reward">${esc(rewardLine(g, card))}</span><span class="fcc-foot"><span class="fcc-chips">${chips}</span>${state}</span>${!built && !expired && st.missing ? `<span class="fcc-deficit">NEED ${deficit(st)}</span>` : ''}${card.until && !built && !expired ? fuse(card.until, card.at, g.arcade.time) : ''}`;
   const cls = `fcc lane-${laneOf(card)} ${st.ready ? 'is-ready' : ''} ${built ? 'is-built' : ''} ${expired ? 'is-expired' : ''}`;
   const label = `${laneLabel(card)}: ${card.name}. ${rewardLine(g, card)}. ${built ? 'Built' : expired ? 'Expired' : st.ready ? 'Ready to build' : `${st.held} of ${st.total} GPUs reserved`}. Open the card desk`;
   return live && !built && !expired ? button('open-card', inner, `class="${cls}" data-card="${esc(card.id)}" data-card-id="${esc(card.id)}" aria-label="${esc(label)}"`) : `<div class="${cls}" data-card-id="${esc(card.id)}" ${live ? `role="group" aria-label="${esc(label)}"` : 'aria-hidden="true"'}>${inner}</div>`;
