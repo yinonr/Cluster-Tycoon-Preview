@@ -1,5 +1,5 @@
 {
-  "commit": "68a731012464be01c353565d88aca311b39f35d9",
+  "commit": "792e6f074b29e978647f78e604d189f7328530cc",
   "entry": "index.html",
   "source_path": "v1171/",
   "files": {
@@ -41,7 +41,7 @@
     "src/ui/offers.js": "3607723df41dcb5b2c27101d7f0c9680890c6b08944eb84746063890a640bea5",
     "src/ui/pit-charm.js": "574875cfb86e121a65a5055c365e1ca7dac559f1217262c88583bcc5b6f79f62",
     "src/ui/pit-company.js": "92a31d53c8650272224db859fbe4d31031a8ac837d7357d2ad91dfb1d7dfbaa7",
-    "src/ui/pit-deals.js": "60655f26a027538f1bd3b73e8c687a8fa58780d9bb68ee23c06a113cf89ad07f",
+    "src/ui/pit-deals.js": "8921d9e27ab68fb1804e3f5973a02a05a347e178e2e53abe69cb0f3fbf1d46da",
     "src/ui/pit-fx.js": "e3df4fa0b9cd8626627ba4555795269ab45272524357e617c2d410de54a06b20",
     "src/ui/pit-ledger.js": "30170ecd1de2a10a357cafddfb92c476597c75b37319ebdbe6471420d2c2bd43",
     "src/ui/pit-stage.js": "a65b227c1101b2eb368489f62d54c67a3119a4c8ce459822b213dcf20239bb54",
@@ -59,7 +59,7 @@
     "styles/pit-stage.css": "cd3e099f5cfab7de18936dd4b1fb27e4cc7bb354263f3ad4308ac40be7408c84",
     "styles/scenarios.css": "41ac4e73e5cadcd9cc22f3db51d010746d9da1b35e2bd2235755fc2a879c35bc",
     "styles/strategic.css": "148e6b31a5ee28601b9324ea5ac4ce17be98f8e1ba16d7d1976cc66f16e1d609",
-    "styles/tetris.css": "8936701af446ab24ac0854b40810a4a5c3cfdffa2daf591ddeb7a45790109f48",
+    "styles/tetris.css": "afd99b222e7107059797e1176cadfe09208ec8f46fb3be009a464f5c355d1a83",
     "styles/tokens.css": "4be447e292e16164969718b29ca90df3414c18732158e3f25c72eb0dc3922ac6",
     "styles/world.css": "67ad5673eecd4d49a23825f4351c1197341b6513c9e9892eb7dedbf69122f4a0",
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

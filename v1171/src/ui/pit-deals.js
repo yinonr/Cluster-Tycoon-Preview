@@ -1,5 +1,4 @@
 import { mini } from './tetris.js';
-import { TETRIS } from '../tycoon/tetris.js';
 // The Founder's desks: every deal is played on one fixed instrument (V10.3 Broker's Desk).
 // THEIR number | GAP | YOUR number, read left to right like a ledger line; commits live in the
 // rail. Every figure is an engine value or exact arithmetic of recorded fields (pit-ledger.js).
@@ -99,11 +98,16 @@ function keys(kind, qty, inputHTML) {
   return `<div class="keys">${key(-5)}${key(-1)}<label class="ink-field">${inputHTML}</label>${key(1)}${key(5)}</div>`;
 }
 
+const BROKER_SHAPES = Object.freeze({
+  H100: [[0,0],[1,0]],
+  H200: [[0,0],[0,1],[1,1]],
+  B200: [[0,0],[1,0],[2,0],[1,1]],
+});
 function theirPlate(g, l, news, { delta = true, closed = '' } = {}) {
   const n = l.negotiation, now = g.arcade.time, total = cents(l.qty, n.price);
   const moved = news && Number.isFinite(news.before) && Number.isFinite(news.after) && news.before !== news.after;
   const was = moved ? `<span class="plate-news"><s class="wide-s">${money(cents(l.qty, news.before))}</s>${delta ? `<i class="delta ${news.after < news.before ? 'down' : 'up'}">${signed(cents(l.qty, news.after - news.before))}</i>` : ''}</span>` : '';
-  return `<section class="plate their ${closed ? 'is-closed' : ''}" data-fx-board aria-label="Their quote ${money(total)}"><header class="plate-head"><span>${wide('THEIR', 'QUOTE')}</span>${closed ? `<span class="plate-off">CLOSED</span>` : fuse(l.until, l.at, now)}</header>${closed ? '' : was}${closed ? `<strong class="plate-total money-hero"><s data-fx-quote data-fx-per="${cents(l.qty, 1)}">${money(total)}</s></strong>` : `<strong class="plate-total money-hero" data-fx-quote data-fx-per="${cents(l.qty, 1)}">${money(total)}</strong>`}<small class="plate-sub">${rate(n.price)}/h ×${l.qty} ${gpuTag(l.gpu)} ${mini({gpu:l.gpu,cells:Array.from({length:TETRIS.size[l.gpu]},(_,x)=>[x,0])}, 'broker-piece')}</small>${closed ? `<strong class="closed-stamp" data-fx-verdict>${closed}</strong>` : ''}</section>`;
+  return `<section class="plate their ${closed ? 'is-closed' : ''}" data-fx-board aria-label="Their quote ${money(total)}"><header class="plate-head"><span>${wide('THEIR', 'QUOTE')}</span>${closed ? `<span class="plate-off">CLOSED</span>` : fuse(l.until, l.at, now)}</header>${closed ? '' : was}${closed ? `<strong class="plate-total money-hero"><s data-fx-quote data-fx-per="${cents(l.qty, 1)}">${money(total)}</s></strong>` : `<strong class="plate-total money-hero" data-fx-quote data-fx-per="${cents(l.qty, 1)}">${money(total)}</strong>`}<small class="plate-sub">${rate(n.price)}/h ×${l.qty} <span class="broker-gpu">${mini({gpu:l.gpu,cells:BROKER_SHAPES[l.gpu]}, 'broker-piece')}${gpuTag(l.gpu)}</span></small>${closed ? `<strong class="closed-stamp" data-fx-verdict>${closed}</strong>` : ''}</section>`;
 }
 
 function supplierReaction(l) {

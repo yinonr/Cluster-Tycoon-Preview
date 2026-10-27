@@ -198,4 +198,5 @@
 @keyframes tt-sparks{0%{transform:scale(.2);opacity:1}100%{transform:scale(1.6);opacity:0}}
 @keyframes tt-card-in{0%{transform:translateY(8px);opacity:0}100%{transform:none;opacity:1}}
 
-#pit .broker-piece{--m:5px;margin-left:4px}
+#pit .broker-gpu{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;vertical-align:middle}
+#pit .broker-piece{--m:8.5px}
