@@ -1,0 +1,10 @@
+/* Integration-only rules; scene, deals and Charm retain separate ownership. */
+html,body{margin:0;min-width:280px;height:100%;background:#152c25}
+#pit{height:100dvh;min-height:0;position:relative}
+.pit-background{height:100%;min-height:0}
+.pit-welcome{min-height:100dvh;box-sizing:border-box;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 15%,#7b684b,transparent 60%),repeating-linear-gradient(90deg,#27332b 0 70px,#a18b5522 72px 75px),#14271f;color:#eaddb9}
+.pit-welcome>section{width:min(620px,100%);box-sizing:border-box;padding:clamp(20px,4vw,50px);border:6px double #bd9d5b;background:#162e25e8;box-shadow:0 30px 80px #0008;text-align:center}
+.pit-welcome h1{font:500 clamp(35px,7vw,70px)/1 Georgia,serif;margin:20px 0}.pit-welcome h2{font:19px Georgia,serif;letter-spacing:.09em}.pit-welcome p{line-height:1.5}.pit-welcome .eyebrow{font:12px monospace;letter-spacing:.15em;color:#e7c889}.pit-welcome button{min-height:48px;padding:14px 28px;margin-top:14px;background:#e4cc8e;color:#17382a;font:700 17px Georgia,serif;border:2px solid #fff1bd;cursor:pointer}
+.pit-error{max-width:600px;padding:30px;margin:auto;color:#f3d3b2}.pit-focus:focus{outline:none}
+.pit-announcement{position:absolute;top:0;left:0;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
