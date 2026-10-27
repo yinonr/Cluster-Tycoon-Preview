@@ -12,6 +12,7 @@ import { companyStats, openCards, cardState, executionOf } from '../tycoon/found
 import { money as sum, short, pctOf, bpsText, phaseName, plural } from './pit-ledger.js';
 import { companyBoard, cardStrip, trayRow, gpuTag } from './pit-company.js';
 import { tapeOffer } from './scenarios.js';
+import { mini, BROKER_SHAPES } from './tetris.js';
 
 // HUD cash always shows cents (pit-fx rolls it in that format).
 const money = c => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(c / 100);
@@ -68,11 +69,12 @@ function station(g, l, seatName, ctx) {
   const vacated = ctx.open && a.active === l.id, cooling = !vacated && l.cooldown > t, rival = ctx.open && l.id === ctx.rivalId;
   const live = !ctx.open && !cooling, worked = price !== opening, favor = l.favor, needed = ctx.need.has(l.gpu);
   const cls = `pit-station seller seat-${seatName} ${needed ? 'is-relevant' : ''} ${vacated ? 'is-vacated' : ''} ${cooling ? 'is-cooling' : ''} ${rival ? 'is-rival' : ''} ${worked ? 'is-worked' : ''} ${favor ? 'is-favor' : ''} ${l.event ? 'is-event' : ''} ${l.block ? 'is-block' : ''}`;
+  const gpuLabel = `${mini({ gpu: l.gpu, cells: BROKER_SHAPES[l.gpu] }, 'booth-piece')}${gpu(l.gpu)}`;
   const screen = vacated
     ? `<span class="pit-crt-away">AT YOUR DESK</span>`
     : cooling
-      ? `<span class="pit-crt-head">${l.qty} ${gpu(l.gpu)}</span><span class="pit-crt-away">BACK IN</span>${fuse(l.cooldown, l.cooldown - 5, t, 'is-cooldown')}`
-      : `<span class="pit-crt-rate">${worked ? `<s>${rate(opening)}</s>` : ''}<b>${rate(price)}</b><small>/h</small></span><span class="pit-crt-head">${l.qty} ${gpu(l.gpu)}${needed ? '<em class="pit-need">NEEDED</em>' : ''}</span><span class="pit-crt-total">${sum(cents(l.qty, price))} lot</span>${fuse(l.until, l.at, t)}`;
+      ? `<span class="pit-crt-head">${l.qty} ${gpuLabel}</span><span class="pit-crt-away">BACK IN</span>${fuse(l.cooldown, l.cooldown - 5, t, 'is-cooldown')}`
+      : `<span class="pit-crt-rate">${worked ? `<s>${rate(opening)}</s>` : ''}<b>${rate(price)}</b><small>/h</small></span><span class="pit-crt-head">${l.qty} ${gpuLabel}${needed ? '<em class="pit-need">NEEDED</em>' : ''}</span><span class="pit-crt-total">${sum(cents(l.qty, price))} lot</span>${fuse(l.until, l.at, t)}`;
   const label = `${favor ? `Held for you by ${l.firm} (Trust ${g.firms[l.firm]?.trust ?? 0}): ` : ''}${l.label ? `${l.label}: ` : ''}Supplier ${l.firm}: ${l.qty} ${l.gpu} at ${rate(price)} per GPU-hour, ${sum(cents(l.qty, price))} lot${needed ? ', a GPU your cards need' : ''}${cooling ? `, back in ${Math.ceil(l.cooldown - t)} seconds` : `, ${Math.ceil(Math.max(0, l.until - t))} seconds left`}`;
   const inner = `<span class="pit-station-person" aria-hidden="true">${vacated ? '' : person('seller', l.firm)}</span><span class="pit-crt">${screen}</span><span class="pit-station-plaque"><b>${esc(l.firm)}</b><small>${l.label ? esc(l.label.toUpperCase()) : favor ? 'HELD FOR YOU' : 'SUPPLIER'}</small></span>`;
   return live

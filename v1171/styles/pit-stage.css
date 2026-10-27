@@ -127,6 +127,7 @@
 .pit-crt-rate b { font:700 2.2em/1 var(--font-mono); letter-spacing:-.05em; color:#ffd88a; text-shadow:0 0 10px #ffb54744; }
 .pit-crt-rate small { font:max(10px,.8em) var(--font-mono); color:#c0ac86; }
 .pit-crt-rate s { order:-1; flex-basis:100%; font:max(10px,.72em)/1.1 var(--font-mono); color:#a39a7c; text-decoration-color:#e0805e; text-decoration-thickness:2px; }
+.pit-crt-head .booth-piece{--m:7px;flex:none;margin-left:2px}
 .pit-crt-head { display:flex; align-items:center; gap:.35em; font:700 max(10px,.95em)/1.1 var(--font-mono); color:#e8dcb6; white-space:nowrap; }
 .pit-need { margin-left:auto; padding:0 .35em; border-radius:2px; font:800 max(9px,.62em)/1.5 var(--font-mono); font-style:normal; letter-spacing:.08em; color:#10140f; background:var(--gc,#ffe08f); }
 .pit-station .pit-crt-head .pit-gpu { padding:0 .3em; border-radius:2px; color:#10140f; background:var(--gc); }

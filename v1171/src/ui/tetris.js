@@ -83,6 +83,11 @@ function rackLabel(t) {
 }
 
 // ---- Small pieces ------------------------------------------------------------------------------------------
+export const BROKER_SHAPES = Object.freeze({
+  H100: [[0,0],[1,0]],
+  H200: [[0,0],[0,1],[1,1]],
+  B200: [[0,0],[1,0],[2,0],[1,1]],
+});
 export function mini(piece, cls = '') {
   const [w, h] = dims(piece.cells);
   return `<span class="tt-mini ${gpuClass(piece.gpu)} ${cls}" style="--w:${w};--h:${h}" aria-hidden="true">${piece.cells.map(([x, y]) => `<i style="grid-area:${y + 1}/${x + 1}"></i>`).join('')}</span>`;

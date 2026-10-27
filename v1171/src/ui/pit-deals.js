@@ -1,4 +1,4 @@
-import { mini } from './tetris.js';
+import { mini, BROKER_SHAPES } from './tetris.js';
 // The Founder's desks: every deal is played on one fixed instrument (V10.3 Broker's Desk).
 // THEIR number | GAP | YOUR number, read left to right like a ledger line; commits live in the
 // rail. Every figure is an engine value or exact arithmetic of recorded fields (pit-ledger.js).
@@ -98,11 +98,6 @@ function keys(kind, qty, inputHTML) {
   return `<div class="keys">${key(-5)}${key(-1)}<label class="ink-field">${inputHTML}</label>${key(1)}${key(5)}</div>`;
 }
 
-const BROKER_SHAPES = Object.freeze({
-  H100: [[0,0],[1,0]],
-  H200: [[0,0],[0,1],[1,1]],
-  B200: [[0,0],[1,0],[2,0],[1,1]],
-});
 function theirPlate(g, l, news, { delta = true, closed = '' } = {}) {
   const n = l.negotiation, now = g.arcade.time, total = cents(l.qty, n.price);
   const moved = news && Number.isFinite(news.before) && Number.isFinite(news.after) && news.before !== news.after;
@@ -144,7 +139,7 @@ function supplierView(g, ui) {
     : vault('buy', saved > 0 ? 'BANK DEAL' : 'BUY NOW', saved > 0 ? `Save ${money(saved)}` : money(cost), `aria-label="Buy for ${money(cost)}; save ${money(saved)}"`);
   const exit = { action: 'close-focus', label: 'PASS', aria: 'Pass: return to the market; quote kept, desk cools 5 seconds' };
   const missing = missingOf(g, l.gpu), free = freeOf(g, l.gpu);
-  const needLine = `<p class="gap-need gpu-${l.gpu.toLowerCase()}">${missing ? `Your cards miss <b>${missing}</b> ${esc(l.gpu)}${free ? ` · ${free} free` : ''}` : `No open card misses ${esc(l.gpu)}`}</p>`;
+  const needLine = `<p class="gap-need gpu-${l.gpu.toLowerCase()}">${missing ? `You're missing <b>${missing}</b> ${esc(l.gpu)}${free ? ` · ${free} free` : ''}` : `No open card misses ${esc(l.gpu)}`}</p>`;
   if (n.attempts.length) {
     return { ...base, title: 'Charm verdict', desk: 'verdict', exit,
       body: `<div class="face-off verdict-face desk-verdict" data-autofocus tabindex="-1" role="group" aria-label="${esc(verdictLabel(l))}">${theirPlate(g, l, news, { delta: false })}<div class="verdict-col">${charmVerdict(l)}</div><div class="leverage"><div class="deal-charm">${charmView(g, l)}</div></div></div>`,
