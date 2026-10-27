@@ -1,5 +1,5 @@
 {
-  "commit": "e64e332695b504f7e95ef875191181301fb29745",
+  "commit": "947e9d5d0560cd60fcb1b78d8f90f266a3ff9809",
   "entry": "index.html",
   "source_path": "v115/",
   "files": {
@@ -8,7 +8,7 @@
     "src/data/gpus.js": "c8a8fdab46f1fca5563398859997b16ac12c578bca6ac93072385d8fda7bd42d",
     "src/data/names.js": "a9980b6ae0c075c4d00fc9b23d65a939bb9f738c67773e49e43d64c2ec1aaf50",
     "src/screens/office.js": "cd237ea9c769d6f9a4f81cfbbcaa6a9eadc434376c51a78d3d6fd7a7d051ce7f",
-    "src/screens/pit.js": "8060d18926b927d6e522252f84db3b828c752db16b20806d3a4ff42c8a7449fc",
+    "src/screens/pit.js": "53c9b3c885e6dba781699c2b157b0821bc4c5ea2fbde576a310c6b2be43b6f9c",
     "src/screens/tetris-input.js": "22d7d3bf02cd4fc298477dcf3f6afe1a020bb5a920b82cc56ee47bc36621e046",
     "src/tycoon/arcade-buyers.js": "e12bd2a406aebba68a00da4d4795617ba3c149baa427a3d21a4f399602fa4c6c",
     "src/tycoon/arcade-negotiation.js": "201149b8346f33474736f803a170295a0e34c14157ecc02d3ee35db3e08caffb",
@@ -39,7 +39,7 @@
     "src/ui/moonshot.js": "c34824cd21cd29d35d95db154d0b82bf552566522fb50ca8e52f8b9454794200",
     "src/ui/offers.js": "3607723df41dcb5b2c27101d7f0c9680890c6b08944eb84746063890a640bea5",
     "src/ui/pit-charm.js": "574875cfb86e121a65a5055c365e1ca7dac559f1217262c88583bcc5b6f79f62",
-    "src/ui/pit-company.js": "6ac36378092ade8bfe0083ae4a0c9e4800b34553ea353e8e83db4d91ac7c70ce",
+    "src/ui/pit-company.js": "9acc9be659eb89f1c4bf40f5a32501b6a72953c9c7abaa0eefaf63c8d3c61474",
     "src/ui/pit-deals.js": "66ac978712fe41c22fcc82aaa033d5e4267e5c43ce2453d9caad8e2565160490",
     "src/ui/pit-fx.js": "e3df4fa0b9cd8626627ba4555795269ab45272524357e617c2d410de54a06b20",
     "src/ui/pit-ledger.js": "c6a339fe4ccbf18dfc81bdc0227712aeff0febb940f60b2aa78b159c61d4b6cd",
@@ -56,7 +56,7 @@
     "styles/pit-feel.css": "89988f3f48b874461cefd615906303edb244a1226dcc83fde4f3bdf5318d2a9d",
     "styles/pit-integration.css": "806fd308b2a467093a4c281cdf22b24fbc409a5ef64b774b650bf8edc6f8ea50",
     "styles/pit-stage.css": "7769dddd38caad02d5f9e475484b4391065cf17973d9ef7b75145a69964a21e1",
-    "styles/scenarios.css": "ea6b44c21780ee13512ecaa95129f6403e6811cd182098fcc0c1042dba769e43",
+    "styles/scenarios.css": "18ec5e304cdf4f39856f9e736993a048522a8b85bc02ee8652be3d112e31a644",
     "styles/strategic.css": "148e6b31a5ee28601b9324ea5ac4ce17be98f8e1ba16d7d1976cc66f16e1d609",
     "styles/tetris.css": "e8b56284f33fba05c55d038a370a09693fa68c131c0cd8e93130e71f973cff73",
     "styles/tokens.css": "4be447e292e16164969718b29ca90df3414c18732158e3f25c72eb0dc3922ac6",

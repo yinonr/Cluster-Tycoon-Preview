@@ -266,7 +266,7 @@ root.addEventListener('click', e => {
     act(g => reserve(g, d.card, d.gpu, Math.max(1, Number(d.qty) || 1)));
   }
   else if (a === 'source-block') { if (act(g => sourceBlock(g, d.card))) { ui.panel = 'floor'; ui.cardId = null; render(); } }
-  else if (a === 'release') act(g => d.all ? release(g, d.card, null, heldFor(g, d.card)) : release(g, d.card, d.gpu, 1));
+  else if (a === 'release') act(g => d.all ? release(g, d.card, null, heldFor(g, d.card)) : release(g, d.card, d.gpu, Math.max(1, Number(d.qty) || 1)));
   else if (a === 'fill') act(g => fill(g, d.card));
   else if (a === 'build') {
     ui.openBefore = { ids: openCards(g).map(o => o.id) }; // so the BUILT moment can name the cards it dealt

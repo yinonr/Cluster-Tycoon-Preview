@@ -46,7 +46,8 @@ export function boardCards(g) {
 
 // ---- GPU slots ------------------------------------------------------------------------------
 // Filled = reserved to this card (tap to release one). Empty = still needed: tap reserves one
-// when free stock exists, otherwise it opens the market filtered to that GPU.
+// when free stock exists, otherwise it opens the market filtered to that GPU. A bar row reserves the
+// whole row in one tap and releases it with its Release control.
 export function slotsHTML(g, card, { live = true, big = false } = {}) {
   const st = cardState(g, card), built = card.status === 'built', can = live && st.live;
   return `<div class="fc-slots ${big ? 'is-big' : ''} ${st.total > 8 ? 'is-dense' : ''}">${st.rows.map(r => {
@@ -72,10 +73,13 @@ function barRow(g, card, r, { can, built }) {
   const held = built ? r.need : r.held, w = Math.round(100 * held / r.need), label = `${r.gpu} ${held}/${r.need}`;
   const bar = `<span class="slot-bar ${gcls(r.gpu)}" aria-hidden="true"><i style="width:${w}%"></i></span>`;
   const tag = `<span class="slot-label">${r.gpu}<small>${held}/${r.need}</small></span>`;
-  if (!can || built || held >= r.need) return `<span class="slot-row is-bar ${gcls(r.gpu)}" data-slot="${esc(card.id)}|${r.gpu}|bar">${tag}${bar}</span>`;
-  const act = r.free > 0 ? button('reserve', bar, `class="slot-bar-btn" data-card="${esc(card.id)}" data-gpu="${r.gpu}" data-qty="${Math.min(r.free, r.need - r.held)}" aria-label="Reserve ${Math.min(r.free, r.need - r.held)} ${r.gpu} for ${esc(card.name)}: ${label}"`)
+  if (!can || built) return `<span class="slot-row is-bar ${gcls(r.gpu)}" data-slot="${esc(card.id)}|${r.gpu}|bar">${tag}${bar}</span>`;
+  const act = held >= r.need ? bar
+    : r.free > 0 ? button('reserve', bar, `class="slot-bar-btn" data-card="${esc(card.id)}" data-gpu="${r.gpu}" data-qty="${Math.min(r.free, r.need - r.held)}" aria-label="Reserve ${Math.min(r.free, r.need - r.held)} ${r.gpu} for ${esc(card.name)}: ${label}"`)
     : button('open-market', bar, `class="slot-bar-btn is-wanting" data-filter="supply" data-gpu="${r.gpu}" aria-label="No free ${r.gpu}. Find ${r.gpu} on the floor for ${esc(card.name)}: ${label}"`);
-  return `<span class="slot-row is-bar ${gcls(r.gpu)}" data-slot="${esc(card.id)}|${r.gpu}|bar">${tag}${act}</span>`;
+  // Release returns this row's GPUs to free stock (other rows keep theirs), so a block can move between projects.
+  const off = held ? button('release', 'Release', `class="slot-bar-release" data-card="${esc(card.id)}" data-gpu="${r.gpu}" data-qty="${held}" aria-label="Release ${held} ${r.gpu} from ${esc(card.name)}"`) : '';
+  return `<span class="slot-row is-bar ${gcls(r.gpu)}" data-slot="${esc(card.id)}|${r.gpu}|bar">${tag}${act}${off}</span>`;
 }
 const canFill = st => st.rows.some(r => r.held < r.need && r.free > 0);
 const deficit = st => st.rows.filter(r => r.held < r.need).map(r => `${r.need - r.held} ${r.gpu}`).join(' + ');

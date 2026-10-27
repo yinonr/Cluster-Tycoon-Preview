@@ -120,6 +120,9 @@
 .fcc-units .slot-bar { min-width: 3.5rem; height: .6rem; }
 .cards .slot-bar-btn { min-height: 24px; }
 .cards .slot-row.is-bar { min-height: 24px; }
+#pit .slot-bar-release { flex: 0 0 auto; min-width: 44px; min-height: 44px; margin: 0; padding: 0 .5rem; border: 1px solid currentColor; border-radius: 3px; background: none; box-shadow: none; color: var(--gc-deep); font: 700 11px/1 var(--font-mono, monospace); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+#pit .slot-bar-release:hover { background: #00000012; }
+#pit .cards .slot-bar-release { min-width: 0; min-height: 24px; padding: 0 .4rem; font-size: 10px; }
 .cd-source { margin: .6rem 0 0; }
 .cd-source-btn { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; min-height: 44px; width: 100%; padding: .5rem .8rem; text-align: left; }
 .cd-source-btn span { font-size: .8em; opacity: .85; }
