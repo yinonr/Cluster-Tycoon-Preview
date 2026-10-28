@@ -35,8 +35,8 @@ export function person(role, name, { paddle = false } = {}) {
   // HSC design pass: the same cast in 1-bit. Each former colour is now a pattern of the same index (see character.js).
   const P = id => `url(#hsc-f-${id})`;
   return figureSVG({ badge: investor ? 'VC' : role === 'seller' ? 'SUPPLY' : role === 'buyer' ? 'BUYER' : 'HSC', look: {
-    skin: [P('p12'), P('p25'), P('p50'), '#F8F7F5'][i % 4],
-    hair: ['#161514', P('p75'), P('p25'), '#161514'][Math.floor(i / 5) % 4],
+    skin: ['#F8F7F5', '#E2DCD2', '#B9B1A4', '#8E867A'][i % 4],   // solid tones: no dither on faces (owner, 28 Oct)
+    hair: ['#161514', P('p75'), P('hatch'), '#161514'][Math.floor(i / 5) % 4],
     hairStyle: ['slick', 'bob', 'curly', 'short', 'bighair', 'bald'][Math.floor(i / 11) % 6],
     suit: investor ? ['#161514', P('pin'), P('p75')][Math.floor(i / 17) % 3] : role === 'seller' ? [P('check'), P('hound'), P('hatch')][Math.floor(i / 17) % 3] : role === 'buyer' ? [P('p50'), P('chalk'), P('pin')][Math.floor(i / 17) % 3] : '#161514',
     shirt: i % 3 === 1 ? P('shirt') : '#F8F7F5', tie: investor ? P('dots') : [P('stripe'), P('dots'), '#161514'][i % 3], glasses: !!(i % 2), phone: role === 'seller', paddle: paddle || role === 'buyer'

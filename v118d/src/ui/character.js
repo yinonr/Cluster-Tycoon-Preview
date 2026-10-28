@@ -1,5 +1,5 @@
 // Traders in 80s business wardrobe, drawn as a 1-bit Macintosh game would draw them (HSC design pass): ink outlines
-// on paper, and every tone a MacPaint pattern instead of a colour. Power shoulders, pinstripes and houndstooth, loud
+// on paper, clothes and hair in MacPaint patterns, faces and hands in clean solid tones (never dithered). Power shoulders, pinstripes and houndstooth, loud
 // patterned ties, a lanyard and badge. Fills go through style="fill:…" so a look can pass a colour or a pattern
 // (url(#hsc-f-…), defined once per page by FIGURE_DEFS).
 
@@ -94,6 +94,7 @@ export function figureSVG(c, { you = false } = {}) {
       <ellipse cx="50" cy="38" rx="13.6" ry="16" ${f(L.skin)} ${O}/>
       ${hairFront(L.hairStyle, L.hair)}
       ${eye(44.5)}${eye(55.5)}
+      <path d="M50.2 39.5 Q48.4 43.6 50.6 44.2" fill="none" stroke="${INK}" stroke-width="1.1" stroke-linecap="round"/>
       <path class="brow brow-l" d="M42 34.5 L47 34" stroke="${INK}" stroke-width="1.4"/><path class="brow brow-r" d="M53 34 L58 34.5" stroke="${INK}" stroke-width="1.4"/>
       ${glasses}
       <path class="mouth-shut" d="M46 47.5 Q50 49.6 54 47.5" fill="none" stroke="${PAPER}" stroke-width="3.2" stroke-linecap="round"/>

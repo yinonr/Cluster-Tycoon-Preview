@@ -32,10 +32,16 @@
 }
 html, body { background: var(--hsc-paper); }
 
-/* ---- GPU identity without colour: H100 outline · H200 50% dither · B200 solid ink. Always beside its name. ------ */
-.gpu-h100 { --g-fill: var(--hsc-paper); --g-pat: none; --g-die: var(--hsc-ink); --g-text: var(--hsc-ink); }
-.gpu-h200 { --g-fill: var(--hsc-paper); --g-pat: var(--pat-50); --g-die: var(--hsc-paper); --g-text: var(--hsc-ink); }
-.gpu-b200 { --g-fill: var(--hsc-ink); --g-pat: none; --g-die: var(--hsc-paper); --g-text: var(--hsc-paper); }
+/* ---- GPU identity: the one intentional colour exception in the paper-and-ink world (owner direction, 28 Oct).
+   H100 green · H200 blue · B200 copper, from the game's established tokens (tokens.css). Colour is never the only cue:
+   each type also keeps its own texture (H100 plain, H200 fine rules, B200 diagonal hatch) and is always named. ---- */
+:root {
+  --pat-g-rules: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='3' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h1v1H0z' fill='%23161514' fill-opacity='.55'/%3E%3C/svg%3E") 0 0/1px 3px;
+  --pat-g-hatch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='5' shape-rendering='crispEdges'%3E%3Cpath d='M4 0h1v1H4zM3 1h1v1H3zM2 2h1v1H2zM1 3h1v1H1zM0 4h1v1H0z' fill='%23161514' fill-opacity='.55'/%3E%3C/svg%3E") 0 0/5px 5px;
+}
+.gpu-h100 { --g-fill: var(--h100); --g-pat: none;              --g-die: var(--hsc-ink); --g-text: var(--hsc-ink); }
+.gpu-h200 { --g-fill: var(--h200); --g-pat: var(--pat-g-rules); --g-die: var(--hsc-ink); --g-text: var(--hsc-ink); }
+.gpu-b200 { --g-fill: var(--b200); --g-pat: var(--pat-g-hatch); --g-die: var(--hsc-ink); --g-text: var(--hsc-ink); }
 #pit .gchip { border-radius: 2px; background: linear-gradient(var(--g-die), var(--g-die)) center/34% 34% no-repeat, var(--g-pat), var(--g-fill);
   box-shadow: 0 0 0 1.5px var(--hsc-ink), 1.5px 1.5px 0 1.5px var(--hsc-ink); }
 #pit .gchip::before, #pit .gchip::after { background: repeating-linear-gradient(var(--hsc-ink) 0 1px, transparent 1px 3px); opacity: 1; }
@@ -43,7 +49,7 @@ html, body { background: var(--hsc-paper); }
 #pit .gtag, #pit .pit-gpu { display: inline-flex; align-items: center; gap: .3em; padding: 0 .35em; border-radius: 2px; background: var(--hsc-paper);
   color: var(--hsc-ink); font: 700 .92em/1.4 var(--hsc-sans); letter-spacing: .02em; box-shadow: inset 0 0 0 1px var(--hsc-ink); text-shadow: none; }
 #pit .gtag::before, #pit .pit-gpu::before { content: ''; flex: none; width: .72em; height: .72em; background: var(--g-pat), var(--g-fill); box-shadow: 0 0 0 1px var(--hsc-ink); }
-#pit .mini { border: 1.5px solid var(--hsc-ink); border-radius: 1px; background: var(--hsc-paper); }
+#pit .mini { border: 1.5px solid var(--hsc-ink); border-radius: 1px; background: color-mix(in srgb, var(--g-fill, var(--hsc-paper)) 28%, var(--hsc-paper)); }
 #pit .mini.is-filled { background: linear-gradient(var(--g-die), var(--g-die)) center/40% 40% no-repeat, var(--g-pat), var(--g-fill); border-color: var(--hsc-ink); }
 
 /* ---- The stage ------------------------------------------------------------------------------------------------ */
@@ -283,6 +289,10 @@ html, body { background: var(--hsc-paper); }
    commit is the Mac's default button. Every number, timer and rule is the engine's; only the look changes.
    ====================================================================================================================== */
 #pit .pit-focus-scrim, #pit .pit-focus-scrim.is-paper { background: var(--pat-50); backdrop-filter: none; }
+/* At a desk the counterpart stands in the band above the panel: keep the dither below the band so no pattern
+   falls across their face (owner, 28 Oct: clean faces). */
+#pit .pit-focus-scrim.has-band { background: linear-gradient(color-mix(in srgb, var(--hsc-paper) 45%, transparent), color-mix(in srgb, var(--hsc-paper) 45%, transparent)) 0 0/100% var(--band-h) no-repeat; }
+#pit .pit-focus-scrim.has-band::before { content: ''; position: absolute; inset: var(--band-h) 0 0 0; z-index: -1; background: var(--pat-50); pointer-events: none; }
 #pit .pit-focus { color: var(--hsc-ink); }
 #pit .pit-focus.is-paper { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); box-shadow: 6px 6px 0 var(--hsc-ink); padding-top: 0; }
 #pit .is-paper .pit-focus-heading { padding: 6px 16px; background: var(--pat-lines), var(--hsc-paper); border-bottom: 2px solid var(--hsc-ink); }
@@ -548,3 +558,498 @@ html, body { background: var(--hsc-paper); }
   #pit button.slot.can-fill:hover { background: var(--hsc-paper); box-shadow: none; }
   #pit button.slot.is-filled:hover { background: none; }
 }
+
+/* ======================================================================================================================
+   PHASE 3 · E. CLUSTER TETRIS: an ink rack on paper. The GPU modules keep their colours and textures (the owner's
+   exception), every other surface is paper and ink. Timing, sizes, controls and scoring are untouched.
+   ====================================================================================================================== */
+#pit .tt { color: var(--hsc-ink); }
+#pit .g-h100 { --c: var(--h100); --tx: none; }
+#pit .g-h200 { --c: var(--h200); --tx: var(--pat-g-rules); }
+#pit .g-b200 { --c: var(--b200); --tx: var(--pat-g-hatch); }
+#pit .g-sw   { --c: var(--hsc-grey-light); --tx: var(--pat-vlines); }
+/* The strip is an LED band like the tape: whole numbers in VT323, captions in sentence case. */
+#pit .tt-strip { background: var(--hsc-ink); border: 0; border-radius: 2px; box-shadow: var(--hsc-shadow-sm); color: var(--hsc-paper); font-family: var(--hsc-sans); }
+#pit .tt-cap { font: 700 11px/1.1 var(--hsc-sans); letter-spacing: .02em; color: var(--hsc-grey-light); text-transform: lowercase; }
+#pit .tt-cap::first-letter { text-transform: uppercase; }
+#pit .tt-clock b, #pit .tt-meter b, #pit .tt-rowcount b { font-family: var(--hsc-term); font-weight: 400; color: var(--hsc-led); text-shadow: none; }
+#pit .tt-clock b { font-size: 32px; }
+#pit .tt-meter b { font-size: 30px; }
+#pit .tt-rowcount b { font-size: 26px; }
+#pit .tt-clock.is-short b { color: var(--hsc-led-warn); }
+#pit .tt-fuse { background: transparent; border-radius: 0; box-shadow: inset 0 0 0 1px var(--hsc-grey); }
+#pit .tt-fuse > i { background: var(--hsc-paper); }
+#pit .tt-bar { background: var(--hsc-ink); border: 1px solid var(--hsc-paper); border-radius: 0; }
+#pit .tt-bar-base { background: var(--pat-50-paper); opacity: .5; }
+#pit .tt-bar-fill { background: var(--hsc-led); }
+#pit .tt-bar-skip { background: var(--hsc-note); box-shadow: none; }
+#pit .tt-bar-legend { font: 700 10px/12px var(--hsc-sans); letter-spacing: 0; color: var(--hsc-grey-light); }
+#pit .tt-bar-legend span:last-child { color: var(--hsc-note); }
+/* The rack: an ink cabinet, paper slots on a fine grid, a solid lip between the loading bay and the rack. */
+#pit .tt-rackframe { background: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-radius: 3px; box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), 5px 5px 0 4px var(--hsc-ink); }
+#pit .tt-rackframe::before, #pit .tt-rackframe::after { background: repeating-linear-gradient(var(--hsc-paper) 0 1px, transparent 1px 6px); opacity: .55; }
+#pit .tt-baylabel { font: 700 10px/1 var(--hsc-sans); letter-spacing: .02em; color: var(--hsc-grey-light); }
+#pit .tt-u { font: 700 9px/1 var(--hsc-sans); color: var(--hsc-grey-light); }
+#pit .tt-row.is-bay { background: transparent; }
+#pit .tt-row.is-lip::before { background: var(--hsc-paper); box-shadow: none; }
+#pit .tt-cell { background: var(--hsc-paper); box-shadow: inset 0 0 0 1px var(--hsc-grey-light); }
+#pit .tt-row.is-bay .tt-cell:not([class*=" g-"]) { background: transparent; box-shadow: none; }
+#pit .tt-cell[class*=" g-"] { background: var(--tx), var(--c); border-color: var(--hsc-ink); box-shadow: none; }
+#pit .tt-cell[class*=" g-"]:not(.j-t) { box-shadow: none; }
+#pit .tt-cell[class*=" g-"]::after { background: var(--hsc-ink); box-shadow: inset 0 0 0 1px var(--hsc-paper); opacity: 1; border-radius: 0; }
+#pit .tt-cell.g-b200::after { background: linear-gradient(90deg, var(--hsc-ink) 0 44%, transparent 44% 56%, var(--hsc-ink) 56%); box-shadow: none; }
+#pit .tt-cell.g-h200::after { box-shadow: inset 0 0 0 1px var(--hsc-paper); }
+#pit .tt-cell.g-sw { background: var(--tx), var(--c); border-color: var(--hsc-ink); }
+#pit .tt-cell.g-sw::after { background: repeating-linear-gradient(90deg, var(--hsc-ink) 0 2px, transparent 2px 5px); box-shadow: none; opacity: 1; }
+#pit .tt-cell.is-cur { border-color: var(--hsc-ink); filter: none; box-shadow: inset 0 0 0 1px var(--hsc-paper); }
+#pit .tt-cell.is-ghost { background: color-mix(in srgb, var(--c) 22%, var(--hsc-paper)); border: 2px dashed var(--hsc-ink); opacity: 1; }
+#pit .tt-cell.is-bounce { background: var(--pat-hatch), var(--hsc-led-warn); border-color: var(--hsc-ink); }
+#pit .tt-cell.j-t { border-top-color: transparent; } #pit .tt-cell.j-r { border-right-color: transparent; }
+#pit .tt-cell.j-b { border-bottom-color: transparent; } #pit .tt-cell.j-l { border-left-color: transparent; }
+/* Rows: the LED is the signal. Powered rows light it LED green; a dead row is hatched with a warning LED. */
+#pit .tt-row.is-powered { box-shadow: none; }
+#pit .tt-row.is-powered .tt-cell[class*=" g-"] { filter: none; }
+#pit .tt-led { background: var(--hsc-ink); box-shadow: 0 0 0 1px var(--hsc-grey); }
+#pit .tt-row.is-powered .tt-led { background: var(--hsc-led); box-shadow: 0 0 0 1px var(--hsc-paper); }
+#pit .tt-row.is-dead .tt-led { background: var(--hsc-led-warn); box-shadow: 0 0 0 1px var(--hsc-paper); }
+#pit .tt-row.is-dead .tt-cell:not([class*=" g-"]) { background: var(--pat-hatch), var(--hsc-paper); }
+/* Side panel: NEXT as a small Mac window, the stakes on a coupon, keycaps. */
+#pit .tt-next { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 2px; box-shadow: var(--hsc-shadow-sm); }
+#pit .tt-next-item { font: 700 12px/1 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .tt-next-item.is-empty, #pit .tt-more { color: var(--hsc-grey); font-family: var(--hsc-sans); }
+#pit .tt-out { border: 1.5px dashed var(--hsc-ink); background: var(--pat-12), var(--hsc-paper); color: var(--hsc-ink); font: 700 11px/1.2 var(--hsc-sans); }
+#pit .tt-mini i { background: var(--tx), var(--c); border: 1px solid var(--hsc-ink); border-radius: 0; }
+#pit .tt-stakes { background: var(--hsc-coupon); color: var(--hsc-ink); border: 1.5px dashed var(--hsc-ink); border-radius: 0; box-shadow: none; font: 13px/1.3 var(--hsc-sans); }
+#pit .tt-stakes span { color: var(--hsc-grey); }
+#pit .tt-stakes .tt-tune { border-top: 1px dashed var(--hsc-ink); }
+#pit .tt-stakes .tt-tune b { color: var(--hsc-ink); letter-spacing: .02em; }
+#pit .tt-keys { font: 700 12px/1.7 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .tt-keys kbd { background: var(--hsc-paper); color: var(--hsc-ink); border: 1.5px solid var(--hsc-ink); border-radius: 3px; box-shadow: 0 2px 0 var(--hsc-ink); font: 700 11px/1.5 var(--hsc-sans); }
+#pit .tt-rule { font: italic 14px/1.35 var(--hsc-serif); color: var(--hsc-ink); }
+/* The intro card: a paper window over a dithered scrim. */
+#pit .tt-overlay.tt-intro { background: var(--pat-50); }
+#pit .tt-card, #pit .tt-card.mat-paper { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 3px; box-shadow: var(--hsc-shadow); }
+#pit .tt-eyebrow { font: 500 12px/1 var(--hsc-ui); letter-spacing: .08em; color: var(--hsc-ink); padding-bottom: 7px; border-bottom: 2px solid var(--hsc-ink); background: var(--pat-lines) 0 100%/1px 2px repeat-x; }
+#pit .tt-card h3 { font: 600 24px/1.15 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .tt-manifest b { font: 700 15px/1.1 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .tt-manifest small { font: 400 12px/1.1 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .tt-rule-big { font: 400 15px/1.4 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .tt-card .tt-stakes { background: var(--hsc-coupon); }
+#pit .tt-card .tt-keys { color: var(--hsc-grey); } #pit .tt-card .tt-keys kbd { background: var(--hsc-paper); }
+/* The finish: a stamp in the bay. Perfect is the one Note Yellow moment. */
+#pit .tt-result { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 2px; box-shadow: var(--hsc-shadow); }
+#pit .tt-stamp { color: var(--hsc-ink); background: var(--hsc-paper); border: 4px double var(--hsc-ink); font: 700 clamp(15px, calc(var(--cell) * .6), 24px)/1.05 var(--hsc-ui); letter-spacing: .06em; text-shadow: none; }
+#pit .tt-result p { font: 400 13px/1.3 var(--hsc-sans); color: var(--hsc-ink); } #pit .tt-result p b { color: var(--hsc-ink); }
+#pit .tt-result .tt-score { font: 700 12px/1.3 var(--hsc-sans); color: var(--hsc-grey); letter-spacing: 0; }
+#pit .tt-result.is-crew .tt-stamp { color: var(--hsc-ink); background: var(--pat-12), var(--hsc-paper); }
+#pit .tt-result.is-perfect { background: var(--hsc-paper); border-color: var(--hsc-ink); }
+#pit .tt-result.is-perfect .tt-stamp { color: var(--hsc-ink); background: var(--hsc-note); text-shadow: none; }
+#pit .tt.is-perfect .tt-rackframe { border-color: var(--hsc-ink); box-shadow: 0 0 0 3px var(--hsc-note), 0 0 0 5px var(--hsc-ink), 5px 5px 0 5px var(--hsc-ink); }
+#pit .tt.is-perfect .tt-row.is-rack .tt-cell[class*=" g-"] { filter: none; }
+#pit .tt.is-perfect .tt-row.is-rack .tt-led { background: var(--hsc-note); box-shadow: 0 0 0 1px var(--hsc-paper); }
+/* The pad: Mac keys; DROP is the default button. Arrow glyphs come from the system face. */
+#pit .tt-key { font: 700 22px/1 system-ui, sans-serif; color: var(--hsc-ink); }
+#pit .tt-key.is-down { transform: translateY(3px); box-shadow: 0 1px 0 var(--hsc-ink); }
+#pit .tt-key-drop, #pit .tt-key.tt-key-drop { background: var(--hsc-ink); color: var(--hsc-paper); border: 2px solid var(--hsc-ink); font: 700 16px/1 var(--hsc-ui); letter-spacing: .06em; box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), 0 5px 0 4px var(--hsc-ink); }
+#pit .tt-key-drop.is-down { box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink); }
+@media (max-width: 760px) {
+  #pit .tt-clock b { font-size: 24px; } #pit .tt-meter b { font-size: 23px; } #pit .tt-rowcount b { font-size: 21px; }
+  #pit .tt-cap { font-size: 10px; }
+  #pit .tt-next-item { font-size: 10px; }
+  #pit .tt-card h3 { font-size: 19px; }
+  #pit .tt-rule-big { font-size: 14px; }
+  #pit .tt-key-drop, #pit .tt-key.tt-key-drop { font-size: 14px; letter-spacing: .02em; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #pit .tt.is-perfect .tt-row.is-rack .tt-cell { animation-name: hsc-tt-jackpot; }
+  #pit .tt.is-perfect .tt-rackframe { animation: none; }
+  #pit .tt-row.is-fresh .tt-cell { animation-name: hsc-tt-power; }
+  #pit .tt-row.is-fresh::after { background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--hsc-paper) 80%, transparent), transparent); }
+  #pit .tt-result.is-perfect::before, #pit .tt-result.is-perfect::after { box-shadow: -70px -30px 0 var(--hsc-note), 60px -36px 0 var(--hsc-ink), -50px 34px 0 var(--hsc-ink), 80px 26px 0 var(--hsc-note), 0 -52px 0 var(--hsc-ink), -96px 4px 0 var(--hsc-note), 98px -6px 0 var(--hsc-ink); }
+}
+@keyframes hsc-tt-jackpot { 0%, 100% { box-shadow: none; } 35% { box-shadow: inset 0 0 0 3px var(--hsc-note); } }
+@keyframes hsc-tt-power { 0% { box-shadow: inset 0 0 0 3px var(--hsc-led); } 100% { box-shadow: none; } }
+
+/* ======================================================================================================================
+   PHASE 3 · Shared remap. The remaining desks (term sheets, board updates, card desks, the Deal Room, resale, memos)
+   read the legacy desk tokens. Inside the game they now resolve to the HSC system: News Cycle for data and labels
+   (the old monospace), Gelasio for headlines, ink for every lane and verdict colour. GPU tokens are not remapped:
+   they stay green, blue and copper. Specific components are finished below.
+   ====================================================================================================================== */
+#pit {
+  --money: var(--hsc-sans); --font-mono: var(--hsc-sans); --font-text: var(--hsc-sans); --font-headline: var(--hsc-serif);
+  --font-ui: var(--hsc-ui); --font-dot: var(--hsc-term);
+  --ink: var(--hsc-ink); --ink-2: var(--hsc-ink); --ink-soft: var(--hsc-grey); --paper: var(--hsc-paper); --paper-2: var(--hsc-coupon);
+  --cream: var(--hsc-paper); --cream-2: var(--hsc-coupon);
+  --ox: var(--hsc-ink); --ox-ink: var(--hsc-ink); --stamp: var(--hsc-ink);
+  --good: var(--hsc-ink); --bad: var(--hsc-ink);
+  --shadow-hard: var(--hsc-shadow); --shadow-paper: var(--hsc-shadow);
+}
+#pit :is(.lane-product, .lane-research, .lane-infra, .lane-opportunity) { --lane: var(--hsc-ink); --lane-deep: var(--hsc-ink); }
+/* Lane patterns as tokens (the same as the board's window title bars): Product pinstripes, Research stipple,
+   Infrastructure brick, Opportunity solid ink. Used wherever a lane colour used to mark a row or a header. */
+#pit .lane-product { --lane-pat: var(--pat-lines), var(--hsc-paper); }
+#pit .lane-research { --lane-pat: var(--pat-25), var(--hsc-paper); }
+#pit .lane-infra { --lane-pat: var(--pat-brick), var(--hsc-paper); }
+#pit .lane-opportunity { --lane-pat: linear-gradient(var(--hsc-ink), var(--hsc-ink)); }
+#pit :is(.bell-list, .bu-builds) li { position: relative; border-left: 0; padding-left: 22px; background: var(--hsc-paper); box-shadow: inset 0 0 0 1px var(--hsc-grey-light); }
+#pit :is(.bell-list, .bu-builds) li::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 12px; background: var(--lane-pat, var(--pat-50)); box-shadow: 1px 0 0 var(--hsc-ink); }
+
+/* ---- Shared paper: money in Gelasio with lining figures; data in News Cycle; verdicts in ink ------------------ */
+#pit .money-hero { font-family: var(--hsc-serif); font-weight: 600; font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.01em; }
+#pit .mat-paper { background: var(--hsc-paper); color: var(--hsc-ink); }
+#pit :is(.pos, .neg) { color: var(--hsc-ink); }
+
+/* ======================================================================================================================
+   PHASE 3 · F. INVESTORS: the term sheet is a ruled HSC document. Ownership is a 1-bit bar: what you keep in ink,
+   what the new investor takes in hatch, earlier investors in 50% dither.
+   ====================================================================================================================== */
+#pit .term-sheet { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); box-shadow: var(--hsc-shadow); }
+#pit .term-sheet .company-identity { font: italic 400 24px/1.1 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .term-sheet .contract-head .desk-fuse { color: var(--hsc-ink); }
+#pit .ts-hero span, #pit .ts-figs dt, #pit .ts-own p span { font: 700 12px/1.2 var(--hsc-sans); letter-spacing: 0; text-transform: lowercase; color: var(--hsc-grey); }
+#pit .ts-hero span::first-letter, #pit .ts-figs dt::first-letter, #pit .ts-own p span::first-letter { text-transform: uppercase; }
+#pit .ts-hero strong { color: var(--hsc-ink); }
+#pit .ts-for strong { font: 600 clamp(30px, 3.4vw, 46px)/1 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .ts-figs > div { border: 0; border-top: 1px solid var(--hsc-ink); background: transparent; padding: 5px 0; }
+#pit .ts-figs dd { font: 700 17px/1.2 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .ts-own p { font: 400 13px var(--hsc-sans); color: var(--hsc-grey); }
+#pit .ts-own b { font: 600 22px/1 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .ts-own b.is-after { color: var(--hsc-ink); font-size: 28px; background: linear-gradient(transparent 62%, var(--hsc-note) 62% 92%, transparent 92%); }
+#pit .ts-fine { font: 400 13px/1.4 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .own-bar { height: 16px; border-radius: 0; background: var(--hsc-paper); box-shadow: inset 0 0 0 2px var(--hsc-ink); }
+#pit .own-you { background: var(--hsc-ink); }
+#pit .own-new { background: var(--pat-hatch), var(--hsc-paper); box-shadow: inset 2px 0 0 var(--hsc-ink); }
+#pit .own-old { background: var(--pat-50), var(--hsc-paper); box-shadow: inset 2px 0 0 var(--hsc-ink); }
+#pit .ts-would { font: 400 14px var(--hsc-sans); color: var(--hsc-grey); } #pit .ts-would b { color: var(--hsc-ink); }
+#pit .ts-delivery, #pit .partnership-terms, #pit .compute-terms, #pit .compute-schedule, #pit .strategic-status { font-family: var(--hsc-sans); color: var(--hsc-ink); }
+#pit .ts-rival { background: var(--hsc-coupon); border: 1.5px dashed var(--hsc-ink); }
+#pit .ts-rival p { font: 700 14px/1.3 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .ts-rival b { font: 500 11px var(--hsc-ui); letter-spacing: .08em; color: var(--hsc-ink); }
+#pit .ts-rival-acts .mat-chip { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 6px; box-shadow: var(--hsc-shadow-sm); font: 700 13px/1 var(--hsc-sans); }
+@media (hover: hover) { #pit .ts-rival-acts .mat-chip:hover { background: var(--hsc-ink); color: var(--hsc-paper); } }
+#pit .ts-rival-acts .mat-chip:focus-visible { background: var(--hsc-paper); }
+#pit .ts-rival-used { font: italic 13px var(--hsc-serif); color: var(--hsc-grey); }
+
+/* ======================================================================================================================
+   PHASE 3 · H. ROUND REPORTS: the board update is a newsletter page (deck layout system, 567:2): a masthead rule,
+   three figures, then the builds as lane-marked rows. Gains and losses read from their signs, not a colour.
+   ====================================================================================================================== */
+#pit .board-sheet { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); box-shadow: var(--hsc-shadow); }
+#pit .news-mast { border-bottom: 2px solid var(--hsc-ink); box-shadow: 0 3px 0 var(--hsc-paper), 0 4px 0 var(--hsc-ink); }
+#pit .news-mast span { font: 700 12px/1 var(--hsc-sans); letter-spacing: .06em; color: var(--hsc-grey); }
+#pit .news-mast b { font: 600 clamp(22px, 2.8vw, 32px)/1 var(--hsc-serif); letter-spacing: 0; font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .bu-event, #pit .bu-event.kind-shortage, #pit .bu-event.kind-glut { font: 700 14px var(--hsc-sans); color: var(--hsc-ink); }
+#pit .bu-flow p { border: 0; border-top: 2px solid var(--hsc-ink); background: transparent; padding: 6px 0; }
+#pit .bu-flow span { font: 700 12px var(--hsc-sans); letter-spacing: 0; text-transform: lowercase; color: var(--hsc-grey); }
+#pit .bu-flow span::first-letter { text-transform: uppercase; }
+#pit .bu-flow b { font: 600 26px/1.1 var(--hsc-serif); font-variant-numeric: lining-nums tabular-nums; color: var(--hsc-ink); }
+#pit .bu-flow .bu-net { border: 2px solid var(--hsc-ink); background: var(--hsc-paper); padding: 6px 10px; box-shadow: var(--hsc-shadow-sm); }
+#pit .bu-stamp, #pit .lane-infra .bu-stamp, #pit .run-setback .bu-stamp { color: var(--hsc-ink); border: 3px double var(--hsc-ink); background: var(--hsc-paper); font: 500 12px/1.2 var(--hsc-ui); letter-spacing: .08em; }
+#pit .run-setback .bu-stamp { background: var(--pat-hatch), var(--hsc-paper); }
+#pit .run-breakthrough .bu-stamp { color: var(--hsc-ink); border-color: var(--hsc-ink); background: var(--hsc-note); box-shadow: none; }
+#pit .bu-builds b { font: 600 17px/1.2 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .bu-builds span { font: 400 13px var(--hsc-sans); color: var(--hsc-grey); }
+#pit .bu-quiet { font: italic 15px var(--hsc-serif); color: var(--hsc-grey); }
+#pit .bu-integ { border: 1.5px dashed var(--hsc-ink); background: var(--hsc-coupon); }
+#pit .bu-integ li { font: 700 13px var(--hsc-sans); color: var(--hsc-ink); }
+#pit .bu-world { border-left: 0; background: var(--hsc-coupon); box-shadow: inset 4px 0 0 var(--hsc-ink); }
+#pit .bu-news { font: 600 15px/1.3 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .bu-news span { font: 400 14px/1.35 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .bu-news.tone-bad b, #pit .bu-news.tone-good b { color: var(--hsc-ink); }
+#pit .bu-memo { border-top: 1px dashed var(--hsc-ink); }
+#pit .bu-memo-q { font: 700 14px/1.35 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .memo-opt { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 6px; box-shadow: var(--hsc-shadow-sm); }
+#pit .memo-opt b { font: 700 14px var(--hsc-sans); } #pit .memo-opt small { font: 400 13px/1.3 var(--hsc-sans); color: var(--hsc-grey); }
+@media (hover: hover) { #pit .memo-opt:hover { background: var(--hsc-ink); color: var(--hsc-paper); } #pit .memo-opt:hover small { color: var(--hsc-grey-light); } }
+#pit .memo-opt:focus-visible { background: var(--hsc-paper); }
+#pit .bell-list li { font: 400 13px var(--hsc-sans); color: var(--hsc-grey); }
+#pit .bell-list b { font: 600 15px var(--hsc-serif); color: var(--hsc-ink); }
+#pit .bell-flow { font: 400 14px var(--hsc-sans); color: var(--hsc-grey); } #pit .bell-flow b { color: var(--hsc-ink); }
+#pit .payoff-hero { font: 600 30px/1.1 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .payoff-hero.money-hero { font-family: var(--hsc-serif); }
+#pit .payoff-hero.win, #pit .payoff-hero.loss { color: var(--hsc-ink); }
+#pit .payoff-hero.win { background: linear-gradient(transparent 70%, var(--hsc-note) 70% 94%, transparent 94%); }
+
+/* ======================================================================================================================
+   PHASE 3 · D. PROJECTS: the card desk is the board card at full size (same window, same lane title bar), and the
+   BUILT moment is a stamp on paper.
+   ====================================================================================================================== */
+#pit .card-desk { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); box-shadow: var(--hsc-shadow); }
+#pit .card-desk.is-ready { box-shadow: 0 0 0 3px var(--hsc-note), 0 0 0 5px var(--hsc-ink), var(--hsc-shadow); }
+#pit .cd-head { background: var(--lane-pat); color: var(--hsc-ink); border-bottom: 2px solid var(--hsc-ink); font: 500 13px/1.2 var(--hsc-ui); letter-spacing: .06em; }
+#pit .cd-head > :first-child { background: var(--hsc-paper); padding: 0 6px; box-shadow: 0 0 0 2px var(--hsc-paper); }
+#pit .lane-opportunity .cd-head { color: var(--hsc-paper); }
+#pit .lane-opportunity .cd-head > :first-child { background: var(--hsc-ink); box-shadow: none; }
+#pit .cd-head .fc-fuse { color: var(--hsc-ink); }
+#pit .cd-head .fc-fuse::before { background: linear-gradient(var(--hsc-ink), var(--hsc-ink)) 0 0/calc(var(--left,1) * 100%) 100% no-repeat, var(--hsc-paper); box-shadow: 0 0 0 1px var(--hsc-ink); }
+#pit .lane-opportunity .cd-head .fc-fuse::before { background: linear-gradient(var(--hsc-paper), var(--hsc-paper)) 0 0/calc(var(--left,1) * 100%) 100% no-repeat, var(--hsc-ink); box-shadow: 0 0 0 1px var(--hsc-paper); }
+#pit .cd-blurb { font: italic 16px/1.3 var(--hsc-serif); color: var(--hsc-grey); }
+#pit .cd-reward, #pit .lane-infra .cd-reward { font: 600 clamp(20px, 2.6vw, 28px)/1.15 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .cd-economics { background: var(--hsc-coupon); border: 1.5px dashed var(--hsc-ink); color: var(--hsc-ink); font: 400 13px/1.35 var(--hsc-sans); }
+#pit .cd-economics > b { color: var(--hsc-ink); font: 500 11px/1.3 var(--hsc-ui); letter-spacing: .08em; }
+#pit .cd-economics small { color: var(--hsc-grey); font: 400 12px/1.35 var(--hsc-sans); }
+#pit .cd-runway { border-left: 0; background: var(--pat-12), var(--hsc-paper); box-shadow: inset 4px 0 0 var(--hsc-ink); color: var(--hsc-ink); font: 700 13px/1.4 var(--hsc-sans); }
+#pit .cd-row { font: 400 14px var(--hsc-sans); color: var(--hsc-grey); }
+#pit .cd-compete { border-top: 1px dashed var(--hsc-ink); font: 400 14px/1.35 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .cd-compete span { font: 500 11px var(--hsc-ui); letter-spacing: .08em; color: var(--hsc-ink); }
+#pit .build-moment { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-top: 0; box-shadow: var(--hsc-shadow); }
+#pit .build-moment::before { content: ''; position: absolute; left: -2px; right: -2px; top: 0; height: 10px; background: var(--lane-pat); border: 2px solid var(--hsc-ink); }
+#pit .bm-stamp { color: var(--hsc-ink); border: 6px double var(--hsc-ink); background: var(--hsc-paper); font: 700 clamp(36px, 5.4vw, 58px)/1 var(--hsc-ui); letter-spacing: .12em; }
+#pit .tone-setback .bm-stamp { background: var(--pat-hatch), var(--hsc-paper); }
+#pit .bm-name { font: 600 clamp(22px, 3vw, 30px)/1.15 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .bm-chips .gchip { box-shadow: 0 0 0 1.5px var(--hsc-ink), 2px 2px 0 1.5px var(--hsc-ink); }
+#pit .bm-change b, #pit .lane-infra .bm-change b, #pit .tone-setback .bm-change b { font: 600 clamp(28px, 4vw, 42px)/1.05 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .bm-change span { font: 400 15px/1.3 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .bm-note { border: 2px dashed var(--hsc-ink); background: var(--hsc-note); font: 700 13px/1.3 var(--hsc-sans); letter-spacing: 0; color: var(--hsc-ink); }
+#pit .bm-company { font: 400 14px var(--hsc-sans); color: var(--hsc-grey); }
+#pit .bm-dealt { font: 700 14px var(--hsc-sans); }
+#pit .bm-dealt span { font: 700 12px var(--hsc-sans); letter-spacing: 0; text-transform: none; color: var(--hsc-grey); }
+#pit .bm-dealt b { border-left: 0; background: var(--hsc-paper); box-shadow: inset 0 0 0 1px var(--hsc-ink); font: 600 15px var(--hsc-serif); }
+
+/* ======================================================================================================================
+   PHASE 3 · The Deal Room and world events (scenarios, memos, news). Brass and wax become ink: an extraordinary
+   offer earns a double rule, an ink seal and the Note Yellow highlight, not a glow.
+   ====================================================================================================================== */
+#pit .scn-chip { background: var(--hsc-paper); border: 1.5px solid var(--hsc-ink); border-radius: 2px; color: var(--hsc-ink); font: 700 11px/1.35 var(--hsc-sans); }
+#pit .scn-chip.is-offer { background: var(--hsc-note); border: 2px solid var(--hsc-ink); color: var(--hsc-ink); box-shadow: var(--hsc-shadow-sm); }
+@media (hover: hover) { #pit button.scn-chip.is-offer:hover { background: var(--hsc-ink); color: var(--hsc-paper); } }
+#pit button.scn-chip.is-offer:focus-visible { background: var(--hsc-note); outline: 3px solid var(--hsc-ink); }
+#pit .scn-chip.is-chain { background: var(--hsc-paper); border-color: var(--hsc-ink); }
+#pit .scn-chip.is-chain.is-due { background: var(--hsc-note); border-color: var(--hsc-ink); }
+#pit .scn-chip.is-risk { background: var(--pat-hatch), var(--hsc-paper); border-color: var(--hsc-ink); color: var(--hsc-ink); }
+#pit .scn-chip.is-good { background: var(--hsc-paper); border: 2px double var(--hsc-ink); }
+#pit .scn-seal, #pit .dr-seal { background: var(--hsc-ink); color: var(--hsc-paper); box-shadow: 0 0 0 1.5px var(--hsc-paper), 0 0 0 3px var(--hsc-ink); font-family: var(--hsc-serif); }
+#pit .dr-seal { box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), 3px 3px 0 4px var(--hsc-ink); }
+@keyframes scn-glow { 50% { box-shadow: 0 0 0 3px var(--hsc-note), 0 0 0 5px var(--hsc-ink); } }
+@media (prefers-reduced-motion: reduce) { #pit .scn-chip.is-offer.is-major { box-shadow: 0 0 0 3px var(--hsc-note); } }
+#pit .tape-deal { background: var(--hsc-note); border: 1px solid var(--hsc-paper); color: var(--hsc-ink); font: 700 12px/1.2 var(--hsc-sans); }
+@media (hover: hover) { #pit .tape-deal:hover { background: var(--hsc-paper); outline: 0; } }
+#pit .tape-deal:focus-visible { outline: 2px solid var(--hsc-paper); }
+#pit .deal-room.is-major { background: var(--hsc-paper); border: 4px double var(--hsc-ink); box-shadow: 0 0 0 3px var(--hsc-note), 0 0 0 5px var(--hsc-ink), var(--hsc-shadow); }
+#pit .dr-title { font: 600 24px/1.15 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .dr-premise { font: 400 15px/1.4 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .dr-fine { font: 400 12.5px/1.45 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .dr-reply { border-left: 0; background: var(--hsc-coupon); box-shadow: inset 4px 0 0 var(--hsc-ink); font: italic 15px/1.4 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .dr-schedule { font: 400 13px/1.35 var(--hsc-sans); }
+#pit .dr-schedule caption, #pit .dr-schedule thead th, #pit .dr-price span, #pit .dr-figs dt { font: 700 12px/1.3 var(--hsc-sans); letter-spacing: 0; text-transform: none; color: var(--hsc-grey); }
+#pit .dr-schedule :is(th, td) { border-bottom: 1px solid var(--hsc-grey-light); }
+#pit .dr-schedule thead th { border-bottom: 2px solid var(--hsc-ink); }
+#pit .dr-price p { border: 0; border-top: 2px solid var(--hsc-ink); background: transparent; padding: 6px 0; }
+#pit .dr-price strong, #pit .dr-price strong.win { font: 600 22px/1.1 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .dr-price strong.win { background: linear-gradient(transparent 64%, var(--hsc-note) 64% 94%, transparent 94%); justify-self: start; }
+#pit .dr-price small { font: 400 12px/1.3 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .dr-figs dd { font: 700 14px/1.35 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .dr-opt { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 6px; box-shadow: var(--hsc-shadow-sm); }
+#pit .dr-opt b { font: 700 15px/1.25 var(--hsc-sans); } #pit .dr-opt small { font: 400 13px/1.35 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .dr-opt.is-primary { background: var(--hsc-paper); border-color: var(--hsc-ink); box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), 4px 4px 0 4px var(--hsc-ink); }
+#pit .dr-opt.is-decline { background: var(--hsc-paper); box-shadow: none; border-style: dashed; }
+@media (hover: hover) { #pit .dr-opt:hover:not(:disabled) { background: var(--hsc-ink); color: var(--hsc-paper); } #pit .dr-opt:hover:not(:disabled) small { color: var(--hsc-grey-light); } }
+#pit .dr-opt:focus-visible { background: var(--hsc-paper); }
+#pit .dr-opt:disabled { opacity: 1; color: var(--hsc-grey); border-color: var(--hsc-grey-light); }
+#pit .dr-opt:disabled small { color: var(--hsc-ink); }
+#pit .fc.is-scenario, #pit .fcc.is-scenario { outline: 0; background: var(--hsc-paper); box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), var(--hsc-shadow); }
+#pit .fc.is-scenario .fc-head { background: var(--pat-50), var(--hsc-paper); }
+#pit .scn-stages { font: 400 13px/1.35 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .scn-stages li.is-done { color: var(--hsc-grey); text-decoration: line-through; }
+#pit .scn-stages li.is-now b { color: var(--hsc-ink); background: var(--hsc-note); }
+#pit .scn-miss, #pit .scn-miss.is-penalty { font: 700 13px/1.4 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .scn-miss.is-penalty { background: var(--pat-12), var(--hsc-paper); }
+#pit .scn-cure { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 6px; box-shadow: var(--hsc-shadow-sm); font: 700 13px var(--hsc-sans); }
+#pit .bell-list li.is-warning span, #pit .scn-dues b { color: var(--hsc-ink); font-weight: 700; }
+#pit .bell-list li.is-warning { background: var(--pat-12), var(--hsc-paper); }
+#pit .exit-sheet.kind-acquired .exit-title { color: var(--hsc-ink); }
+#pit .fc.is-flagship .fc-lane i { background: var(--hsc-ink); color: var(--hsc-paper); }
+/* World: news tags on the tape stay inside the ink LED band; event booths, rival offers. */
+#pit .tape-news, #pit .tape-event.tone-bad .tape-news, #pit .tape-event.tone-good .tape-news, #pit .tape-event.tone-funny .tape-news { background: var(--hsc-paper); color: var(--hsc-ink); font: 700 10px/1.3 var(--hsc-sans); letter-spacing: .06em; }
+#pit .tape-event.tone-bad .tape-news { background: var(--hsc-led-warn); }
+#pit .tape-mkt { color: var(--hsc-grey-light); font: 700 11px/1.3 var(--hsc-sans); letter-spacing: .02em; text-transform: none; }
+#pit .tape-mkt.kind-shortage { color: var(--hsc-led-warn); } #pit .tape-mkt.kind-glut { color: var(--hsc-led); }
+#pit .pit-station.is-event .pit-station-plaque small { color: var(--hsc-ink); background: var(--hsc-note); padding: 0 4px; letter-spacing: .02em; }
+#pit .pit-station.is-event .pit-crt { box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-note), var(--hsc-shadow); }
+#pit .pit-station.is-block .pit-crt, #pit .pit-station.is-block .pit-crt { box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 5px var(--hsc-ink), var(--hsc-shadow); }
+#pit .pit-station.is-block .pit-station-plaque small { color: var(--hsc-ink); letter-spacing: .02em; }
+#pit .exit-epilogue { font: italic 16px/1.4 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .exit-math small { font: 400 12px var(--hsc-sans); color: var(--hsc-grey); }
+
+/* ======================================================================================================================
+   PHASE 3 · In-game guidance: tips, the rename dialog and the context hint are small Mac windows. The welcome /
+   help dialog (.welcome-dialog) closes the cinematic opening, so it is left as V10.18 has it (see the design doc).
+   ====================================================================================================================== */
+#pit .founding-scrim:has(.founding-dialog:not(.welcome-dialog)), .founding-scrim:has(.founding-dialog:not(.welcome-dialog)) { background: var(--pat-50); }
+.founding-scrim.is-tip { background: color-mix(in srgb, var(--hsc-paper) 30%, transparent); }
+.founding-dialog:not(.welcome-dialog) { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-radius: 3px; box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), 6px 6px 0 4px var(--hsc-ink); font-family: var(--hsc-sans); }
+.founding-dialog:not(.welcome-dialog) h1, .founding-dialog:not(.welcome-dialog) h2 { font-family: var(--hsc-serif); font-weight: 600; }
+.founding-dialog:not(.welcome-dialog) .founding-kicker { font: 500 12px var(--hsc-ui); letter-spacing: .06em; color: var(--hsc-ink); border-bottom: 2px solid var(--hsc-ink); }
+.founding-dialog:not(.welcome-dialog) label { font: 700 13px var(--hsc-sans); }
+.founding-dialog:not(.welcome-dialog) input { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); font: 600 20px var(--hsc-serif); }
+.founding-dialog:not(.welcome-dialog) input::placeholder { font: 16px var(--hsc-sans); color: var(--hsc-grey); }
+.founding-dialog:not(.welcome-dialog) .name-error { color: var(--hsc-ink); font-weight: 700; }
+.founding-dialog:not(.welcome-dialog) .founding-steps li { border-left: 0; box-shadow: inset 4px 0 0 var(--hsc-ink); }
+.founding-dialog:not(.welcome-dialog) .founding-steps b { font: 700 13px var(--hsc-sans); }
+.founding-dialog:not(.welcome-dialog) .founding-goal { border-top: 2px solid var(--hsc-ink); }
+.founding-dialog:not(.welcome-dialog) button { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-radius: 6px; font: 700 14px var(--hsc-ui); letter-spacing: .04em; box-shadow: var(--hsc-shadow-sm); }
+.founding-dialog:not(.welcome-dialog) .founding-primary { background: var(--hsc-ink); color: var(--hsc-paper); box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink); }
+.founding-dialog:not(.welcome-dialog) .founding-links button { background: transparent; border: 0; box-shadow: none; font: 400 14px var(--hsc-sans); color: var(--hsc-ink); }
+.founding-dialog:not(.welcome-dialog) :is(button, input):focus-visible { outline: 3px solid var(--hsc-ink); outline-offset: 3px; box-shadow: 0 0 0 7px var(--hsc-note); }
+.tip-dialog { border-top: 2px solid var(--hsc-ink); }
+.tip-dialog .founding-kicker { background: var(--pat-lines), var(--hsc-paper); margin: -20px -20px 0; padding: 7px 20px; }
+.tip-copy { font: 400 18px/1.4 var(--hsc-sans); }
+#pit .context-hint { background: var(--hsc-note); color: var(--hsc-ink); font: 400 14px/1.3 var(--hsc-sans); }
+#pit .context-hint b { font: 700 13px var(--hsc-sans); }
+#pit .pit-tape .context-hint { background: transparent; color: var(--hsc-paper); }
+#pit .pit-tape .context-hint b { color: var(--hsc-note); }
+.guide-target { outline: 3px solid var(--hsc-ink) !important; outline-offset: 2px; box-shadow: 0 0 0 7px var(--hsc-note) !important; }
+
+/* ======================================================================================================================
+   PHASE 3 · C. The market directory (every live supplier, buyer and investor): Mac folder tabs over a ruled ledger.
+   Rates are CRT-free here, so they are News Cycle data; the selected tab is the paper one.
+   ====================================================================================================================== */
+#pit .pit-market-filters .pit-tab { background: var(--pat-12), var(--hsc-coupon); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-bottom: 0; border-radius: 6px 6px 0 0; font: 500 14px/1.2 var(--hsc-ui); letter-spacing: .04em; }
+#pit .pit-market-filters .pit-tab { text-shadow: 1px 0 0 var(--hsc-paper), -1px 0 0 var(--hsc-paper), 0 1px 0 var(--hsc-paper), 0 -1px 0 var(--hsc-paper); }
+#pit .pit-market-filters .pit-tab[aria-pressed="true"] { text-shadow: none; }
+#pit .pit-market-filters .pit-tab b { background: var(--hsc-ink); color: var(--hsc-paper); font: 700 12px var(--hsc-sans); border-radius: 2px; }
+#pit .pit-market-filters .pit-tab[aria-pressed="true"] { background: var(--hsc-paper); color: var(--hsc-ink); border-color: var(--hsc-ink); position: relative; z-index: 1; box-shadow: 0 2px 0 var(--hsc-paper); }
+#pit .pit-market-filters .pit-tab[aria-pressed="true"] b { background: var(--hsc-ink); }
+#pit .pit-market-filters .pit-tab-gpu { background: var(--g-pat, none), var(--gc); color: var(--hsc-ink); border-color: var(--hsc-ink); }
+#pit .pit-ledger-sheet { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: var(--hsc-shadow); }
+#pit .pit-market-col h3, #pit .pit-market-col.buyer h3 { border-bottom: 2px solid var(--hsc-ink); font: 700 13px var(--hsc-sans); letter-spacing: 0; text-transform: none; color: var(--hsc-ink); }
+#pit .pit-market-row { border-bottom: 1px solid var(--hsc-grey-light); color: var(--hsc-ink); }
+@media (hover: hover) { #pit .pit-market-row:hover { background: var(--hsc-coupon); } }
+#pit .pit-market-face { background: var(--hsc-paper); border: 1.5px solid var(--hsc-ink); border-radius: 2px; }
+#pit .pit-market-who small, #pit .pit-market-row.buyer .pit-market-who small { font: 700 11px var(--hsc-sans); letter-spacing: .02em; color: var(--hsc-grey); }
+#pit .pit-market-who b { font: 600 18px/1.12 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .pit-market-rate, #pit .pit-market-row.buyer .pit-market-rate { font: 600 26px/1 var(--hsc-serif); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.01em; color: var(--hsc-ink); }
+#pit .pit-market-rate small { font: 400 12px var(--hsc-sans); color: var(--hsc-grey); }
+#pit .pit-market-rate s { color: var(--hsc-grey); text-decoration-color: var(--hsc-ink); }
+#pit .pit-market-lot, #pit .pit-market-lot .pit-gpu { font: 400 13px/1.3 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .pit-market-cover { font: 700 11px/1.3 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .pit-market-context { font: 700 12px var(--hsc-sans); color: var(--hsc-ink); }
+#pit .pit-market-row .pit-fuse, #pit .pit-market-row .pit-fuse.is-short { color: var(--hsc-ink); font-family: var(--hsc-sans); }
+#pit .pit-market-row .pit-fuse::before { background: linear-gradient(var(--hsc-ink), var(--hsc-ink)) 0 0/calc(var(--left,1) * 100%) 100% no-repeat, var(--hsc-paper); box-shadow: 0 0 0 1px var(--hsc-ink); }
+#pit .pit-market-row .pit-fuse.is-short::before { background: linear-gradient(var(--hsc-ink), var(--hsc-ink)) 0 0/calc(var(--left,1) * 100%) 100% no-repeat, var(--pat-hatch), var(--hsc-paper); }
+#pit .pit-market-row.is-primary .pit-market-who b::after { border-radius: 0; background: var(--hsc-note); box-shadow: 0 0 0 1.5px var(--hsc-ink); }
+#pit .pit-market-empty { font: italic 16px/1.5 var(--hsc-serif); color: var(--hsc-grey); }
+#pit .pit-pagination button, #pit .pit-door-btn { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-radius: 6px; box-shadow: var(--hsc-shadow-sm); font: 700 14px/1.2 var(--hsc-ui); letter-spacing: .04em; }
+@media (hover: hover) { #pit .pit-pagination button:not(:disabled):hover, #pit .pit-door-btn:hover { background: var(--hsc-ink); color: var(--hsc-paper); border-color: var(--hsc-ink); } }
+#pit .pit-pagination button:disabled { color: var(--hsc-grey-light); border-color: var(--hsc-grey-light); box-shadow: none; }
+#pit .pit-pagination > span { font: 400 14px var(--hsc-sans); color: var(--hsc-ink); }
+/* Board update, continued: figures fit two columns on phones; capital and expiries read as ledger lines. */
+#pit .bu-flow b { font-size: clamp(19px, 2.4vw, 26px); }
+#pit .bu-flow p { min-width: 0; } #pit .bu-flow b { overflow-wrap: anywhere; }
+#pit .bu-expired, #pit .bu-value { font: 400 14px var(--hsc-sans); color: var(--hsc-ink); }
+#pit .bu-expired span, #pit .bu-value > span:first-child { font: 700 12px var(--hsc-sans); letter-spacing: 0; text-transform: none; color: var(--hsc-grey); }
+#pit .bu-expired b { font: 700 14px var(--hsc-sans); }
+#pit .bu-expired small { color: var(--hsc-grey); }
+#pit .bu-value > b { font: 600 21px var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .bu-exec { font: 700 14px var(--hsc-sans); color: var(--hsc-ink); letter-spacing: 0; }
+#pit .news-next { font-family: var(--hsc-sans); color: var(--hsc-ink); }
+/* Tetris stamps carry numbers ("100% integrated"), so they use the text sans, never the pixel face. */
+#pit .tt-stamp { font-family: var(--hsc-sans); font-weight: 700; letter-spacing: .04em; }
+@media (max-width: 760px) { #pit .bu-flow b { font-size: 19px; } #pit .bu-value > b { font-size: 17px; } }
+#pit .bu-exec b { color: var(--hsc-ink); }
+#pit .news-next { border-top: 1px solid var(--hsc-ink); } #pit .news-next span { font: 700 12px var(--hsc-sans); letter-spacing: 0; text-transform: none; color: var(--hsc-grey); } #pit .news-next b { font-family: var(--hsc-serif); font-weight: 600; }
+/* Palette audit fixes (tools/v118d-browser.mjs paletteAudit). */
+#pit .pit-center-inset { color: var(--hsc-ink); }
+#pit .pit-phone-company { box-shadow: 0 2px 0 var(--hsc-paper), 0 3px 0 var(--hsc-ink); }
+#pit .tape-event.has-news { color: var(--hsc-paper); }
+#pit .gap-label { color: var(--hsc-ink); font: 700 12px/1 var(--hsc-sans); letter-spacing: .06em; }
+#pit .gap-label::before, #pit .gap-label::after { background: var(--hsc-ink); height: 2px; }
+#pit .gap-figs { background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 2px; box-shadow: var(--hsc-shadow-sm); }
+#pit .gap-figs b { font: 600 clamp(18px, 1.9vw, 24px)/1.1 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); }
+#pit .gap-figs small, #pit .gap-fact { font: 400 13px/1.3 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .gap-fact :is(.pos, .neg) { color: var(--hsc-ink); }
+#pit .gap-need { border-left: 0; background: var(--hsc-coupon); box-shadow: inset 4px 0 0 var(--gc, var(--hsc-ink)); font: 400 13px/1.3 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .gap-need b { color: var(--hsc-ink); }
+/* Phones: the balloon keeps the original two-line clamp at a phone size, so it never reaches the nameplate. */
+@media (max-width: 760px) { #pit .pit-bubble blockquote { font-size: 16px; line-height: 1.22; } #pit .pit-nameplate { position: relative; z-index: 2; padding: 2px 8px 3px; } #pit .pit-nameplate h3 { font-size: 15px; } #pit .pit-nameplate p { font-size: 12px; } }
+@media (max-width: 360px) { #pit .pit-bubble blockquote { font-size: 13px; } #pit .pit-nameplate h3 { font-size: 14px; } }
+
+/* ======================================================================================================================
+   PHASE 3 · F (floor). The investor's booth: a term sheet held up on the floor. Paper ticket with an ink frame and
+   a Note Yellow "term sheet" tag; the cheque in Gelasio; the name on an ink plate. No glow, no green felt.
+   ====================================================================================================================== */
+#pit .pit-investor { color: var(--hsc-ink); }
+#pit .ib-tag { border: 2px solid var(--hsc-ink); border-radius: 2px; background: var(--hsc-note); color: var(--hsc-ink); font: 500 max(10px, .8em)/1.2 var(--hsc-ui); letter-spacing: .08em; box-shadow: var(--hsc-shadow-sm); }
+#pit .ib-person .fig { filter: none; }
+#pit .ib-sheet { border: 2px solid var(--hsc-ink); border-bottom-width: 2px; border-radius: 2px; background: var(--hsc-paper); box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), 4px 4px 0 4px var(--hsc-ink); font-family: var(--hsc-sans); }
+#pit .ib-kind { font: 700 max(10px, .72em)/1.2 var(--hsc-sans); letter-spacing: .02em; color: var(--hsc-grey); }
+#pit .ib-check { font: 600 2em/1 var(--hsc-serif); font-variant-numeric: lining-nums; letter-spacing: -.01em; color: var(--hsc-ink); text-shadow: none; }
+#pit .ib-for { font: 400 max(10px, .95em)/1.2 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .ib-for b { color: var(--hsc-ink); font-weight: 700; }
+#pit .pit-investor .pit-fuse { color: var(--hsc-ink); }
+#pit .ib-name { background: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-radius: 0; box-shadow: var(--hsc-shadow-sm); }
+#pit .ib-name b { font: 600 max(11px, 1em)/1.1 var(--hsc-serif); color: var(--hsc-paper); }
+@media (hover: hover) { #pit button.pit-investor:hover .ib-sheet { border-color: var(--hsc-ink); background: var(--hsc-coupon); } }
+@keyframes pit-term-glow { from { box-shadow: var(--hsc-shadow-sm); } to { box-shadow: 0 0 0 3px var(--hsc-paper), 0 0 0 5px var(--hsc-ink); } }
+#pit .pit-investor.is-vacated { color: var(--hsc-grey); }
+/* When a counter is lit, ACCEPT steps back to a plain paper button (the counter strip is the commit). */
+#pit .pit-focus:has(.mat-strip.is-lit:not(:disabled)) .pit-focus-footer .mat-vault:is([data-action="accept-term"],[data-action="sell-buyer"]):not(:disabled) { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: var(--hsc-shadow-sm); }
+/* Remaining legacy greens and reds: gains and losses read from their signs. */
+#pit .delta.down, #pit .delta.up { background: var(--hsc-ink); color: var(--hsc-paper); }
+#pit .delta.up { background: var(--pat-hatch), var(--hsc-paper); color: var(--hsc-ink); box-shadow: inset 0 0 0 1.5px var(--hsc-ink); }
+#pit .stake-hit { color: var(--hsc-ink); border-left-color: var(--hsc-ink); }
+#pit .verdict-line b.down, #pit .verdict-line b.up { color: var(--hsc-ink); }
+#pit .mat-paper .deal-quote { border-bottom: 1px solid var(--hsc-grey-light); }
+#pit .mat-paper .deal-quote > span { font: 700 12px/1.2 var(--hsc-sans); letter-spacing: 0; text-transform: none; color: var(--hsc-grey); }
+#pit .mat-paper .deal-quote > strong { font: 600 clamp(26px, 3.4vw, 36px)/1.1 var(--hsc-serif); font-variant-numeric: lining-nums; }
+#pit .deal-metric.positive strong, #pit .deal-metric.negative strong { color: var(--hsc-ink); }
+#pit .bu-integ li span, #pit .final-shared small, #pit .rt-own.has-stock, #pit .pit-market-row.is-relevant .pit-market-role { color: var(--hsc-ink); }
+#pit .fcc-state.is-ready { border: 2px solid var(--hsc-ink); font: 500 11px/1.2 var(--hsc-ui); letter-spacing: .06em; }
+#pit .fcc-state.is-expired { color: var(--hsc-grey); }
+/* V10.15–V10.17 additions: grades, fast close, outcome stamps, stage chips, the exit breakdown. */
+#pit .tt-grade { font-family: var(--hsc-sans); letter-spacing: .02em; }
+#pit .tt-grade b, #pit .tt-grade.grade-s b, #pit .tt-grade.grade-a b, #pit .tt-grade.grade-c b { color: var(--hsc-ink); }
+#pit .tt-grade.grade-s b { background: var(--hsc-note); padding: 0 4px; }
+#pit .hud-stage.is-scale-2 { background: var(--hsc-ink); color: var(--hsc-paper); }
+#pit .hud-stage.is-scale-3 { background: var(--hsc-note); color: var(--hsc-ink); box-shadow: 0 0 0 1.5px var(--hsc-ink); }
+#pit .assets-ops b, #pit .bell-exec b, #pit .bu-exec b { color: var(--hsc-ink); }
+#pit .bell-exec { font-family: var(--hsc-sans); color: var(--hsc-ink); }
+#pit .bell-exec b { font-weight: 700; letter-spacing: .02em; background: linear-gradient(transparent 60%, var(--hsc-note) 60% 95%, transparent 95%); }
+#pit .bu-builds li.out-exceeded .bu-stamp, #pit .bu-builds li.out-breakthrough .bu-stamp { color: var(--hsc-ink); border-color: var(--hsc-ink); background: var(--hsc-note); }
+#pit .bu-builds li.out-under .bu-stamp { color: var(--hsc-ink); border-color: var(--hsc-ink); background: var(--pat-hatch), var(--hsc-paper); }
+#pit .bell-fast { font: 700 10px/1.1 var(--hsc-sans); letter-spacing: .02em; color: var(--hsc-led); text-transform: none; }
+#pit .exit-parts .is-sum th, #pit .exit-parts .is-sum td { border-top: 1px dashed var(--hsc-ink); }
+#pit .exit-parts .is-pay th, #pit .exit-parts .is-pay td { border-top: 2px solid var(--hsc-ink); color: var(--hsc-ink); }
+#pit .slot-bar-release { color: var(--hsc-ink); border-color: var(--hsc-ink); font-family: var(--hsc-sans); }
+@media (hover: hover) { #pit .slot-bar-release:hover { background: var(--hsc-ink); color: var(--hsc-paper); } }
+/* Touch screens keep :hover after a tap; legacy hover colours must not show there (Phase 3 components). */
+@media (hover: none) {
+  #pit .mat-move:hover { border-color: var(--hsc-ink); color: var(--hsc-paper); }
+  #pit .pit-market-row:hover { background: none; }
+  #pit .pit-pagination button:not(:disabled):hover, #pit .pit-door-btn:hover { border-color: var(--hsc-ink); }
+  #pit .dr-opt:hover:not(:disabled) { background: var(--hsc-paper); }
+  #pit .dr-opt.is-primary:hover:not(:disabled) { background: var(--hsc-paper); }
+  #pit .memo-opt:hover, #pit .ts-rival-acts .mat-chip:hover { background: var(--hsc-paper); }
+  #pit button.scn-chip.is-offer:hover { background: var(--hsc-note); outline: 0; }
+  #pit .tape-deal:hover { background: var(--hsc-note); outline: 0; }
+  #pit button.pit-investor:hover .ib-sheet { border-color: var(--hsc-ink); background: var(--hsc-paper); }
+  #pit .slot-bar-release:hover { background: none; }
+}
+
+/* ======================================================================================================================
+   PHASE 3 · Sourcing and the rival quote. "Find suppliers" lists booths as CRT plates (the same ink screen as the
+   floor's booths, VT323 rates). A rival quote is a carbon copy: coupon paper, dashed rule, an ink stamp to play it.
+   ====================================================================================================================== */
+#pit .source-card { background: var(--hsc-ink); color: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-bottom-width: 2px; border-radius: 4px; box-shadow: inset 0 0 0 2px var(--hsc-paper), inset 0 0 0 4px var(--hsc-ink), var(--hsc-shadow); }
+@media (hover: hover) { #pit .source-card:hover { border-color: var(--hsc-ink); box-shadow: inset 0 0 0 2px var(--hsc-note), inset 0 0 0 4px var(--hsc-ink), var(--hsc-shadow); } }
+@media (hover: none) { #pit .source-card:hover { border-color: var(--hsc-ink); } }
+#pit .src-face { background: var(--hsc-paper); border-radius: 2px; }
+#pit .face-mono { background: radial-gradient(circle at 50% 30%, var(--hsc-grey-light) 0 13px, transparent 14px), linear-gradient(#0000 0 30px, var(--hsc-ink) 30px); }
+#pit .src-who b { font: 600 17px/1.15 var(--hsc-serif); color: var(--hsc-paper); }
+#pit .src-who small, #pit .src-total, #pit .source-card .desk-fuse { font: 400 13px var(--hsc-sans); color: var(--hsc-grey-light); }
+#pit .src-rate { font: 400 34px/1 var(--hsc-term); color: var(--hsc-paper); }
+#pit .src-rate small { font: 400 14px var(--hsc-sans); color: var(--hsc-grey-light); }
+#pit .desk-empty { font: italic 16px/1.4 var(--hsc-serif); color: var(--hsc-grey); border: 1.5px dashed var(--hsc-ink); background: var(--hsc-paper); }
+#pit .rival-slip, #pit .mat-carbon { background: var(--pat-12), var(--hsc-coupon); color: var(--hsc-ink); border: 1.5px dashed var(--hsc-ink); box-shadow: none; }
+#pit .rival-slip > div > span { font: 700 12px/1.2 var(--hsc-sans); letter-spacing: 0; text-transform: none; color: var(--hsc-grey); }
+#pit .rival-slip b { font: 700 15px/1.2 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .rival-slip em { font: normal 700 13px/1.2 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .rival-play { background: var(--hsc-paper); border: 3px double var(--hsc-ink); color: var(--hsc-ink); font: 500 13px/1.1 var(--hsc-ui); letter-spacing: .06em; box-shadow: var(--hsc-shadow-sm); }
+@media (hover: hover) { #pit .rival-play:hover { background: var(--hsc-ink); color: var(--hsc-paper); } }
+@media (hover: none) { #pit .rival-play:hover { background: var(--hsc-paper); } }
+#pit .rival-played { font: 400 13px/1.2 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .rival-played span { font-weight: 700; letter-spacing: .02em; text-transform: none; color: var(--hsc-ink); }
+/* Board update figures never break inside a number; the smallest phones step the size down instead. */
+#pit .bu-flow b { overflow-wrap: normal; white-space: nowrap; }
+@media (max-width: 360px) { #pit .bu-flow b { font-size: 16px; } #pit .bu-flow .bu-net { padding: 6px 6px; } }
