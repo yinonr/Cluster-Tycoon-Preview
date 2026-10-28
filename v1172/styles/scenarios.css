@@ -1,0 +1,157 @@
+/* V10.14 The World Gets Bigger: the Deal Room, the status chips and the commitment cards. Everything
+   sits on existing surfaces (the status strip, the tape, the opportunity slot, a paper desk); an
+   extraordinary offer earns brass, a wax seal and a slow glow, not a new screen. */
+#pit .scn-status { display:flex; flex-wrap:wrap; gap:5px; margin:3px 0 0; min-width:0; }
+/* The Frontier program and the Deal Room share one swipeable row. */
+#pit .status-row { display:flex; flex-wrap:nowrap; align-items:center; gap:6px; min-width:0; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; margin:0; flex:0 0 auto; }
+#pit .status-row button.scn-chip, #pit .status-row .frontier-status button { min-height:24px; padding-block:1px; }
+#pit .status-row > p { flex:0 0 auto; margin:0; }
+#pit .status-row .scn-status { flex-wrap:nowrap; margin:0; }
+#pit .status-row .scn-chip { flex:0 0 auto; white-space:nowrap; }
+#pit .scn-chip { display:inline-flex; align-items:center; gap:5px; min-width:0; max-width:100%; padding:2px 8px; border:1px solid #8a5a12; border-radius:3px;
+  background:#fff3d6; color:var(--ink); font:700 10.5px/1.35 var(--money); letter-spacing:.02em; overflow-wrap:anywhere; }
+#pit button.scn-chip { min-height:28px; cursor:pointer; }
+#pit .scn-chip.is-offer { border:1.5px solid #6b4a12; background:linear-gradient(#f9df96,#d9b45a); color:#2a1606; box-shadow:0 1px 0 #6b4a12; }
+#pit .scn-chip.is-offer.is-major { animation:scn-glow 2.4s ease-in-out infinite; }
+#pit button.scn-chip.is-offer:hover, #pit button.scn-chip.is-offer:focus-visible { background:linear-gradient(#ffe9ae,#e8c46a); outline:2px solid #fff1c2; outline-offset:1px; }
+#pit .scn-chip.is-chain { background:#e9f1ea; border-color:#2f6b4f; }
+#pit .scn-chip.is-chain.is-due { background:#ffe7a8; border-color:#8a5a12; }
+#pit .scn-chip.is-risk { background:#fde3dc; border-color:#8f2416; color:#5a160c; }
+#pit .scn-chip.is-good { background:#e2f4e4; border-color:#1f6b3f; }
+#pit .scn-seal { flex:0 0 auto; display:inline-grid; place-items:center; width:18px; height:18px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#c9473a,#7d1a12);
+  color:#ffe9c9; font:800 8px/1 var(--money); font-style:normal; letter-spacing:0; box-shadow:0 0 0 1.5px #5a120c; }
+@keyframes scn-glow { 50% { box-shadow:0 0 0 3px #ffd36b88, 0 0 14px #ffcf5c99; } }
+@media (prefers-reduced-motion: reduce) { #pit .scn-chip.is-offer.is-major { animation:none; box-shadow:0 0 0 3px #ffd36b88; } }
+
+/* The tape's private-offer flag. */
+#pit .tape-deal { flex:0 0 auto; min-width:0; max-width:190px; display:inline-flex; align-items:center; gap:7px; padding:2px 8px; min-height:26px; border:1px solid #ffcf5c; border-radius:3px;
+  background:#2a1d08; color:#ffe1a0; font:700 12px/1.2 var(--font-mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+#pit .tape-deal > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+#pit .tape-deal.is-major { animation:scn-glow 2.4s ease-in-out infinite; }
+#pit .tape-deal:hover, #pit .tape-deal:focus-visible { background:#3a2a0c; outline:2px solid #fff1c2; }
+@media (max-width:760px) {
+  #pit .tape-deal { display:none; }
+  /* Phones: one swipeable row of chips above the card strip. */
+  #pit .pit-phone-company .scn-status { flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; padding:0 10px; margin:2px 0; }
+  #pit .pit-phone-company .scn-status .scn-chip { flex:0 0 auto; white-space:nowrap; }
+}
+
+/* The Deal Room: a private document on the existing paper desk. */
+#pit .deal-room { position:relative; max-width:720px; display:grid; gap:10px; }
+#pit .deal-room.is-major { border:3px double #8a5a12; box-shadow:0 0 0 1px #d9b45a, 0 2px 0 #b9a378, 0 14px 26px -8px #000c; background:linear-gradient(#f8f0da,#ecdfbf); }
+#pit .dr-top { display:grid; grid-template-columns:auto minmax(0,1fr); gap:12px; align-items:center; }
+#pit .dr-seal { display:grid; place-items:center; width:54px; height:54px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#c9473a,#7d1a12 70%);
+  color:#ffe9c9; font:800 17px/1 Georgia,serif; letter-spacing:.04em; box-shadow:0 0 0 3px #5a120c, inset 0 -3px 6px #0006; transform:rotate(-8deg); }
+#pit .dr-title { margin:0; font:700 22px/1.15 Georgia,serif; color:var(--ink); }
+#pit .dr-premise { margin:3px 0 0; font:14px/1.4 Georgia,serif; color:var(--ink-2); }
+#pit .dr-fine { margin:0; font:11.5px/1.45 var(--money); color:var(--ink-soft); }
+#pit .dr-reply { margin:0; padding:7px 10px; border-left:4px solid #8a5a12; background:#fff7e3; font:13px/1.4 Georgia,serif; color:var(--ink); }
+#pit .dr-schedule { width:100%; border-collapse:collapse; font:12px/1.35 var(--money); color:var(--ink); }
+#pit .dr-schedule caption { text-align:left; padding-bottom:4px; font:700 10.5px/1.3 var(--money); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+#pit .dr-schedule :is(th,td) { padding:5px 6px; border-bottom:1px solid #8f795d55; text-align:left; vertical-align:top; }
+#pit .dr-schedule thead th { font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); }
+#pit .dr-price { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+#pit .dr-price p { display:grid; gap:2px; margin:0; padding:6px 8px; border:1px solid #8f795d66; background:#fff7e3; }
+#pit .dr-price span { font:700 10.5px/1.2 var(--money); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+#pit .dr-price strong { font:800 20px/1.1 var(--money); color:var(--ink); }
+#pit .dr-price strong.win { color:#1f6b3f; }
+#pit .dr-price small { font:11px/1.3 var(--money); color:var(--ink-soft); overflow-wrap:anywhere; }
+#pit .dr-figs { display:grid; gap:6px; margin:0; }
+#pit .dr-figs div { display:grid; grid-template-columns:110px minmax(0,1fr); gap:8px; }
+#pit .dr-figs dt { font:700 10.5px/1.4 var(--money); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+#pit .dr-figs dd { margin:0; font:700 13px/1.35 var(--money); color:var(--ink); }
+#pit .dr-options { display:grid; gap:8px; }
+#pit .dr-opt { display:grid; gap:3px; min-height:56px; padding:9px 12px; text-align:left; border:2px solid var(--ink); border-radius:var(--radius-btn);
+  background:#fffaf0; color:var(--ink); box-shadow:var(--shadow-hard); cursor:pointer; }
+#pit .dr-opt b { font:800 14px/1.25 var(--money); }
+#pit .dr-opt small { font:12.5px/1.35 Georgia,serif; color:var(--ink-2); }
+#pit .dr-opt.is-primary { background:linear-gradient(#fff3cf,#f6dc93); border-color:#5a3c0c; }
+#pit .dr-opt.is-decline { background:#f3eee2; box-shadow:2px 2px 0 var(--ink-soft); }
+#pit .dr-opt:hover:not(:disabled), #pit .dr-opt:focus-visible { background:#ffe7a8; }
+#pit .dr-opt:disabled { opacity:.62; box-shadow:none; border-style:dashed; cursor:not-allowed; }
+#pit .dr-opt:disabled small { color:#8f2416; }
+@media (max-width:760px) {
+  #pit .dr-title { font-size:19px; }
+  #pit .dr-seal { width:42px; height:42px; font-size:14px; }
+  #pit .dr-price { grid-template-columns:1fr; }
+  #pit .dr-price strong { font-size:18px; }
+  #pit .dr-schedule { font-size:11px; }
+  #pit .dr-schedule :is(th,td) { padding:4px 3px; }
+  #pit .dr-figs div { grid-template-columns:1fr; gap:1px; }
+}
+
+/* Commitment cards in the opportunity slot: brass frame, the contract's own label. */
+#pit .fc.is-scenario { outline:2px solid #8a5a12; outline-offset:-2px; background:linear-gradient(#fbf0d2,#efdcae); }
+#pit .fc.is-scenario .fc-head { background:linear-gradient(#d9b45a,#a8822f); }
+#pit .fcc.is-scenario { outline:2px solid #8a5a12; outline-offset:-2px; background:linear-gradient(#fbf0d2,#efdcae); }
+#pit .scn-terms { display:grid; gap:6px; margin:6px 0; }
+#pit .scn-stages { display:grid; gap:3px; margin:0; padding:0; list-style:none; font:12px/1.35 var(--money); color:var(--ink); }
+#pit .scn-stages li { display:flex; flex-wrap:wrap; gap:2px 10px; }
+#pit .scn-stages li.is-done { color:#1f6b3f; }
+#pit .scn-stages li.is-now b { color:#5a3c0c; }
+#pit .scn-stages span { color:var(--ink-soft); }
+#pit .scn-miss { margin:0; font:700 12px/1.4 var(--money); color:var(--ink); }
+#pit .scn-miss.is-penalty { color:#8f2416; }
+#pit .scn-cure { justify-self:start; min-height:44px; padding:6px 12px; border:1.5px solid var(--ink); border-radius:var(--radius-btn); background:#fff7e3; color:var(--ink); font:700 12.5px var(--money); }
+#pit .scn-cure:disabled { opacity:.55; }
+
+/* The bell's reminder of what a signed commitment still needs, and the damages line. */
+#pit .bell-list li.is-warning span { color:#8f2416; font-weight:700; }
+#pit .scn-dues b { color:#8f2416; }
+#pit .exit-sheet.kind-acquired .exit-title { color:#5a3c0c; }
+
+/* Short desktop boards (1280×680): a three-GPU deficit stays on one line so the build rail never clips. */
+@container (max-height: 240px) {
+  .cards .fc-count small { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+}
+
+/* V10.15 The Scaling Game: block booths, flagship cards, big recipe bars, grades, sourcing. */
+.pit-station.is-block .pit-crt { box-shadow: 0 0 0 2px #c9a13b, 0 6px 14px rgba(0,0,0,.35); }
+.pit-station.is-block .pit-station-plaque small { color: #e2c46a; letter-spacing: .14em; }
+.fc.is-flagship { box-shadow: inset 0 0 0 2px #c9a13b; }
+.fc.is-flagship .fc-lane i { margin-left: 4px; padding: 0 4px; border-radius: 2px; background: #10140f; color: #f3d27a; opacity: 1; }
+.slot-row.is-bar { display: flex; align-items: center; gap: .5rem; }
+.slot-row.is-bar .slot-label { flex: 0 0 auto; }
+.slot-bar { position: relative; display: inline-block; flex: 1 1 auto; min-width: 5rem; height: .9rem; border-radius: 3px; background: color-mix(in srgb, currentColor 18%, transparent); overflow: hidden; vertical-align: middle; }
+.slot-bar > i { position: absolute; inset: 0 auto 0 0; background: currentColor; opacity: .85; }
+.slot-bar.gpu-h100 { color: #2f8f5b; } .slot-bar.gpu-h200 { color: #3c6fb8; } .slot-bar.gpu-b200 { color: #b8642c; }
+.slot-bar-btn { flex: 1 1 auto; display: flex; min-height: 44px; align-items: center; padding: 0; border: 0; background: none; cursor: pointer; }
+.slot-bar-btn.is-wanting .slot-bar { outline: 1px dashed currentColor; outline-offset: 2px; }
+.fcc-units .slot-bar { min-width: 3.5rem; height: .6rem; }
+.cards .slot-bar-btn { min-height: 24px; }
+.cards .slot-row.is-bar { min-height: 24px; }
+#pit .slot-bar-release { flex: 0 0 auto; min-width: 44px; min-height: 44px; margin: 0; padding: 0 .5rem; border: 1px solid currentColor; border-radius: 3px; background: none; box-shadow: none; color: var(--gc-deep); font: 700 11px/1 var(--font-mono, monospace); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+#pit .slot-bar-release:hover { background: #00000012; }
+#pit .cards .slot-bar-release { min-width: 0; min-height: 24px; padding: 0 .4rem; font-size: 10px; }
+.cd-source { margin: .6rem 0 0; }
+.cd-source-btn { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; min-height: 44px; width: 100%; padding: .5rem .8rem; text-align: left; }
+.cd-source-btn span { font-size: .8em; opacity: .85; }
+.tt-grade { display: flex; flex-wrap: wrap; gap: .2rem .6rem; justify-content: center; align-items: baseline; margin: .3rem 0; font-family: var(--mono, monospace); letter-spacing: .06em; text-align: center; }
+.tt-grade b { font-size: 1.15em; white-space: nowrap; }
+.tt-grade.grade-s b, .tt-grade.grade-a b { color: #1e7a45; }
+.tt-grade.grade-c b { color: #a3402a; }
+.hud-stage.is-scale-2 { background: #c9a13b; color: #1d1a12; }
+.hud-stage.is-scale-3 { background: #e8c55a; color: #1d1a12; box-shadow: 0 0 0 1px #fff3c4; }
+.assets-ops b { color: #1e7a45; }
+
+/* V10.17.2 Fortune Builder: fast close, outcome stamps. */
+.bell-exec { display: flex; flex-wrap: wrap; gap: .2rem .6rem; align-items: baseline; margin: .5rem 0; font-family: var(--font-mono, monospace); }
+.bell-exec b { color: #1e7a45; letter-spacing: .06em; }
+.bell-exec span { font-size: .85em; opacity: .8; }
+.bell-exec.is-idle span { opacity: .7; }
+.bu-exec { margin: .4rem 0; font-family: var(--font-mono, monospace); letter-spacing: .06em; }
+.bu-exec b { color: #1e7a45; }
+.bu-builds li.out-exceeded .bu-stamp, .bu-builds li.out-breakthrough .bu-stamp { color: #1e7a45; border-color: #1e7a45; }
+.bu-builds li.out-under .bu-stamp { color: #a3402a; border-color: #a3402a; }
+#pit .bell-fast { display: block; font: 700 9px/1.1 var(--font-mono, monospace); letter-spacing: .06em; color: #8fe0a8; text-transform: uppercase; }
+
+/* V10.17.2 final sheet: the value breakdown. */
+#pit .exit-parts { width: 100%; max-width: 440px; justify-self: center; margin: 0 auto; border-collapse: collapse; font: 600 13px var(--money); color: var(--ink); }
+#pit .exit-parts caption { font: 800 10.5px var(--money); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); padding-bottom: 3px; }
+#pit .exit-parts th { font: 700 11.5px var(--money); letter-spacing: .08em; text-transform: uppercase; text-align: left; padding: 2px 8px 2px 0; color: var(--ink-soft); }
+#pit .exit-parts th small { display: block; font: 600 10.5px var(--money); letter-spacing: 0; text-transform: none; }
+#pit .exit-parts td { text-align: right; padding: 2px 0; white-space: nowrap; }
+#pit .exit-parts .is-zero td { color: var(--ink-soft); }
+#pit .exit-parts .is-sum th, #pit .exit-parts .is-sum td { border-top: 1px dashed #8f795d; padding-top: 4px; }
+#pit .exit-parts .is-pay th, #pit .exit-parts .is-pay td { border-top: 1px solid #8f795d; padding-top: 4px; color: #174f30; font-weight: 800; }
+@media (max-width: 520px) { #pit .exit-parts { font-size: 12px; } #pit .exit-parts th { font-size: 10.5px; } }
