@@ -1,5 +1,5 @@
 {
-  "commit": "b8cd6f09bb1fe09164e3b74d840545d786ada03a",
+  "commit": "d16e18fd3a5c9e9730f49f0f4250db640536a31a",
   "entry": "index.html",
   "source_path": "v118/",
   "files": {
@@ -16,7 +16,7 @@
     "src/data/gpus.js": "c8a8fdab46f1fca5563398859997b16ac12c578bca6ac93072385d8fda7bd42d",
     "src/data/names.js": "79170307f0b86bba5f718730dc81dead76f756037fb5bbce58ec352a2c6b2d94",
     "src/media.js": "adf22962f4c3e824c82b8cd84086ffd5f67ce3f48cd9c7e4599024119d994cc7",
-    "src/screens/office.js": "4251be6ee0f28006a5b5245450a201afda7e08e74a0a1875e529b2dacf49b6b4",
+    "src/screens/office.js": "5388a72ce78628201f29554cd2a45a792e959a03efe676ddda8eb0465a98e6d8",
     "src/screens/pit.js": "6f47974687708e1dffd1f7d2470c0a0d5632efc64a9f9f52bf7d57bc01e10e7d",
     "src/screens/tetris-input.js": "22d7d3bf02cd4fc298477dcf3f6afe1a020bb5a920b82cc56ee47bc36621e046",
     "src/tycoon/arcade-buyers.js": "e12bd2a406aebba68a00da4d4795617ba3c149baa427a3d21a4f399602fa4c6c",
@@ -61,7 +61,7 @@
     "src/util.js": "ecd57ded72bf4cc5daa144e80180cad6e277832657e9682ee7caabd18f4d27ab",
     "styles/fonts.css": "5a914fd3e6edfe15093f7666d86ceecaa9797974b40de056bcc2776f069536c6",
     "styles/founding.css": "9b166730267aa60073f4cb878ecb9cb792cd19dedae2c4e304ca9730181527dd",
-    "styles/opening.css": "144fab2d4c905b7047101392dc14d015a0b6401c79058f5d386836035ae9d6d1",
+    "styles/opening.css": "2cbd93a455f3447c67388bf0d9827244a9aa92737ff28f7256aaad957f07a245",
     "styles/pit-charm.css": "08c1e682c98188396dc757022007e931acf0a5d9da2c8b9c22646d10a73ca3cb",
     "styles/pit-company.css": "a322a41010611ca84bd4fe0bc6f133fbe0e4a38abfb8ab7774ec53b7edbee57c",
     "styles/pit-deals.css": "d143815bb6b19865d0a04d66d1d087c6737b3ab1133bb57133a4d47b8225e953",

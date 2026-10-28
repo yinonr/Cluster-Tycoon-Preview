@@ -25,7 +25,6 @@
   box-shadow: inset 0 0 0 12px #1E1410, inset 0 -40px 60px rgba(0,0,0,.25);
 }
 .office-title { position: relative; z-index: 3; padding: 28px clamp(16px, 4vw, 40px); color: #F8ECD6; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
-.office-title h1 { margin: 6px 0 0; font-size: clamp(30px, 5.2vw, 66px); max-width: 12em; }
 
 .office-desk { position: absolute; left: 0; right: 0; bottom: 0; height: 48%; }
 .desk-surface {
@@ -283,6 +282,38 @@
 .computer.waking .screen-static { opacity: 1; animation: staticJitter .12s steps(2) infinite, wake .9s ease-out both; }
 @keyframes staticJitter { 50% { background-position: 37px 61px; } }
 @keyframes wake { 0% { opacity: 0; } 12% { opacity: 1; } 22% { opacity: .2; } 34%, 100% { opacity: 1; } }
+
+/* V10.18 the CEO briefing: a sheet on the desk (HSC paper, ink and one strip of note-yellow tape), legible first. */
+.brief { position: absolute; inset: 0; z-index: 12; display: grid; place-items: center; padding: 72px 16px 24px;
+  background: radial-gradient(ellipse at 50% 60%, rgba(20, 12, 8, .35), rgba(12, 7, 5, .72)); animation: fadeIn .45s ease both; }
+.brief-paper { position: relative; box-sizing: border-box; width: min(36rem, 100%); max-height: 100%; overflow: auto;
+  padding: clamp(22px, 3.4vw, 40px) clamp(20px, 3.6vw, 44px) clamp(20px, 3vw, 32px); border-radius: 2px;
+  background: #F8F7F5; color: #161514; box-shadow: 0 1px 0 #E2DFD8, 0 22px 48px rgba(0, 0, 0, .5), 0 3px 8px rgba(0, 0, 0, .25);
+  transform: rotate(-1deg); animation: briefIn .6s cubic-bezier(.2, .8, .2, 1) both; }
+.brief-paper::before { content: ""; position: absolute; top: -11px; left: 50%; width: 112px; height: 24px; margin-left: -56px;
+  background: rgba(255, 219, 84, .82); transform: rotate(-3deg); box-shadow: 0 1px 2px rgba(0, 0, 0, .18); }
+.brief-copy p { margin: 0 0 .85em; font: 400 clamp(16px, calc(14.5px + .35vw), 19px) / 1.55 "Libre Franklin", Arial, sans-serif;
+  letter-spacing: .002em; text-wrap: pretty; }
+.brief-name { padding: 0 .08em; border-bottom: 1.5px solid #161514; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.brief-go { display: flex; align-items: center; justify-content: center; gap: .6em; min-height: 48px; margin: 1.3em 0 0 auto; padding: 0 22px;
+  border: 2px solid #161514; border-radius: 6px; background: #161514; color: #F8F7F5; font: 700 15px/1 var(--mono); letter-spacing: .08em;
+  cursor: pointer; box-shadow: 0 0 0 3px #F8F7F5, 0 0 0 5px #161514; }
+.brief-go:hover { background: #2C2A27; }
+.brief-go:active { transform: translateY(1px); }
+.brief.is-leaving { animation: fadeOut .38s ease both; }
+.brief.is-leaving .brief-paper { animation: briefOut .38s ease-in both; }
+@keyframes briefIn { from { opacity: 0; transform: translateY(36px) rotate(-5deg) scale(.96); } }
+@keyframes briefOut { to { opacity: 0; transform: translateY(60px) rotate(4deg) scale(.96); } }
+@keyframes fadeOut { to { opacity: 0; } }
+.is-calm .brief, .is-calm .brief-paper, .is-calm .brief.is-leaving, .is-calm .brief.is-leaving .brief-paper { animation: fadeIn .2s ease both; }
+.is-calm .brief.is-leaving, .is-calm .brief.is-leaving .brief-paper { animation-name: fadeOut; animation-duration: .12s; }
+@media (max-width: 599.98px) {
+  .brief { padding: 60px 10px 12px; }
+  .brief-paper { transform: none; padding: 22px 16px 16px; }
+  .brief-copy p { line-height: 1.5; margin-bottom: .7em; }
+  .brief-go { width: 100%; margin-top: .9em; }
+}
+@media (prefers-reduced-motion: reduce) { .brief, .brief-paper { animation: fadeIn .2s ease both; } }
 
 .crt-stage { position: absolute; inset: 0; z-index: 40; display: grid; place-items: center; padding: 64px 16px 20px;
   background: radial-gradient(90% 80% at 50% 45%, rgba(40, 22, 18, .9), rgba(19, 9, 13, .97)); }

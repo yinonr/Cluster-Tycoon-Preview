@@ -1,8 +1,9 @@
 // THE OPENING (V10.18). Scene 1, the window: the game begins where hscompute.com begins, on its own view of dusk
 // San Francisco from the office glass, and asks for the startup's name. Scene 2, YOUR CORNER OFFICE, the old way
 // (SOURCE: Notion cold open + Act I: "Last quarter you called a broker, who called a guy, who said he'd get back
-// to you in Q2 next year."): the camera pulls back from the glass to the desk, the player clicks SOURCE COMPUTE
-// and watches weeks disappear into phone tag; every click is another call back and another excuse, until the
+// to you in Q2 next year."): the camera pulls back from the glass to the desk, where the CEO briefing (the owner's
+// copy, with the startup's name) waits as long as the player likes. Its SOURCE COMPUTE → starts the old way, and the
+// player watches weeks disappear into phone tag; every click is another call back and another excuse, until the
 // slips bury the office. Scene 3, the break: "There has to be a better way." Scene 4: the desk Mac becomes the
 // screen and plays HSC's film (ui/crt.js). Scenes 5-6 (across San Francisco to 400 Sansome) wait for the Notion
 // references; until then the film hands over to the welcome.
@@ -148,12 +149,28 @@ const GLYPH = {
 // Where the chain's echoes are written: on paper, on phone slips, on screens.
 const ECHO_KINDS = ['print', 'print', 'print', 'slip', 'crt'];
 
+// The CEO briefing that opens Scene 2: the owner's copy, verbatim. Every name slot is the player's startup. A name
+// that already ends in "Inc" or "Inc." keeps a single suffix in the opening sentence.
+const NAME = Symbol('name');
+function briefParts(name) {
+  const suffix = /\binc\.?$/iu.test(name) ? (name.endsWith('.') ? '' : '.') : ' Inc.';
+  return [
+    ['Congrats - you are the CEO of ', NAME, suffix + ' ', NAME, ' has an idea, a team, and funding (your savings). ', NAME,
+      ' is just missing one thing. It’s missing compute.'],
+    ['That’s where you come in. You need to go out and figure out a way to get ', NAME, ' the GPUs ', NAME,
+      ' needs to become a real business. The better you do, the better ', NAME, ' does. ', NAME, ' needs you to be a Cluster Tycoon.'],
+  ];
+}
+export const briefText = (name) => briefParts(name).map((p) => p.map((x) => (x === NAME ? name : x)).join(''));
+const briefHTML = (name) => briefParts(name)
+  .map((p) => `<p>${p.map((x) => (x === NAME ? `<span class="brief-name">${esc(name)}</span>` : esc(x))).join('')}</p>`).join('');
+
 // ctx: { audio, name() (the company's name, or null before naming), story (play Scenes 2-4 after Scene 1),
 //        found(name) → true or an error string, done(), sound { on, set(on) }, motion { on, set(on) } }
 export default function office(root, ctx) {
   let alive = true;
   let fast = false;
-  let stage = 'window'; // window → idle → calls → world → chain → after → crt
+  let stage = 'window'; // window → brief → idle → calls → world → chain → after → crt
   let wake = null;
   let clicks = 0;     // how many times you called back
   let calls = 0;      // calls in the story so far
@@ -186,7 +203,6 @@ export default function office(root, ctx) {
       </div>
       <header class="office-title">
         <p class="kicker ui">YOUR CORNER OFFICE · SAN FRANCISCO · 2026</p>
-        <h1 class="hl">Trading compute doesn’t have to be like this.</h1>
       </header>
       <div class="office-desk">
         <div class="desk-surface"></div>
@@ -213,6 +229,12 @@ export default function office(root, ctx) {
           <div class="computer-chin"><span class="slot"></span></div>
         </div>
         ${PHONE}
+      </div>
+      <div class="brief" hidden>
+        <article class="brief-paper">
+          <div class="brief-copy" id="brief-copy"></div>
+          <button type="button" class="brief-go" aria-describedby="brief-copy">SOURCE COMPUTE <span aria-hidden="true">→</span></button>
+        </article>
       </div>
       <div class="slips" aria-live="polite"></div>
       <div class="taps" aria-hidden="true"></div>
@@ -322,9 +344,30 @@ export default function office(root, ctx) {
     if (!alive) return;
     $(root, '.s1').hidden = true;
     office.classList.add('at-desk');
-    $(root, '.source').focus({ preventScroll: true });
-    armNudge(4500);
+    showBrief();
   }
+
+  // The CEO briefing lies on the desk until the player is ready: no timer, no nudge. SOURCE COMPUTE → takes it
+  // off the desk and starts Scene 2 exactly as the computer's own SOURCE COMPUTE does.
+  function showBrief() {
+    stage = 'brief';
+    const brief = $(root, '.brief');
+    $(brief, '.brief-copy').innerHTML = briefHTML(forName());
+    $(root, '.office-desk').inert = true;
+    brief.hidden = false;
+    ctx.audio.rustle();
+    $(brief, '.brief-go').focus({ preventScroll: true });
+  }
+  $(root, '.brief-go').addEventListener('click', () => {
+    if (stage !== 'brief') return;
+    stage = 'idle';
+    const brief = $(root, '.brief');
+    brief.classList.add('is-leaving');
+    ctx.audio.rustle();
+    $(root, '.office-desk').inert = false;
+    run();
+    setTimeout(() => { brief.hidden = true; brief.classList.remove('is-leaving'); }, calm() ? 120 : 380);
+  });
 
   // ---- Scene 2: the old way -----------------------------------------------------------------------------------
   office.addEventListener('click', (e) => {
