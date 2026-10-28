@@ -1053,3 +1053,89 @@ html, body { background: var(--hsc-paper); }
 /* Board update figures never break inside a number; the smallest phones step the size down instead. */
 #pit .bu-flow b { overflow-wrap: normal; white-space: nowrap; }
 @media (max-width: 360px) { #pit .bu-flow b { font-size: 16px; } #pit .bu-flow .bu-net { padding: 6px 6px; } }
+
+/* ======================================================================================================================
+   V10.18 FINAL POLISH (owner, 28 Oct)
+   ====================================================================================================================== */
+/* 1. No news ticker. The room's first row is a hint slot: zero height unless a guidance hint is showing. Arrivals and
+      the round's market condition ride on the Market button. */
+#pit .pit-hintbar { min-height: 0; }   /* stays in the room's grid (row 1) at zero height when empty */
+#pit .pit-hintbar.has-hint { position: relative; z-index: 3; background: var(--hsc-note); border-bottom: 2px solid var(--hsc-ink); }
+#pit .pit-hintbar .context-hint { background: transparent; color: var(--hsc-ink); }
+#pit .pit-hintbar .context-hint b { color: var(--hsc-ink); }
+.is-backdrop .pit-hintbar { opacity: .6; }
+#pit .pit-ledger { flex-basis: 168px; grid-template-rows: auto auto auto; }
+#pit .ledger-line { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 3px; padding-left: 6px; font: 700 11px/1.2 var(--hsc-sans); color: var(--hsc-grey-light); white-space: nowrap; }
+#pit .ledger-line .tape-next { display: inline-flex; align-items: center; gap: 5px; font: inherit; color: inherit; }
+#pit .ledger-line .pit-fuse { width: 46px; color: var(--hsc-paper); font: 700 11px/1 var(--hsc-sans); }
+#pit .ledger-line .pit-fuse::before { background: linear-gradient(var(--hsc-paper), var(--hsc-paper)) 0 0/calc(var(--left,1) * 100%) 100% no-repeat, var(--pat-50-paper); }
+#pit .ledger-event { display: inline-flex; align-items: center; gap: 4px; color: var(--hsc-paper); text-transform: lowercase; }
+#pit .ledger-event .gtag { text-transform: none; }
+#pit .ledger-event.kind-shortage { color: var(--hsc-led-warn); }
+#pit .ledger-event.kind-glut { color: var(--hsc-led); }
+@media (max-width: 760px) {
+  #pit .pit-ledger { flex-basis: auto; }
+  #pit .ledger-line { padding-left: 0; font-size: 10px; }
+  #pit .ledger-line .tape-long { display: none; }
+  #pit .ledger-line .pit-fuse { width: auto; }
+  #pit .ledger-line .pit-fuse::before { display: none; }
+  #pit .ledger-event .gtag { font-size: 10px; }
+}
+
+/* 2. The round counter: an ink-ruled tile with a big numeral, so the round reads at a glance on every width without
+      looking like money. */
+#pit .hud-round strong { align-self: flex-start; display: inline-flex; align-items: baseline; gap: 1px; padding: 2px 7px 3px; font: 600 30px/1 var(--hsc-serif); font-variant-numeric: lining-nums; color: var(--hsc-ink); box-shadow: inset 0 0 0 2px var(--hsc-ink); border-radius: 3px; background: var(--hsc-paper); }
+#pit .hud-round small { font: 700 15px/1 var(--hsc-sans); color: var(--hsc-ink); }
+@media (max-width: 760px) {
+  #pit .hud-round strong { font-size: 24px; padding: 1px 6px 2px; }
+  #pit .hud-round strong::before { color: var(--hsc-ink); font: 700 14px/1 var(--hsc-sans); margin-right: 2px; }
+  #pit .hud-round small { font-size: 13px; }
+}
+@media (max-width: 360px) {
+  #pit .hud-round strong { font-size: 21px; padding: 1px 5px 2px; }
+  #pit .hud-round strong::before { font-size: 12px; }
+  #pit .hud-round small { font-size: 12px; }
+}
+/* 3. Cluster Tetris: one instruction, set as the card's statement. */
+#pit .tt-card .tt-rule-big { margin: 4px 0 2px; font: 600 26px/1.2 var(--hsc-serif); color: var(--hsc-ink); }
+#pit .tt-card .tt-rule-big::before { content: ''; display: block; width: 44px; height: 4px; margin-bottom: 10px; background: var(--hsc-note); box-shadow: 0 0 0 1.5px var(--hsc-ink); }
+@media (max-width: 760px) { #pit .tt-card .tt-rule-big { font-size: 21px; } }
+@media (max-width: 360px) { #pit .tt-card .tt-rule-big { font-size: 19px; } }
+/* 5. The BUILT moment: a stronger stamp on a 1-bit burst, the build's GPUs racked on an ink strip, the change
+      highlighted. Everything lands within ~0.6 s (the chip stagger is capped), the button is live from the first
+      frame, and reduced motion shows the final frame. */
+#pit .bm-stamp { position: relative; z-index: 0; display: inline-block; padding: 8px 26px 6px; border: 8px double var(--hsc-ink); background: var(--hsc-note); color: var(--hsc-ink); font: 700 clamp(44px, 6.4vw, 72px)/1 var(--hsc-ui); letter-spacing: .14em; box-shadow: 5px 5px 0 var(--hsc-ink); transform: rotate(-6deg); }
+#pit .tone-setback .bm-stamp { background: var(--pat-hatch), var(--hsc-paper); }
+#pit .bm-stamp::before { content: ''; position: absolute; z-index: -1; left: 50%; top: 50%; width: 175%; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(6deg);
+  background: repeating-conic-gradient(from 0deg, var(--hsc-ink) 0 2deg, transparent 2deg 12deg);
+  -webkit-mask: radial-gradient(circle, transparent 33%, #000 34%, #000 41%, transparent 42%); mask: radial-gradient(circle, transparent 33%, #000 34%, #000 41%, transparent 42%); pointer-events: none; }
+#pit .bm-chips { padding: 8px 12px; background: var(--hsc-ink); border-radius: 3px; box-shadow: var(--hsc-shadow-sm); }
+#pit .bm-chips .gchip { box-shadow: 0 0 0 1.5px var(--hsc-paper); }
+#pit .bm-change b { background: linear-gradient(transparent 64%, var(--hsc-note) 64% 94%, transparent 94%); }
+@media (max-width: 760px) { #pit .bm-stamp { font-size: 38px; padding: 5px 16px 4px; border-width: 6px; } #pit .bm-chips { padding: 6px 8px; } }
+@media (prefers-reduced-motion: no-preference) {
+  #pit .build-moment .bm-stamp { animation: hsc-bm-stamp .34s .04s cubic-bezier(.3, 1.6, .5, 1) both; }
+  #pit .build-moment .bm-stamp::before { animation: hsc-bm-burst .5s .12s ease-out both; }
+  #pit .bm-chips .gchip.is-locking { animation: bm-lock .32s calc(.12s + min(var(--i, 0), 10) * 30ms) cubic-bezier(.3, 1.4, .5, 1) both; }
+  #pit .bm-change { animation: bm-rise .3s .3s ease-out both; }
+}
+@keyframes hsc-bm-stamp { from { transform: scale(2.2) rotate(-16deg); opacity: 0; } 70% { transform: scale(.96) rotate(-5deg); opacity: 1; } to { transform: rotate(-6deg); opacity: 1; } }
+@keyframes hsc-bm-burst { from { transform: translate(-50%, -50%) rotate(-10deg) scale(.4); opacity: 0; } 50% { opacity: 1; } to { transform: translate(-50%, -50%) rotate(6deg) scale(1); opacity: 1; } }
+/* 6. Phones: project cards stay discoverable (a visible ink scrollbar, the next card always peeking, snap to each
+      card) and their small numbers grow: recipe rows, slot minis, the build count and the HUD's fine print. */
+@media (max-width: 760px) {
+  #pit .strip { scroll-snap-type: x mandatory; scroll-padding-inline: 10px; scrollbar-width: thin; scrollbar-color: var(--hsc-ink) var(--hsc-grey-light); padding-bottom: 10px; }
+  #pit .fcc { flex-basis: clamp(128px, 42vw, 170px); }   /* ~2.3 cards: the next one always peeks */
+  #pit .fcc-resource { font-size: 12px; }
+  #pit .fcc-units .mini { flex-basis: 9px; width: 9px; height: 11px; }
+  #pit .fcc-deficit { font: 700 11px/1.3 var(--hsc-sans); color: var(--hsc-ink); }
+  #pit .fcc-state, #pit .fcc-state b { font-size: 13px; }
+  #pit .fcc-state b { font-size: 15px; color: var(--hsc-ink); }
+  #pit .inv-chip { font-size: 12px; }
+  #pit .inv-chip b { font-size: 14px; }
+  #pit .hud-val small, #pit .hud-flow small, #pit .hud-flow strong .short { font-size: 11px; }
+}
+@media (max-width: 360px) { #pit .fcc-resource { font-size: 11.5px; } }
+#pit .build-moment { overflow: hidden; }
+#pit .build-moment .bm-stamp { margin: 22px 0 14px; }
+#pit .build-moment .bm-name { position: relative; z-index: 1; padding: 0 10px; background: var(--hsc-paper); }

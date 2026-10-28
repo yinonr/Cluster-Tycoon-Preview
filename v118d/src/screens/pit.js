@@ -141,9 +141,9 @@ function render() {
   }
   paintKey = marketKey(g); last = performance.now();
   if (ui.hint && !ui.guidanceOpen) {
-    const body = root.querySelector('.pit-focus-body'), tape = root.querySelector('.pit-tape');
+    const body = root.querySelector('.pit-focus-body'), bar = root.querySelector('.pit-hintbar');
     if (body) body.insertAdjacentHTML('afterbegin', hintView(ui.hint));
-    else if (tape) { tape.innerHTML = hintView(ui.hint); tape.classList.add('has-hint'); }
+    else if (bar) { bar.innerHTML = hintView(ui.hint); bar.classList.add('has-hint'); }
     const action = ui.hint === 'supplier' ? 'start-rizz' : ui.hint === 'ready' ? 'fill' : ui.hint === 'objective' ? 'focus-supplier' : null;
     if (action) [...root.querySelectorAll(`[data-action="${action}"]`)].find(e => e.getClientRects().length)?.classList.add('guide-target');
   }

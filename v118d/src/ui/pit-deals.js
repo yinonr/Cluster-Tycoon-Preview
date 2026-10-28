@@ -9,6 +9,7 @@ import { activeLot, available, cash, cents, owned, inventoryCost, V7 } from '../
 import { buyerLive, saleQuote } from '../tycoon/arcade-buyers.js';
 import { termLive, termQuote, rivalTerm } from '../tycoon/investors.js';
 import { deliveryText } from '../tycoon/strategic.js';
+import { HIRES } from '../tycoon/commerce.js';
 import { rivalQuotes } from '../tycoon/arcade-negotiation.js';
 import { marketEvent } from '../tycoon/founder-market.js';
 import { MODEL_NAMES, FOUNDER, executionOf, openCards, cardState, heldFor, freeOf, companyStats, pendingIntegration, revenueNow, cashRevenueNow, burnOf, totalShares, focusOf, rackOutput } from '../tycoon/founder.js';
@@ -381,16 +382,23 @@ function keyChoices(g) {
   const c = g.company, list = [], first = lane => c.builds.find(b => b.lane === lane);
   for (const b of c.builds) if (b.lane === 'research' || b === first('product') || b === first('infra'))
     list.push({ q: b.q, text: `${b.lane === 'research' ? 'Trained' : 'Built'} ${b.name}${b.result ? ` · ${runText(b.result).toLowerCase()}` : ''}` });
-  for (const i of c.shares.investors) list.push({ q: i.q, text: i.kind === 'talent' ? `Granted ${bpsText(i.pct)} to ${i.name}` : i.inKind ? `Compute ${money(i.inKind)} from ${i.name} for ${bpsText(i.pct)}` : `Cash ${money(i.paid)} from ${i.name} for ${bpsText(i.pct)}` });
+  for (const i of c.shares.investors) list.push({ q: i.q, text: investorChoice(i) });
   list.push(...scenarioChoices(g));
   list.sort((x, y) => x.q - y.q);
   const n = lane => c.builds.filter(b => b.lane === lane).length;
   return { list, summary: c.builds.length ? `${plural(c.builds.length, 'build')}: ${plural(n('product'), 'product')}, ${plural(n('infra'), 'rack')}, ${plural(n('research'), 'training run')}, ${plural(n('opportunity'), 'opportunity', 'opportunities')} won` : '' };
 }
+// One cap-table entry as a final-board line. Leadership grants (V10.17 hires) store shares but no
+// percentage: the grant is the hire's newly issued equity (HIRES), never a cash raise.
+export function investorChoice(i) {
+  if (i.kind === 'leadership') { const h = HIRES.find(x => x.name === i.name); return h ? `Granted ${bpsText(h.equity)} to ${i.name} (leadership hire)` : `Equity grant to ${i.name} (leadership hire)`; }
+  if (i.kind === 'talent') return `Granted ${bpsText(i.pct)} to ${i.name}`;
+  return i.inKind ? `Compute ${money(i.inKind)} from ${i.name} for ${bpsText(i.pct)}` : `Cash ${money(i.paid)} from ${i.name} for ${bpsText(i.pct)}`;
+}
 function capTable(g) {
   const c = g.company, total = totalShares(c), funds = new Map();
   // One row per investor: a fund that signed twice holds the sum of both rounds.
-  for (const i of c.shares.investors) { const f = funds.get(i.name) || { name: i.name, shares: 0, paid: 0, grant: false }; f.shares += i.shares; f.paid += i.paid; f.grant ||= i.kind === 'talent'; funds.set(i.name, f); }
+  for (const i of c.shares.investors) { const f = funds.get(i.name) || { name: i.name, shares: 0, paid: 0, grant: false }; f.shares += i.shares; f.paid += i.paid; f.grant ||= i.kind === 'talent' || i.kind === 'leadership'; funds.set(i.name, f); }
   const rows = [{ name: 'You (founder)', pct: c.shares.founder / total, cls: 'is-you' }, ...[...funds.values()].map(f => ({ name: f.name, pct: f.shares / total, paid: f.paid, grant: f.grant }))];
   return `<table class="cap-table"><caption>Cap table</caption><tbody>${rows.map(r => `<tr class="${r.cls || ''}"><th scope="row">${esc(r.name)}</th><td>${pctOf(r.pct)}</td><td>${r.paid ? `paid ${short(r.paid)}` : r.grant ? 'equity grant' : ''}</td></tr>`).join('')}</tbody></table>`;
 }

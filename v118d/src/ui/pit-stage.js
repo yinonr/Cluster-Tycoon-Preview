@@ -11,7 +11,6 @@ import { rivalQuotes } from '../tycoon/arcade-negotiation.js';
 import { companyStats, openCards, cardState, executionOf } from '../tycoon/founder.js';
 import { money as sum, short, pctOf, bpsText, phaseName, plural } from './pit-ledger.js';
 import { companyBoard, cardStrip, trayRow, gpuTag } from './pit-company.js';
-import { tapeOffer } from './scenarios.js';
 import { mini, BROKER_SHAPES } from './tetris.js';
 
 // HUD cash always shows cents (pit-fx rolls it in that format).
@@ -127,6 +126,15 @@ function hud(g, ui, open) {
     </header>`;
 }
 
+// What the tape used to say that matters for play: when the next suppliers (or buyer, or offer) arrive, and this
+// round's market condition. It rides on the Market button, the floor's existing way into the full ledger.
+function marketLine(g, ev, upcoming, lastArrival, t) {
+  if (g.phase !== 'floor') return '';
+  const a = g.arcade;
+  const next = upcoming ? `<span class="tape-next ledger-next">next<span class="tape-long"> ${a.lots.includes(upcoming) ? 'suppliers' : a.buyers.includes(upcoming) ? 'buyer' : 'offer'} ·</span> ${fuse(upcoming.at, lastArrival, t, 'is-next')}</span>` : '<span class="tape-next ledger-next">no more arrivals</span>';
+  const cond = ev.kind !== 'quiet' && ev.gpu ? `<span class="ledger-event kind-${esc(ev.kind)}">${gpuTag(ev.gpu)} ${esc(ev.kind)}</span>` : '';
+  return `<small class="ledger-line">${cond}${next}</small>`;
+}
 export function stage(g, ui = {}) {
   const a = g.arcade, open = !!ui.focusOpen, live = !open, t = a.time;
   const { list, need, live: lots } = seating(g), term = g.phase === 'floor' ? liveTerm(g) || (open && a.confirm?.termId ? a.terms.find(x => x.id === a.confirm.termId) : null) : null;
@@ -136,21 +144,16 @@ export function stage(g, ui = {}) {
   const bids = a.buyers.filter(b => buyerLive(g, b));
   const upcoming = [...a.lots, ...a.buyers, ...a.terms.filter(x => x.status === 'open')].filter(x => x.at > t).sort((x, y) => x.at - y.at)[0];
   const lastArrival = Math.max(0, ...[...a.lots, ...a.buyers].filter(x => x.at <= t).map(x => x.at));
-  const ev = a.event || { kind: 'quiet', text: '' }, phase = phaseName(g.q), lead = g.phase === 'floor' ? (a.news || []).find(n => n.size === 'major') || (a.news || [])[0] : null;
+  const ev = a.event || { kind: 'quiet', text: '' };
   const liveCount = lots.length + bids.length;
   return `<section class="pit-stage ${open ? 'is-backdrop' : ''} ${term ? 'has-term' : ''}" aria-label="Haight Street Compute: your company and the GPU floor">
     ${hud(g, ui, open)}
     <div class="pit-main">
       <div class="pit-phone-company">${trayRow(g)}${cardStrip(g, live)}</div>
       <div class="pit-room">
-        <div class="pit-tape" role="group" aria-label="The tape">
-          <span class="tape-phase">R${g.q} · ${esc(phase.toUpperCase())}</span>
-          ${g.phase === 'floor' ? tapeOffer(g, live) : ''}
-          ${lead ? `<span class="tape-event has-news tone-${esc(lead.tone)}"><i class="tape-news">NEWS</i><span>${esc(lead.headline)}</span>${ev.kind !== 'quiet' ? `<i class="tape-mkt kind-${esc(ev.kind)}">${esc(ev.gpu)} ${esc(ev.kind)}</i>` : ''}</span>`
-            : `<span class="tape-event kind-${esc(ev.kind)}">${ev.gpu ? gpuTag(ev.gpu) : ''}<span>${esc(ev.gpu ? ev.text.replace(`${ev.gpu} `, '') : ev.text)}</span></span>`}
-          <span class="tape-count"><b>${lots.length}</b> ${lots.length === 1 ? 'lot' : 'lots'}</span>
-          ${upcoming && g.phase === 'floor' ? `<span class="tape-next">next<span class="tape-long"> ${a.lots.includes(upcoming) ? 'suppliers' : a.buyers.includes(upcoming) ? 'buyer' : 'offer'} ·</span> ${fuse(upcoming.at, lastArrival, t, 'is-next')}</span>` : '<span class="tape-next">no more arrivals</span>'}
-        </div>
+        <!-- V10.18 HSC polish: no news ticker. This slot holds a guidance hint only while one is shown (zero height
+             otherwise); arrivals and market conditions live on the Market button, scenario offers on the company board. -->
+        <div class="pit-hintbar"></div>
         <div class="pit-hall">
           <div class="pit-architecture" aria-hidden="true"><div class="pit-coffer"></div><div class="pit-column column-left"></div><div class="pit-column column-right"></div><div class="pit-marble"></div><div class="pit-balustrade"></div></div>
           <div class="pit-center" aria-hidden="true"><div class="pit-center-inset"><img class="pit-center-mark" src="brand/logo/hsc-mark-ink.svg" width="37" height="47" alt=""></div></div>
@@ -159,7 +162,7 @@ export function stage(g, ui = {}) {
         <div class="pit-desk-rest">
           ${resaleTickets(g, open)}
           ${control(live, 'open-market', 'pit-resale-btn', `<span class="pit-ledger-tag">RESALE</span><b>${bids.length} ${bids.length === 1 ? 'bid' : 'bids'}</b>`, `data-filter="buyers" aria-label="Resale desk: ${bids.length} funded bids for spare capacity"`)}
-          ${control(live, 'open-market', 'pit-ledger', `<span class="pit-ledger-tag">MARKET</span><b>${liveCount} live</b><i aria-hidden="true">→</i>`, `data-filter="all" aria-label="Market ledger: ${liveCount} live lots and bids"`)}
+          ${control(live, 'open-market', 'pit-ledger', `<span class="pit-ledger-tag">MARKET</span><b>${liveCount} live</b><i aria-hidden="true">→</i>${marketLine(g, ev, upcoming, lastArrival, t)}`, `data-filter="all" aria-label="Market ledger: ${liveCount} live lots and bids${ev.kind !== 'quiet' && ev.gpu ? `; ${esc(ev.gpu)} ${esc(ev.kind)}` : ''}"`)}
           ${control(live, 'finish-review', 'pit-bell', `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6c-1.4 0-2.4 1-2.4 2.3v1.1C11.9 10.6 9 15.3 9 21v6.2L5.8 31h28.4L31 27.2V21c0-5.7-2.9-10.4-8.6-11.6V8.3C22.4 7 21.4 6 20 6z"/><circle cx="20" cy="33.4" r="3"/></svg><span>End round${fastClose(g) ? `<small class="bell-fast">+${fastClose(g)}% fast close</small>` : ''}</span>`, 'aria-label="End round: ring the bell"')}
         </div>
       </div>

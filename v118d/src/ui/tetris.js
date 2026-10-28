@@ -143,19 +143,20 @@ function resultHTML(g, t, out) {
   return `<div class="tt-result" role="status"><strong class="tt-stamp">${pct(out.efficiency)} INTEGRATED</strong>${grade}<p>${why}${out.rows}/${out.height} rows powered · ${pct(delayed)} next bell${out.bounced ? ` · ${out.bounced} module${out.bounced > 1 ? 's' : ''} bounced` : ''}</p><p class="tt-score">Score ${out.score.toLocaleString('en-US')}</p></div>`;
 }
 
-export const RULE = `Fill whole rows to power them: ${Math.round(TETRIS.floor * 100)}% base + powered rows online now, the rest next bell. Grades S and A leave lasting bonuses.`;
+// V10.18 final polish (owner): the only how-to-play sentence. Stakes and outcomes show beside the rack and in the result.
+export const RULE = 'Fill whole rows to power them.';
 const KEYS = '<kbd>←</kbd><kbd>→</kbd> move · <kbd>↑</kbd> rotate · <kbd>↓</kbd> soft · <kbd>Space</kbd> drop';
 
 export function tetrisView(g, ui = {}, now = globalThis.performance?.now?.() ?? 0) {
   const t = g.arcade.tetris, out = puzzleOutcome(g);
   if (!t?.pieces) return { title: 'Cluster Tetris', role: 'report', desk: 'tetris', exit: null, body: '<div class="desk-center"><p>Integrating…</p></div>', footer: out ? button('tetris-continue', 'Continue', 'class="mat-move rail-commit rail-solo" data-autofocus') : '' };
   const state = out ? 'is-done' : t.started ? 'is-play' : 'is-intro';
-  const intro = !t.started && !out ? `<div class="tt-overlay tt-intro"><div class="tt-card mat-paper"><p class="tt-eyebrow">THE BELL · MIXED CLUSTER</p><h3>Integrate ${recipeText(t.recipe)}</h3>${manifest(t)}<p class="tt-rule-big">${esc(RULE)}</p>${stakes(g, t)}<p class="tt-keys">${KEYS} · or the pad / swipe the rack</p></div></div>` : '';
+  const intro = !t.started && !out ? `<div class="tt-overlay tt-intro"><div class="tt-card mat-paper"><p class="tt-eyebrow">THE BELL · MIXED CLUSTER</p><h3>Integrate ${recipeText(t.recipe)}</h3>${manifest(t)}<p class="tt-rule-big">${esc(RULE)}</p><p class="tt-keys">${KEYS}</p></div></div>` : '';
   const result = out ? `<div class="tt-overlay tt-finish">${resultHTML(g, t, out)}</div>` : '';
   const body = `<div class="tt ${state}${out?.perfect ? ' is-perfect' : ''}" data-tt style="--rows:${t.rows};--cols:${t.w}">${stripHTML(t)}` +
     `<div class="tt-field"><div class="tt-stage"><div class="tt-rackframe"><span class="tt-baylabel" aria-hidden="true">LOADING BAY</span><div class="tt-rack" data-tt-board role="img" aria-label="${esc(rackLabel(t))}">${rackRows(t, now)}</div>${result}</div>` +
     `<aside class="tt-side"><div class="tt-next" data-tt-next>${nextHTML(t)}</div><div class="tt-side-more">${stakes(g, t)}<p class="tt-keys">${KEYS}</p></div></aside></div>${intro}</div>` +
-    `<p class="tt-rule">${esc(RULE)}</p><span class="tt-say" data-tt-say aria-live="polite"></span></div>`;
+    `<span class="tt-say" data-tt-say aria-live="polite"></span></div>`;
   const footer = out ? button('tetris-continue', 'Continue <span aria-hidden="true">→</span>', 'class="mat-move rail-commit rail-solo" data-tt-continue data-autofocus aria-label="Continue to the board update"')
     : !t.started ? button('tetris-skip', `Skip<span class="wide"> · crew baseline</span> · ${pct(TETRIS.skip)}`, `class="mat-exit rail-quiet tt-skip" aria-label="Skip the puzzle: the integration crew brings ${pct(TETRIS.skip)} online now, the rest next bell"`) + button('tetris-start', 'Start <span class="wide">integration </span><span aria-hidden="true">▶</span>', 'class="mat-move rail-commit" data-autofocus aria-label="Start integration"')
     : `<div class="tt-pad" role="group" aria-label="Rack controls">${pad('left', '◀', 'Move left')}${pad('rotate', '⟳', 'Rotate')}${pad('right', '▶', 'Move right')}${pad('soft', '▼', 'Soft drop')}${pad('drop', '<span aria-hidden="true">⤓</span> DROP', 'Hard drop', 'tt-key-drop')}</div>`;
