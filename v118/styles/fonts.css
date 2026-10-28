@@ -1,0 +1,5 @@
+/* V10.18 self-hosted type. No font is requested from any other host, and no commercial font file is shipped.
+   Libre Franklin 400 (SIL OFL 1.1, fonts/LibreFranklin-OFL.txt; the open-source release via @fontsource 5.3.0) is
+   the open face hscompute.com itself falls back to for News Gothic. Here it sets the opening's "Haight St. Compute"
+   wordmark until a licensed News Gothic SB web font is approved for the game (docs/V10_18_AUDIT.md §9). */
+@font-face { font-family: "Libre Franklin"; src: url("../fonts/libre-franklin-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
