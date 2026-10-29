@@ -281,3 +281,8 @@ button.slot.is-filled:hover .gchip { transform:translateY(-2px); }
 @keyframes bm-lock { 0% { transform:translateY(-14px) scale(.7); opacity:0; } 70% { transform:translateY(1px) scale(1.1); opacity:1; } 100% { transform:none; opacity:1; } }
 @keyframes bm-rise { from { transform:translateY(12px); opacity:0; } to { transform:none; opacity:1; } }
 @keyframes build-breathe { from { box-shadow:0 3px 0 #3b0a06,0 0 0 2px #f3d27a66; } to { box-shadow:0 3px 0 #3b0a06,0 0 0 5px #f3d27aaa,0 0 16px #ffd88c88; } }
+/* Essential project actions stay in the fixed footer rail. */
+#pit .desk-card .pit-focus-footer { flex-wrap: wrap; }
+#pit .desk-card .pit-focus-footer > * { max-width: 100%; min-width: 0; }
+#pit .desk-card .pit-focus-footer .cd-source-btn { margin: 0; flex: 1 1 160px; }
+#pit .cd-capital-status { margin: 8px 0; padding: 8px; border: 1px solid var(--hsc-ink); }

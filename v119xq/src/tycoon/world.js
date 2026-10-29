@@ -4,7 +4,7 @@
 // draw comes from a named seeded stream, and every effect moves money through the existing
 // ledger: nothing here mints cash or GPUs without a buyer, a seller or a cost.
 import { stream } from '../util.js';
-import { GPUS, FOUNDER, revenueNow, burnOf, enterpriseValue, founderPct, pendingIntegration, recipeCost, isMixed, liveProducts } from './founder.js';
+import { GPUS, MODEL_NAMES, FOUNDER, revenueNow, burnOf, enterpriseValue, founderPct, pendingIntegration, recipeCost, isMixed, liveProducts } from './founder.js';
 import { ASK, DRIFT } from './founder-market.js';
 import { supplierStyle } from './exchange.js';
 import { SELLER_FIRMS } from '../data/names.js';
@@ -132,7 +132,7 @@ export function fire(g, e) {
 function fill(g, text = '', F = facts(g)) {
   const c = g.company, product = c.products.at(-1)?.name || 'your product';
   return String(text).replace(/\{company\}/g, c.name).replace(/\{gpu\}/g, F.marketGpu || 'GPU').replace(/\{product\}/g, product)
-    .replace(/\{model\}/g, ['Prototype', 'Tuned', 'Specialist', 'Competitive', 'Frontier', 'State of the art'][c.level]).replace(/\{round\}/g, String(F.round));
+    .replace(/\{model\}/g, (MODEL_NAMES[c.level] || MODEL_NAMES[0])).replace(/\{round\}/g, String(F.round));
 }
 
 // ---- Effects (SCHEMA §4) ----------------------------------------------------------------------

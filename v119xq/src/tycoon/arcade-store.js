@@ -50,7 +50,7 @@ function validSave(g) {
   }
   if (!w || typeof w !== 'object' || !['flags', 'seen', 'inv'].every(k => w[k] && typeof w[k] === 'object' && !Array.isArray(w[k])) || !['due', 'spawns', 'sentiment', 'exitMods', 'news', 'log'].every(k => Array.isArray(w[k]))) return false;
   if (w.vulture !== undefined && (!w.vulture || !int(w.vulture.offers) || w.vulture.offers < 0 || w.vulture.offers > 2 || !int(w.vulture.attemptQ) || w.vulture.attemptQ < 1 || w.vulture.attemptQ > g.q)) return false;
-  if (a.terms.filter(t => t.vulture).length > 1 || a.terms.some(t => t.vulture && (t.id !== `q${g.q}-vulture` || t.pct < 4000 || t.pct > 4900 || typeof t.cardId !== 'string' || !w.vulture?.offers))) return false;
+  if (a.terms.filter(t => t.vulture).length > 1 || a.terms.some(t => t.vulture && (t.id !== `q${g.phase === 'report' ? g.q - 1 : g.q}-vulture` || t.pct < 4000 || t.pct > 4900 || typeof t.cardId !== 'string' || !w.vulture?.offers))) return false;
   if (w.memo !== null && !(g.phase === 'report' && typeof w.memo === 'object' && Array.isArray(w.memo.options) && w.memo.options.length === 2)) return false;
   if (!c.mods || !['revenue', 'burn', 'prepaid'].every(k => Array.isArray(c.mods[k]))) return false;
   if (c.mods.tech !== null && !(typeof c.mods.tech === 'object' && Number.isFinite(c.mods.tech.mult) && c.mods.tech.mult > 0 && c.mods.tech.mult <= 1 && int(c.mods.tech.until))) return false;

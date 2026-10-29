@@ -63,7 +63,7 @@ function signalText(t) {
 function stripHTML(t) {
   const e = evaluateCable(t), connected = t.signal.on ? t.nodes.filter(n => n.online).length : t.nodes.filter(n => connectedCable(t).has(n.i)).length;
   return `<div class="tt-strip arc-strip"><div class="tt-clock" data-ch-clock><small class="tt-cap">NETWORK</small><b data-ch-sec>${signalText(t)}</b></div>` +
-    meterHTML(t.signal.on ? e.efficiency : connected / e.nodes, t.signal.on ? 'ONLINE NOW' : 'CONNECTED') +
+    (t.signal.on ? meterHTML(e.efficiency, 'ONLINE NOW') : `<div class="tt-meter" data-arc-meter><small class="tt-cap">GPU NODES CONNECTED</small><b data-arc-pct>${connected}/${e.nodes}</b><span class="tt-bar"><i class="tt-bar-fill" data-arc-fill style="--v:${connected / e.nodes}"></i></span><small>Planning · not integration efficiency</small></div>`) +
     `<div class="tt-rowcount"><small class="tt-cap">CONNECTED</small><b data-ch-nodes>${connected}/${e.nodes}</b></div></div>`;
 }
 function manifest(t) {
@@ -101,15 +101,19 @@ export function cableView(g, ui = {}) {
 export function paintCable(root, g) {
   const t = g?.arcade?.cable, board = root.querySelector('[data-ch-board]');
   if (!t?.cells || !board) return false;
+  if (t.signal.on && !root.querySelector('.tt-bar-base')) {
+    const meter = root.querySelector('[data-arc-meter]');
+    if (meter) meter.outerHTML = meterHTML(evaluateCable(t).efficiency, 'ONLINE NOW');
+  }
   const html = boardHTML(t);
   if (board.dataset.painted !== html) { board.dataset.painted = html; board.innerHTML = html; }
   const q = root.querySelector('[data-ch-queue]'), qh = queueHTML(t);
   if (q && q.dataset.painted !== qh) { q.dataset.painted = qh; q.innerHTML = qh; }
   const e = evaluateCable(t), connected = t.signal.on ? e.online : t.nodes.filter(n => connectedCable(t).has(n.i)).length, set = (sel, text) => { const el = root.querySelector(sel); if (el && el.textContent !== text) el.textContent = text; };
   const shown = t.signal.on ? e.efficiency : connected / e.nodes;
-  set('[data-ch-sec]', signalText(t)); set('[data-ch-nodes]', `${connected}/${e.nodes}`); set('[data-arc-pct]', pct(shown));
+  set('[data-ch-sec]', signalText(t)); set('[data-ch-nodes]', `${connected}/${e.nodes}`); set('[data-arc-pct]', t.signal.on ? pct(shown) : `${connected}/${e.nodes}`);
   root.querySelector('[data-arc-fill]')?.style.setProperty('--v', String(shown));
-  const cap = root.querySelector('[data-arc-meter] .tt-cap'); if (cap) cap.textContent = t.signal.on ? 'ONLINE NOW' : 'CONNECTED';
+  const cap = root.querySelector('[data-arc-meter] .tt-cap'); if (cap) cap.textContent = t.signal.on ? 'ONLINE NOW' : 'GPU NODES CONNECTED';
   const send = root.querySelector('[data-arc-key="send"]');
   if (send) send.disabled = t.signal.on;
   for (const a of ['rotate', 'lay', 'remove']) { const b = root.querySelector(`[data-arc-key="${a}"]`); if (b) b.disabled = t.signal.on; }

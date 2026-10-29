@@ -10,7 +10,7 @@ export const TIPS = {
   ready: ['FILL SLOTS', 'Then BUILD.'],
   vc: ['INVESTORS', 'Cash now. Less ownership.'],
   tetris: ['FIT THE GPUs', 'Better fit, faster integration.'],
-  cable: ['CABLE THE NODES', 'Beat the signal to every node.'],
+  cable: ['CABLE THE NODES', 'Connect every GPU node. Plan freely, then TEST NETWORK.'],
   kernel: ['RUN THE FLEET', 'Every job, no stalls.'],
   deal: ['PRIVATE OFFER', 'Check the deadline and risk.'],
 };

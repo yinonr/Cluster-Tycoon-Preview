@@ -18,7 +18,7 @@ const gpusIn = r => Object.values(r || {}).reduce((n, x) => n + (x || 0), 0);
 // The two first-time milestones: they come from the company's infrastructure (the first bell at each tier), never
 // from the round number. Shown once, on that bell's intro card.
 export const MILESTONES = Object.freeze({
-  cluster: { kicker: 'First multi-node deployment', text: 'Your company has graduated from provisioning hardware to networking it. One rack of GPUs is a computer; a cluster is only as good as the fabric that ties the nodes together. Cable them into the switch before the link comes up.' },
+  cluster: { kicker: 'First multi-node deployment', text: 'Your company has graduated from provisioning hardware to networking it. Connect every GPU node to the switch. Planning is untimed; TEST NETWORK commits your design.' },
   fleet: { kicker: 'First large distributed deployment', text: 'You now operate a massive, expensive compute fleet. Idle GPUs burn money; the job now is keeping every one of them productive. Steer the work across the fleet, and never let it stall.' },
 });
 

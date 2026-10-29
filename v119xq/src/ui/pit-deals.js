@@ -301,7 +301,7 @@ function bellView(g) {
       (lapsing || pending ? `<ul class="bell-list">${lapsing}${pending}</ul>` : '') +
       `<p class="bell-flow"><span>Revenue in <b>${money(revenue)}</b></span><span>Burn out <b>${money(burn)}</b></span>${prepaid ? `<small>${money(prepaid)} of revenue was already prepaid.</small>` : ''}${pending ? '<small>Integrations at the bell can change these.</small>' : ''}</p>` +
       (payroll ? note(`Cash ${money(cash(g))} + revenue ${money(revenue)} cannot cover ${money(burn)} payroll: the company shuts down at this bell.`, 'negative') : '') +
-      (last ? note('Round 10: the exit follows this bell.') : '') + execLine(g) + stampLine('finish', last ? 'RING THE FINAL BELL' : 'SETTLE THIS ROUND')), footer: close('Keep trading') };
+      (last ? note('Round 10: the exit follows this bell.') : '') + execLine(g)), footer: close('Keep trading') + button('finish', last ? 'RING THE FINAL BELL' : 'SETTLE THIS ROUND', 'class="mat-move rail-commit"') };
 }
 
 // ---- The bell report: one punchy board update ------------------------------------------------

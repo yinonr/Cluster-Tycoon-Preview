@@ -49,7 +49,7 @@ export function kernelView(g) {
   const state = out ? 'is-done' : t.started ? 'is-play' : 'is-intro';
   const intro = !t.started && !out ? introCard(g, { kind: 'kernel', rule: RULE, keys: KEYS, manifest: manifest(t) }) : '';
   const result = out ? `<div class="tt-overlay tt-finish">${resultHTML(g, t, out)}</div>` : '';
-  const body = `<div class="tt arc arc-kernel ${state}${out?.perfect ? ' is-perfect' : ''}" data-arc="kernel">${stripHTML(t)}` +
+  const body = `<div class="tt arc arc-kernel ${state}${out?.perfect ? ' is-perfect' : ''}" data-arc="kernel">${stripHTML(t)}<p class="ks-hazard-legend">Orange / hatched tiles are throttled GPUs. Hitting one ends the run.</p>` +
     `<div class="tt-field arc-field"><div class="arc-stage"><div class="ks-frame"><span class="tt-baylabel" aria-hidden="true"><img class="arc-seal" src="brand/logo/hsc-mark-white.svg" width="37" height="47" alt="">FLEET · ${t.gpus.length} GPU GROUPS</span>` +
     `<div class="ks-board" data-ks-board style="--cols:${t.w};--rows:${t.h}" role="img" aria-label="${esc(`Fleet grid: ${t.ran} of ${t.target} kernels run, stream length ${t.snake.length}, heading ${t.dir}`)}">${gridHTML(t)}</div>${result}</div>` +
     `<aside class="arc-side">${manifest(t)}</aside></div>${intro}</div>` +

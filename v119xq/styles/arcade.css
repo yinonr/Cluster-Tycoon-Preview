@@ -175,3 +175,5 @@
   .cards .fc-name, .cards .fc-reward { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 
+#pit .ks-hazard-legend { margin: 2px 0; font: 600 11px/1.2 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .arc-kernel { grid-template-rows: auto auto minmax(0, 1fr) auto; }

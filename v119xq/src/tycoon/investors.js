@@ -160,11 +160,17 @@ export const termLive = (g, t) => !!t && g.phase === 'floor' && t.status === 'op
 
 // One seeded chance on the first cash-blocked, fully stocked card encountered each round.
 // A rejected roll is persisted too, so reopening cards or reloading cannot reroll the offer.
+export function vultureReviewAvailable(g, card) {
+  const v = g.world.vulture;
+  const minimum = [0, 2_500_000, 10_000_000, 50_000_000][g.company.scale || 1];
+  return vultureBlocked(g, card) && cardState(g, card).cashNeeded >= Math.max(minimum, Math.ceil(card.cashCost * .2)) &&
+    (v?.offers || 0) < 2 && v?.attemptQ !== g.q && !g.arcade.terms.some(t => t.vulture);
+}
 export function maybeVulture(g, cardId) {
   const a = g.arcade, card = a.objectives.find(c => c.id === cardId), v = g.world.vulture || { offers: 0, attemptQ: 0 };
-  if (a.active || a.signing || a.confirm || a.terms.some(t => t.vulture) || v.offers >= 2 || v.attemptQ === g.q || !vultureBlocked(g, card)) return false;
+  if (a.active || a.signing || a.confirm || a.terms.some(t => t.vulture) || v.offers >= 2 || v.attemptQ === g.q || !vultureReviewAvailable(g, card)) return false;
   v.attemptQ = g.q; g.world.vulture = v;
-  if (stream(g.seed, 'v119-vulture-round', g.q, card.id).next() >= .18) return 'passed';
+  if (stream(g.seed, 'v119-vulture-round', g.q, card.id).next() >= .18) { a.message = { text: 'No emergency investor is willing to fund this gap this round.', tone: 'plain' }; return 'passed'; }
   const shortfall = cardState(g, card).cashNeeded, buffer = Math.min(100_000_000, Math.max(1_000_000, Math.round(card.cashCost * .05)));
   const amount = shortfall + buffer, pct = 4000 + 100 * stream(g.seed, 'v119-vulture-price', g.q, card.id).int(0, 9);
   if (!Number.isSafeInteger(amount) || amount <= 0) return 'passed';

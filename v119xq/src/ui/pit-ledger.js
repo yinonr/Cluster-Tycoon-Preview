@@ -61,8 +61,7 @@ export function buildChange(g, b) {
   if (b.status === 'integrating') return { tone: 'mixed', head: 'Integrating', text: 'Comes online at the bell' };
   if (b.status === 'training') return { tone: 'research', head: 'Training', text: 'Result at the bell · a fast close helps' };
   if (R.revenue) {
-    const p = c.products.find(p => p.build === b.id), m = 1 + FOUNDER.quality * c.level, S = revenueOf(c);
-    const add = p ? revenueNow(c) - Math.round((S - Math.round(p.revenue * p.online)) * m) : 0;
+    const add = revenueNow(c) - revenueNow({ ...c, products: c.products.filter(p => p.build !== b.id) });
     return { tone: 'product', head: `+${money(add)}/round`, text: `Revenue now ${money(revenueNow(c))} a round` };
   }
   if (R.agi) {

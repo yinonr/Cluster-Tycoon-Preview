@@ -277,7 +277,8 @@ root.addEventListener('click', e => {
     openPanel('market');
   }
   else if (a === 'market-page') { ui.page = Math.max(0, ui.page + Number(d.step)); render(); }
-  else if (a === 'open-card') {
+  else if (a === 'open-card') { if (g.phase !== 'floor') return; ui.cardId = d.card; openPanel('card'); }
+  else if (a === 'review-vulture') {
     if (g.phase !== 'floor') return;
     let offered = false;
     ui.panel = 'floor';
