@@ -118,6 +118,7 @@ function onKey(e) {
   if (kind() === 'kernel') {
     if (STEER[k]) { e.preventDefault(); e.stopPropagation(); send('turn', STEER[k]); return; }
   } else {
+    if (/^[1-4]$/.test(k)) { e.preventDefault(); e.stopPropagation(); send('select', ['I', 'L', 'T', 'X'][Number(k) - 1]); return; }
     if (STEER[k]) { e.preventDefault(); e.stopPropagation(); if (!e.repeat || k.startsWith('Arrow')) send('move', STEER[k]); return; }
     if (k === ' ' || k === 'Enter') { e.preventDefault(); e.stopPropagation(); if (!e.repeat) send('lay'); return; }
     if (k === 'r' || k === 'R' || k === 'x' || k === 'X') { e.preventDefault(); e.stopPropagation(); if (!e.repeat) send('rotate'); return; }
