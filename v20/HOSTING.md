@@ -1,5 +1,7 @@
 # Cluster Tycoon V20 — HSC hosting guide
 
+> **Deployment revision: v20-welcome-cleanup-2026-10-29.** The live preview includes the welcome cleanup from source `b527c2e9aeba9640ed3ff7f2e673e00da0687320`. The immutable `v20.0.0-handoff` ZIP is preserved and **does not include this cleanup**. Follow [DEPLOYMENT_REVISION.md](DEPLOYMENT_REVISION.md) to reproduce this revision; do not assume the original ZIP equals the current preview.
+
 Cluster Tycoon is a ten-round, single-player browser game about buying GPU capacity and building an AI company. The score is founder wealth. It runs entirely in the browser; there is no backend, database, login, API key, package installation or server build step.
 
 ## Deploy

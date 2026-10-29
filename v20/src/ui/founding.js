@@ -51,9 +51,7 @@ export function foundingView(ui, prefs, g) {
     <div class="welcome-content" tabindex="0" aria-label="Welcome guide. Scroll to read all three steps.">
     <header><p class="founding-kicker">CLUSTER TYCOON · V20</p><h1 id="welcome-title">WELCOME TO THE HAIGHT STREET COMPUTE MARKET!</h1>
     <p class="welcome-subtitle">10 rounds. One AI startup. Get the bag.</p>
-    <p class="welcome-early-goal"><strong>GOAL:</strong> Finish 10 rounds with the biggest founder fortune.</p>
-    <p class="welcome-intro">You’re the founder of an AI startup. Buy the computing power you need, build your business, and try to finish with the biggest fortune possible.</p></header>
-    <p class="welcome-swipe" id="welcome-swipe">Buy / sell → Build → Integrate<br>3 steps · Swipe or scroll sideways →</p>
+    </header>
     <ol class="welcome-panels" aria-label="Your game loop">
       <li class="welcome-panel" tabindex="0" aria-labelledby="welcome-buy">
         <h2 id="welcome-buy">1. BUY AND SELL GPUs</h2>

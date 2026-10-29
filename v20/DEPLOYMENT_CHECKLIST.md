@@ -1,5 +1,7 @@
 # V20 deployment checklist
 
+> **Deployment revision: v20-welcome-cleanup-2026-10-29.** The live preview includes the welcome cleanup from source `b527c2e9aeba9640ed3ff7f2e673e00da0687320`. The immutable `v20.0.0-handoff` ZIP is preserved and **does not include this cleanup**. Follow [DEPLOYMENT_REVISION.md](DEPLOYMENT_REVISION.md) to reproduce this revision; do not assume the original ZIP equals the current preview.
+
 Release source/tag: see RELEASE_MANIFEST.md. Deploy all ZIP contents together; no build or backend is required.
 
 - [ ] Verify `cluster-tycoon-v20.zip` SHA-256 matches RELEASE_MANIFEST.md; retain a rollback copy of the previous site.
@@ -7,7 +9,7 @@ Release source/tag: see RELEASE_MANIFEST.md. Deploy all ZIP contents together; n
 - [ ] Replace the four canonical/social image URL prefixes in index.html with the final directory URL; record the change.
 - [ ] Open the page in a fresh browser profile. Confirm V20, fonts, logo, welcome images and optional intro media load without 404s or console errors.
 - [ ] Check 1280×800 desktop and 390×844/320×640 phones: no horizontal page overflow, readable numbers, visible focus, and accessible ENTER THE FLOOR.
-- [ ] Name a company, read/swipe the three welcome panels, confirm the goal appears early, and enter the floor.
+- [ ] Name a company, read/swipe the three welcome panels, read the full end-of-round-10 scoring explanation, and enter the floor.
 - [ ] Open a supplier, complete the first purchase/signature, allocate chips and build a project. Confirm cash and inventory change once.
 - [ ] Finish a round, try integration or the crew fallback, and reach the board report without an error. Check a pilot/infra description distinguishes payments, base income and costs.
 - [ ] Reload and confirm the current campaign resumes; verify browser storage is allowed. Do not clear real users' saves.
