@@ -31,6 +31,15 @@
 #pit .ch-frame .tt-baylabel { left: 10px; top: 5px; }
 #pit .arc .tt-baylabel .arc-seal { display: inline-block; height: 10px; width: auto; margin-right: 6px; vertical-align: -1px; }  /* the house seal on the hardware */
 #pit .ch-board { display: grid; grid-template-columns: repeat(var(--cols), var(--cell)); grid-template-rows: repeat(var(--rows), var(--cell)); background: var(--hsc-paper); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#pit .ch-board, #pit .ch-queue { touch-action: none; }
+#pit .ch-drop-valid { outline: 3px solid var(--hsc-led); outline-offset: -3px; }
+#pit .ch-drop-invalid { outline: 2px dashed var(--hsc-led-warn); outline-offset: -2px; }
+.ch-drag-ghost { position: fixed; z-index: 10000; width: 42px; height: 42px; transform: translate(-50%, -50%); pointer-events: none; background: var(--hsc-paper); border: 1px solid var(--hsc-ink); opacity: .9; }
+.ch-drag-ghost.is-invalid { opacity: .55; }
+.ch-drag-ghost svg { width: 100%; height: 100%; }
+.ch-drag-ghost .ch-wire { stroke: var(--hsc-ink); stroke-width: 9; }
+.ch-drag-ghost .ch-core { stroke: var(--hsc-paper); stroke-width: 3; }
+.ch-drag-ghost .ch-joint, .ch-drag-ghost .ch-leaf { fill: var(--hsc-ink); }
 #pit .ch-cell { position: relative; display: block; width: var(--cell); height: var(--cell); min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--hsc-paper); box-shadow: inset 0 0 0 .5px var(--hsc-grey-light); cursor: default; -webkit-tap-highlight-color: transparent; }
 #pit .ch-cell svg { display: block; width: 100%; height: 100%; overflow: visible; }
 #pit .ch-cell.can-lay { cursor: pointer; }

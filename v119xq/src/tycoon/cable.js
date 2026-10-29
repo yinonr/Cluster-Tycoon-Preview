@@ -235,6 +235,21 @@ export function cableInput(g, action, arg) {
   if (action === 'start') { if (t.started) return false; t.started = true; return true; }
   if (!t.started) return false;
   if (t.signal.on && action !== 'move') return false;
+  if (action === 'drop') {
+    const { from, to, piece, mask, rotation } = arg || {};
+    if (Number.isSafeInteger(from)) {
+      const c = t.cells[from];
+      if (c?.t !== 'c' || c.piece !== piece || c.m !== mask) return false;
+      if (to === 'inventory') return remove(t, from);
+      if (!Number.isSafeInteger(to) || !canLay(t, to)) return false;
+      t.cells[to] = c; t.cells[from] = { t: 'e' }; t.cursor = to; t.last = { i: to, n: t.placed };
+      return true;
+    }
+    const p = t.queue[piece];
+    if (!Number.isSafeInteger(piece) || !p || p.used || pieceMask(p) !== mask || !Number.isInteger(rotation) || rotation < 0 || rotation > 3 || !Number.isSafeInteger(to) || !canLay(t, to)) return false;
+    t.selected = piece; p.r = rotation;
+    return lay(t, to);
+  }
   if (action === 'move') {
     const d = { up: 1, right: 2, down: 4, left: 8 }[arg], n = d ? neighbour(t.cursor, d) : -1;
     if (n < 0) return false; t.cursor = n; return true;

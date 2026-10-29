@@ -8,10 +8,10 @@
 //   tap a piece type then a tile, tap a placed cable to pick it up. Planning has no timer.
 //   Kernel Snake: arrows/WASD steer; swipe the fleet; the four-way pad.
 import { integrationInput, integrationTick, skipIntegration, integrationKind, integrationState } from '../tycoon/integration.js';
-import { msToNext } from '../tycoon/cable.js';
+import { msToNext, pieceMask, rotateMask } from '../tycoon/cable.js';
 import { msToMove } from '../tycoon/kernel.js';
 import { finishIntegration } from '../tycoon/arcade.js';
-import { paintCable } from '../ui/cable.js';
+import { paintCable, tileSVG } from '../ui/cable.js';
 import { paintKernel } from '../ui/kernel.js';
 import { say } from '../ui/integration.js';
 
@@ -26,6 +26,35 @@ const kind = () => { const g = ctx?.store.state; return g?.phase === 'integratio
 const game = () => { const k = kind(); return k === 'cable' || k === 'kernel' ? integrationState(ctx.store.state) : null; };
 const onScreen = () => !!ctx?.root.querySelector('[data-arc]');
 const playing = () => { const t = game(); return !!(t && t.started && !t.done && !ctx.ui.guidanceOpen && !ctx.store.error && onScreen()); };
+let drag = null;
+function cancelDrag() {
+  if (!drag) return;
+  drag.ghost?.remove();
+  ctx.root.querySelectorAll('.ch-drop-valid,.ch-drop-invalid').forEach(e => e.classList.remove('ch-drop-valid', 'ch-drop-invalid'));
+  const id = drag.id; drag = null;
+  if (ctx.root.hasPointerCapture(id)) ctx.root.releasePointerCapture(id);
+}
+function dragTarget(e) {
+  const el = document.elementFromPoint(e.clientX, e.clientY), cell = el?.closest('[data-ch-cell]');
+  if (cell && ctx.root.contains(cell)) return { el: cell, to: Number(cell.dataset.chCell), valid: game()?.cells[Number(cell.dataset.chCell)]?.t === 'e' };
+  const inventory = el?.closest('[data-ch-queue]');
+  return { el: inventory, to: 'inventory', valid: !!inventory && Number.isInteger(drag?.from) };
+}
+function onPointerMove(e) {
+  if (!drag || drag.id !== e.pointerId) return;
+  if (!playing() || game().signal.on) { cancelDrag(); return; }
+  if (!drag.active && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
+  e.preventDefault(); drag.active = true;
+  if (!drag.mask) return;
+  if (!drag.ghost) { drag.ghost = document.createElement('div'); drag.ghost.className = 'ch-drag-ghost'; document.body.append(drag.ghost); }
+  drag.ghost.innerHTML = tileSVG({ t: 'c', m: drag.from === undefined ? rotateMask(drag.mask, drag.rotation - drag.originalRotation) : drag.mask });
+  ctx.root.querySelectorAll('.ch-drop-valid,.ch-drop-invalid').forEach(el => el.classList.remove('ch-drop-valid', 'ch-drop-invalid'));
+  const target = dragTarget(e), box = target.valid && target.to !== 'inventory' ? target.el.getBoundingClientRect() : null;
+  target.el?.classList.add(target.valid ? 'ch-drop-valid' : 'ch-drop-invalid');
+  drag.ghost.classList.toggle('is-invalid', !target.valid);
+  drag.ghost.style.left = `${box ? box.x + box.width / 2 : e.clientX}px`;
+  drag.ghost.style.top = `${(box ? box.y + box.height / 2 : e.clientY) - (e.pointerType === 'touch' ? 42 : 0)}px`;
+}
 
 export function attachArcade(context) {
   ctx = context; lastNow = now();
@@ -33,9 +62,12 @@ export function attachArcade(context) {
   document.addEventListener('keyup', onKeyUp, true);
   ctx.root.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('pointerup', onPointerUp);
-  window.addEventListener('pointercancel', () => { swipe = null; });
+  window.addEventListener('pointermove', onPointerMove, { passive: false });
+  window.addEventListener('pointercancel', () => { swipe = null; cancelDrag(); });
+  ctx.root.addEventListener('lostpointercapture', cancelDrag);
+  window.addEventListener('blur', cancelDrag);
   ctx.root.addEventListener('click', onClick);
-  document.addEventListener('visibilitychange', () => { lastNow = now(); pending = 0; });
+  document.addEventListener('visibilitychange', () => { lastNow = now(); pending = 0; cancelDrag(); });
   setInterval(tick, 40);
 }
 
@@ -108,6 +140,10 @@ function tick() {
 
 // ---- Keyboard ------------------------------------------------------------------------------------------------
 function onKey(e) {
+  if (drag) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancelDrag(); return; }
+    cancelDrag();
+  }
   if (!ctx || ctx.ui.guidanceOpen) return;
   const t = game();
   if (!t || e.target.closest?.('input,textarea,select') || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -135,6 +171,7 @@ function onKeyUp(e) {
 // ---- Pointer: tiles, pad keys, swipes ---------------------------------------------------------------------------
 function onPointerDown(e) {
   if (!game()) return;
+  if (drag) { cancelDrag(); return; }
   const key = e.target.closest?.('[data-arc-key]');
   if (key) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -147,18 +184,27 @@ function onPointerDown(e) {
     return;
   }
   const cell = e.target.closest?.('[data-ch-cell]');
-  if (cell && kind() === 'cable') {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
+  const piece = e.target.closest?.('[data-ch-select]');
+  if ((cell || piece) && kind() === 'cable') {
+    if (e.button !== 0 || !e.isPrimary || !playing() || game().signal.on || (startedAt && now() - startedAt < 300)) return;
     e.preventDefault();
-    if (playing() && !(startedAt && now() - startedAt < 300)) send('lay', Number(cell.dataset.chCell));
+    const t = game(), from = cell ? Number(cell.dataset.chCell) : undefined;
+    const index = piece ? t.queue.findIndex(p => p.k === piece.dataset.chSelect && !p.used) : t.cells[from]?.piece;
+    const p = t.queue[index];
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, from, piece: index, mask: cell ? t.cells[from]?.m : p && pieceMask(p), rotation: p?.r, originalRotation: p?.r, tap: cell ? ['lay', from] : ['select', piece.dataset.chSelect] };
+    ctx.root.setPointerCapture(e.pointerId);
     return;
   }
-  const piece = e.target.closest?.('[data-ch-select]');
-  if (piece && kind() === 'cable') { e.preventDefault(); if (playing()) send('select', piece.dataset.chSelect); return; }
   const board = e.target.closest?.('[data-ks-board]');
   if (board && kind() === 'kernel' && playing()) { e.preventDefault(); swipe = { x: e.clientX, y: e.clientY, id: e.pointerId }; }
 }
 function onPointerUp(e) {
+  if (drag && drag.id === e.pointerId) {
+    const d = drag, target = dragTarget(e); cancelDrag();
+    if (!d.active) send(...d.tap);
+    else if (d.mask && target.valid) send('drop', { from: d.from, to: target.to, piece: d.piece, mask: d.mask, rotation: d.rotation });
+    return;
+  }
   if (!swipe || e.pointerId !== swipe.id) return;
   const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y; swipe = null;
   if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return;

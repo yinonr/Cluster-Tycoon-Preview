@@ -7,7 +7,7 @@ import { CABLE, DIRS, pieceMask, handPiece, connectedCable, evaluateCable, cable
 import { introCard, resultBlock, footerFor, meterHTML, gpuClass, pct } from './integration.js';
 
 export const RULE = 'Connect every GPU node to the central switch.';
-const KEYS = 'Tap a cable type, then a tile. Tap a placed cable to pick it up; rotate with ⟳. Keyboard: 1–4 select, arrows move, Space places, Delete picks up.';
+const KEYS = 'Drag cables from inventory or move them on the grid; drag back to reclaim. Or tap a type, then a tile; tap a cable to pick up. ⟳ / R rotates. Keyboard: 1–4 select, arrows move, Space places, Delete picks up. Escape cancels a drag.';
 const END = { 1: [20, 0], 2: [40, 20], 4: [20, 40], 8: [0, 20] };
 const PIECE_NAME = { I: 'straight', L: 'corner', T: 'leaf switch', X: 'cross' };
 
