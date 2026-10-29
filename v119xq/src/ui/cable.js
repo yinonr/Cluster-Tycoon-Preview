@@ -50,7 +50,7 @@ function boardHTML(t) {
 function queueHTML(t) {
   const hand = handPiece(t);
   const available = t.queue.filter((p, i) => p.k && (t.selected === undefined ? i >= t.qi : !p.used));
-  return Object.keys(PIECE_NAME).map(k => { const count = available.filter(p => p.k === k).length, p = hand?.k === k ? hand : available.find(p => p.k === k);
+  return (!hand && !t.signal.on && !t.done ? '<p class="ch-empty" role="status">Select another cable type</p>' : '') + Object.keys(PIECE_NAME).map(k => { const count = available.filter(p => p.k === k).length, p = hand?.k === k ? hand : available.find(p => p.k === k);
     return `<button type="button" class="ch-q${hand?.k === k ? ' is-hand' : ''}" data-ch-select="${k}" ${!count || t.signal.on ? 'disabled' : ''} aria-pressed="${hand?.k === k}" aria-label="${PIECE_NAME[k]}, ${count} available${hand?.k === k ? ', selected' : ''}">${tileSVG({ t: 'c', m: p ? pieceMask(p) : 5 })}<small>${PIECE_NAME[k]} ×${count}</small></button>`;
   }).join('');
 }

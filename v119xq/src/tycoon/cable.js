@@ -135,7 +135,7 @@ export function startCable(g, spec) {
 const state = g => g?.arcade?.cable;
 const live = g => g?.phase === 'integration' && !!state(g) && !state(g).done;
 export const cableOutcome = g => state(g)?.done ? state(g).result : null;
-export const handPiece = t => t.selected === undefined ? t.queue[t.qi] || null : t.queue[t.selected] && !t.queue[t.selected].used ? t.queue[t.selected] : t.queue.find(p => !p.used) || null;
+export const handPiece = t => t.selected === undefined ? t.queue[t.qi] || null : t.queue[t.selected] && !t.queue[t.selected].used ? t.queue[t.selected] : null;
 export const handMask = t => { const p = handPiece(t); return p ? pieceMask(p) : 0; };
 // A tile can take a cable if it is open floor, or a cable the signal has not reached yet (replace).
 export const canLay = (t, i) => i >= 0 && i < t.cells.length && t.cells[i].t === 'e' && !t.signal.on;
@@ -168,12 +168,14 @@ function lay(t, i) {
   const index = t.queue.indexOf(p);
   t.cells[i] = { t: 'c', m: pieceMask(p), k: p.k, piece: index };
   p.used = true; t.qi++; t.placed++; t.cursor = i; t.last = { i, n: t.placed };
-  t.selected = t.queue.findIndex(x => !x.used);
+  // Stay with the player's chosen type and orientation; an exhausted type requires an explicit new choice.
+  t.selected = t.queue.findIndex(x => x.k === p.k && !x.used);
+  if (t.selected >= 0) t.queue[t.selected].r = p.r;
   return true;
 }
 function remove(t, i) {
   if (t.signal.on || t.cells[i]?.t !== 'c') return false;
-  const p = t.queue[t.cells[i].piece]; if (p) { p.used = false; t.selected = t.cells[i].piece; }
+  const p = t.queue[t.cells[i].piece]; if (p) p.used = false;
   t.cells[i] = { t: 'e' }; t.qi = Math.max(0, t.qi - 1); t.replaced++; t.cursor = i; return true;
 }
 function send(t) {

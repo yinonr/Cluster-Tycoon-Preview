@@ -103,6 +103,7 @@
   #pit .arc-side .arc-nodes { display: none; }
   #pit .arc-kernel .arc-side { display: none; }
   #pit .ch-queue { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; padding: 3px; gap: 3px; }
+  #pit .ch-queue .ch-empty { grid-column: 1 / -1; }
   #pit .ch-q { flex-direction: column; justify-content: center; gap: 1px; min-width: 0; min-height: 47px; padding: 2px; }
   #pit .ch-q svg, #pit .ch-q.is-hand svg { width: 25px; height: 25px; }
   #pit .ch-q small, #pit .ch-q.is-hand small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
