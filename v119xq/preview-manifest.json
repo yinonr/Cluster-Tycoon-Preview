@@ -1,5 +1,5 @@
 {
-  "source_commit": "58db01daa0fd4b628cab841039a4ed30a99b10a8",
+  "source_commit": "dbf1fb4f87905a05de811e2666cca4ded09bea9a",
   "source_path": "v119/",
   "preview_path": "v119xq/",
   "transforms": [
@@ -7,6 +7,10 @@
     "isolated v119xq save/best/guidance keys"
   ],
   "files": {
+    "assets/welcome/README.md": "26ebbca399ff81140731c6b3248415e03a2c928581e2e751ec0c8830e0c34236",
+    "assets/welcome/build.webp": "2bfe48c0efd65188a2d66f1c01c75298ea991925defd8f820b248c7b05abd378",
+    "assets/welcome/integration.webp": "8e3340af2a4c45ffa66af4f2aab5935e9c33969cdd1c4cfa07abde44c28fb331",
+    "assets/welcome/market.webp": "978399d9e780f04b6354872566089bce2935c7752c67b07ed76dd564acf69439",
     "brand/logo/hsc-lockup-ink.svg": "04a0a023fa0fbeb2b38bae4c485eed6b425b52059e5bfc919877e25661402dbd",
     "brand/logo/hsc-lockup-white.svg": "8f5071c28d1c59cd21c24142b66409b95801e2798ffd4c748c100bf08ca61de0",
     "brand/logo/hsc-mark-ink.svg": "96cb92488929aab651db9122d580c03f7f5e4d89e900113fe49261e88e49d727",
@@ -48,7 +52,7 @@
     "src/media.js": "44d3f646e5d9e0c971c5b0a005d767ed9ed3d08e20da761442ee816858dff719",
     "src/screens/arcade-input.js": "005cce4b9882d2e8078f66c483cbef200626a7e61c26d79adcd85a96f3c4e042",
     "src/screens/office.js": "1998c97530cd9d227a0cb9aa57ce3f2f17e476b1ca221c15c544354e0d7f6943",
-    "src/screens/pit.js": "f5828fef3fcbdce35514d3e8014e0bba94e406defec93fa086ac7b04752cf514",
+    "src/screens/pit.js": "a0a744bc5649b2a94770e51bedcdc86166f70316e03c347fee517ec4dce26bf9",
     "src/screens/tetris-input.js": "22d7d3bf02cd4fc298477dcf3f6afe1a020bb5a920b82cc56ee47bc36621e046",
     "src/tycoon/arcade-buyers.js": "e12bd2a406aebba68a00da4d4795617ba3c149baa427a3d21a4f399602fa4c6c",
     "src/tycoon/arcade-negotiation.js": "53e7b6523fcff113d06007842b11ba5c8b32ffcbf2221d8b7f765355eb83488d",
@@ -81,7 +85,7 @@
     "src/ui/cable.js": "5f70e8639607c7d37619082ecc89e08fb8067d12a662733e1ddf3525462a8f2b",
     "src/ui/character.js": "3b892ab62d157f2e0dcf028488086334623e852e53ed337d5440cf31f5d4fe98",
     "src/ui/crt.js": "39db65df61e8914d694a678ba011ede86efa7324408859af9d35fa9edaab1feb",
-    "src/ui/founding.js": "b88bf31d3abfd0a65b4eb6f263233e0b050c8b49303b03dc7644bdf9b14fb5fe",
+    "src/ui/founding.js": "cc400e5a13f3b5ef7cf5c7f1b30c3864a32506632f7dc5af8b9efacf709dcd3a",
     "src/ui/integration.js": "8fb516b5556e51551f1ce75d09ed30d443fe8206119215015de56b2e85c7afe4",
     "src/ui/kernel.js": "366cad8d6c1fb480c84e7f1cee1fd76aaa3b64c85d4ad4e90cdd0cd0ebe6cc93",
     "src/ui/moonshot.js": "8708440d5b9b0627ebe0f43f0d1e3d2cc8c135137aefadff0a28c65725e7359a",
@@ -98,7 +102,7 @@
     "src/util.js": "ecd57ded72bf4cc5daa144e80180cad6e277832657e9682ee7caabd18f4d27ab",
     "styles/arcade.css": "ff3061724e88957908132d020c69058e496db64fab48f9b7921e1e4423768ede",
     "styles/fonts.css": "cf2201cf78351805fcf46c6488b59ccc348a9ba1c77782fec5f22cc80e9f1890",
-    "styles/founding.css": "9b166730267aa60073f4cb878ecb9cb792cd19dedae2c4e304ca9730181527dd",
+    "styles/founding.css": "b5f62a421afb39dc42a8b5b04c9d02e551ef59148cce2d3c39111d022523514d",
     "styles/hsc.css": "660e8f0ba4e7a8a0ce7fed56767719a1d22f16cb9f3f503a4a5b26721b91a8d7",
     "styles/opening.css": "65de05d7956f364cff1be9e1883396ddbee255064478c5673be64b1648a270f3",
     "styles/pit-charm.css": "08c1e682c98188396dc757022007e931acf0a5d9da2c8b9c22646d10a73ca3cb",

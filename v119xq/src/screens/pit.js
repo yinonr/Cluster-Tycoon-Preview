@@ -391,7 +391,7 @@ document.addEventListener('keydown', e => {
     if (!dialog) return;
     if (e.key === 'Escape') { e.preventDefault(); closeGuide(); }
     if (e.key === 'Tab') {
-      const all = [...dialog.querySelectorAll('button:not(:disabled),input')].filter(el => el.getClientRects().length);
+      const all = [...dialog.querySelectorAll('button:not(:disabled),input,[tabindex="0"]')].filter(el => el.getClientRects().length);
       if (e.shiftKey && (document.activeElement === all[0] || document.activeElement === dialog)) { e.preventDefault(); all.at(-1)?.focus(); }
       else if (!e.shiftKey && document.activeElement === all.at(-1)) { e.preventDefault(); all[0]?.focus(); }
     }

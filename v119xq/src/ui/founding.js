@@ -48,11 +48,30 @@ const steps = () => `<ol class="founding-steps">
 </ol>`;
 export function foundingView(ui, prefs, g) {
   if (ui.entry === 'welcome' || ui.guide === 'help') return `<div class="founding-scrim"><section class="founding-dialog welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="welcome-title" tabindex="-1">
-    <header><p class="founding-kicker">CLUSTER TYCOON · V10.19</p><h1 id="welcome-title">WELCOME TO HAIGHT STREET COMPUTE MARKET!</h1></header>
-    <div class="welcome-copy"><p>Vetted GPU suppliers, buyers, and investors are on the floor. You have <b>45 seconds each round</b> to acquire the compute you need, based on your company's needs during that round, or to sell any excess chips to other buyers. Use your <b>Charm</b> to get better deals.</p>
-    <p>At the end of every round, you need to integrate your new chips with land, power, and networking. The better you integrate them through <b>Node Tetris</b>, the better your models will run. The better your models run, the more money you'll make.</p>
-    <p>At the end of round 10, your tenure as CEO of <b class="welcome-name">${esc(g?.company.name || ui.nameDraft || 'your startup')}</b> ends.</p>
-    <p class="founding-goal"><b>Get the biggest bag you can get. Become a Cluster Tycoon.</b></p></div>
+    <div class="welcome-content" tabindex="0" aria-label="Welcome guide. Scroll to read all three steps.">
+    <header><p class="founding-kicker">CLUSTER TYCOON · V10.19</p><h1 id="welcome-title">WELCOME TO THE HAIGHT STREET COMPUTE MARKET!</h1>
+    <p class="welcome-subtitle">10 rounds. One AI startup. Get the bag.</p>
+    <p class="welcome-intro">You’re the founder of an AI startup. Buy the computing power you need, build your business, and try to finish with the biggest fortune possible.</p></header>
+    <p class="welcome-swipe" id="welcome-swipe">Buy / sell → Build → Integrate<br>3 steps · Swipe or scroll sideways →</p>
+    <ol class="welcome-panels" aria-label="Your game loop">
+      <li class="welcome-panel" tabindex="0" aria-labelledby="welcome-buy">
+        <h2 id="welcome-buy">1. BUY AND SELL GPUs</h2>
+        <img src="./assets/welcome/market.webp" width="720" height="450" alt="GPU suppliers on the trading floor, with chip quantities and asking prices." decoding="async">
+        <p>Each round, you have <strong>45 seconds</strong> on the trading floor to buy GPUs from suppliers or sell your extras to buyers.</p><p>Click on a task to quickly find the suppliers with the chips you need. Use your <strong>Charm</strong> to negotiate better deals.</p>
+      </li>
+      <li class="welcome-panel" tabindex="0" aria-labelledby="welcome-build">
+        <h2 id="welcome-build">2. BUILD YOUR COMPANY</h2>
+        <img src="./assets/welcome/build.webp" width="720" height="450" alt="A product project showing required GPUs and the build controls." decoding="async">
+        <p>Use your GPUs to <strong>launch products, train AI models, and make money.</strong> As your company grows, bigger projects and opportunities open up.</p><p>You can raise investment to grow faster, but be careful how much of your company you give away.</p>
+      </li>
+      <li class="welcome-panel" tabindex="0" aria-labelledby="welcome-integrate">
+        <h2 id="welcome-integrate">3. GET YOUR GPUs RUNNING</h2>
+        <img src="./assets/welcome/integration.webp" width="720" height="450" alt="Cable Mania: connect GPU nodes to power and networking, then test your network." decoding="async">
+        <p>At the end of each round, you’ll play a short <strong>integration minigame</strong> to connect your GPUs with power and networking.</p><p>The better you do, the better your GPUs perform — and the more your company can earn.</p>
+      </li>
+    </ol>
+    <p class="welcome-goal">After round 10, the game ends. Your score is your <strong>founder wealth:</strong> the value of your ownership in the company, plus your cash.</p>
+    </div>
     <footer><button type="button" class="founding-primary" data-action="${ui.entry === 'welcome' ? 'enter-floor' : 'guide-close'}" data-autofocus>${ui.entry === 'welcome' ? 'ENTER THE FLOOR' : 'BACK TO MY COMPANY'} &#8594;</button>
     ${ui.guide === 'help' ? '<div class="founding-links"><button type="button" data-action="intro-replay">Replay Intro</button><button type="button" data-action="rename-startup">Edit startup name</button></div>' : ''}</footer>
   </section></div>`;
