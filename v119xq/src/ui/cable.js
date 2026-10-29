@@ -23,7 +23,8 @@ export function tileSVG(cell, { lit = false, drops = [], ghost = 0 } = {}) {
   } else if (cell.t === 's') {
     inner = `${wires(15, 'ch-stub')}<rect x="6" y="6" width="28" height="28" rx="2" class="ch-spine"/><g class="ch-ports">${[11, 17, 23, 29].map(x => `<rect x="${x - 2}" y="25" width="4" height="4" class="${lit ? 'is-lit' : ''}"/>`).join('')}</g><text x="20" y="20" class="ch-spine-t">SPINE</text>`;
   } else if (cell.t === 'n') {
-    inner = `${wires(cell.m, 'ch-wire')}${wires(cell.m, `ch-core${lit ? ' is-lit' : ''}`)}<rect x="5" y="5" width="30" height="30" rx="1.5" class="ch-node"/>${[11, 17, 23, 29].map(y => `<line x1="9" y1="${y}" x2="31" y2="${y}" class="ch-slot"/>`).join('')}<circle cx="30" cy="9" r="2.6" class="ch-led${lit ? ' is-lit' : ''}"/>`;
+    const [x, y] = END[cell.m], px = 20 + (x - 20) * .68, py = 20 + (y - 20) * .68;
+    inner = `<rect x="5" y="5" width="30" height="30" rx="1.5" class="ch-node"/>${[11, 17, 23, 29].map(y => `<line x1="9" y1="${y}" x2="31" y2="${y}" class="ch-slot"/>`).join('')}<circle cx="30" cy="9" r="2.6" class="ch-led${lit ? ' is-lit' : ''}"/><g class="ch-node-port${lit ? ' is-lit' : ''}"><line x1="${px}" y1="${py}" x2="${x}" y2="${y}"/><circle cx="${px}" cy="${py}" r="4"/></g>`;
   } else if (cell.t === 'b') {
     inner = `<rect x="4" y="4" width="32" height="32" class="ch-block"/><rect x="10" y="10" width="20" height="20" class="ch-block-in"/>`;
   } else inner = `<circle cx="20" cy="20" r="1.4" class="ch-dot"/>`;
@@ -42,7 +43,7 @@ function boardHTML(t) {
   for (let i = 0; i < t.cells.length; i++) {
     const c = t.cells[i], node = c.t === 'n' ? t.nodes.find(n => n.i === i) : null;
     const lit = !!t.live[i] || !!connected?.has(i);
-    const cls = ['ch-cell', `is-${c.t}`, node ? gpuClass(node.gpu) : '', lit ? 'is-live' : '', i === t.cursor && t.started && !t.done ? 'is-cursor' : '', t.last?.i === i ? 'is-new' : '', canLay(t, i) ? 'can-lay' : ''].filter(Boolean).join(' ');
+    const cls = ['ch-cell', `is-${c.t}`, node ? gpuClass(node.gpu) : '', node ? `port-${({ 1: 'north', 2: 'east', 4: 'south', 8: 'west' })[c.m]}` : '', lit ? 'is-live' : '', i === t.cursor && t.started && !t.done ? 'is-cursor' : '', t.last?.i === i ? 'is-new' : '', canLay(t, i) ? 'can-lay' : ''].filter(Boolean).join(' ');
     out += `<button type="button" class="${cls}" data-ch-cell="${i}" aria-label="${esc(tileLabel(t, i))}" tabindex="-1">${tileSVG(c, { lit, drops: drops.get(i) || [], ghost: i === t.cursor ? ghost : 0 })}${node ? `<span class="ch-node-label"><b>${node.gpus}</b>${esc(node.gpu)}</span>` : ''}</button>`;
   }
   return out;

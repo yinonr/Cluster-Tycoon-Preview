@@ -52,12 +52,17 @@
 #pit .ch-slot { stroke: var(--hsc-ink); stroke-width: 1.2; opacity: .55; }
 #pit .ch-led { fill: var(--hsc-ink); stroke: var(--hsc-paper); stroke-width: 1; }
 #pit .ch-led.is-lit { fill: var(--hsc-led); }
+#pit .ch-node-port line { stroke: var(--hsc-ink); stroke-width: 7; stroke-linecap: square; }
+#pit .ch-node-port circle { fill: var(--hsc-paper); stroke: var(--hsc-ink); stroke-width: 2.5; }
+#pit .ch-node-port.is-lit line { stroke: var(--hsc-led); stroke-width: 7; }
+#pit .ch-node-port.is-lit circle { fill: var(--hsc-led); stroke: var(--hsc-ink); }
 #pit .ch-block { fill: var(--hsc-grey-light); stroke: var(--hsc-ink); stroke-width: 2; }
 #pit .ch-block-in { fill: none; stroke: var(--hsc-ink); stroke-width: 1; stroke-dasharray: 2 2; }
 #pit .ch-dot { fill: var(--hsc-grey-light); }
 #pit .ch-spark circle { fill: var(--hsc-led-warn); stroke: var(--hsc-ink); stroke-width: 1.5; }
 #pit .ch-spark path { stroke: var(--hsc-paper); stroke-width: 1.5; }
-#pit .ch-node-label { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); display: flex; align-items: baseline; gap: 2px; padding: 0 3px; background: var(--hsc-paper); box-shadow: 0 0 0 1px var(--hsc-ink); font: 700 clamp(8px, calc(var(--cell) * .2), 12px)/1.2 var(--hsc-sans); color: var(--hsc-ink); white-space: nowrap; pointer-events: none; }
+#pit .ch-node-label { position: absolute; z-index: 1; left: 50%; top: 2px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; max-width: calc(100% - 4px); padding: 0 2px; background: var(--hsc-paper); box-shadow: 0 0 0 1px var(--hsc-ink); font: 700 clamp(7px, calc(var(--cell) * .16), 11px)/1.1 var(--hsc-sans); color: var(--hsc-ink); white-space: nowrap; pointer-events: none; }
+#pit .ch-cell.port-north .ch-node-label { top: auto; bottom: 2px; }
 #pit .ch-cell.is-n.is-live .ch-node-label { background: var(--hsc-led); }
 #pit .ch-queue { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 8px 10px; background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 2px; box-shadow: var(--hsc-shadow-sm); }
 #pit .ch-q { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 3px; border: 1px solid var(--hsc-ink); background: var(--hsc-paper); color: var(--hsc-ink); cursor: pointer; }
