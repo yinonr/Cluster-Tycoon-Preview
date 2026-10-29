@@ -1,10 +1,9 @@
-// V10.19 Cable Hell: network compute (engine). Contract: docs/V10_19_INTEGRATION_CONTRACT.md.
+// V10.19 Cable Mania: untimed network puzzle. The cable identifier and saved board remain stable.
 // A Pipe Mania-style puzzle on a 7 × 7 data-hall floor. The spine switch sits near the middle; GPU nodes stand in racks
-// around the walls, each with one network port facing the room; equipment blocks some floor tiles. The player lays
-// cable pieces from a short queue (straight, corner, tee = a leaf switch, cross), rotating the piece in hand. After a
-// countdown the link signal leaves the switch and travels along the cables one tile at a time: every node it reaches
-// comes online; a cable end that leads nowhere is a dropped link and that branch goes dark. SEND starts the signal
-// early (then fast-forwards it). Perfect = every node online and no dropped link. The generator first builds a
+// around the walls, each with one network port facing the room; equipment blocks some floor tiles. The player places,
+// rotates and reclaims finite cable pieces (straight, corner, tee, cross), then commits with TEST NETWORK. The signal
+// travels one tile at a time: every node it reaches comes online; an open cable end is a dropped link. Perfect means
+// every node online and no dropped link. The generator first builds a
 // switch tree that reaches every node and deals exactly its pieces first, so a perfect fabric is always possible.
 // Pure, deterministic (stream(seed, 'v119-cable', …), no Math.random, no clock) and JSON state in g.arcade.cable.
 import { stream } from '../util.js';
@@ -14,11 +13,8 @@ export const CABLE = Object.freeze({
   w: 7, h: 7,
   nodes: Object.freeze([4, 6]),         // node racks on the board, by deployment scale (4 at 48 GPUs, +1 per 70)
   blocks: Object.freeze([3, 5]),        // equipment tiles
-  prime: Object.freeze({ base: 6, perCell: .8, min: 12, max: 24 }),   // seconds before the signal leaves the switch
   step: 520,                            // ms per tile the signal travels
-  fast: 110,                            // ms per tile once SEND fast-forwards it
-  show: 4,                              // pieces visible: the one in hand and three next
-  score: Object.freeze({ cable: 10, node: 250, perfect: 1000, second: 50 }),
+  score: Object.freeze({ cable: 10, node: 250, perfect: 1000 }),
   skip: .75, floor: .55,
 });
 // Directions as bits: N 1, E 2, S 4, W 8.
@@ -110,7 +106,7 @@ export function generateCable(seed, q, recipe, scale) {
     if (solution.length < 8 || solution.length > 22 || solution.some(s => degree(s.m) < 2)) continue;
     return { cells, spine, nodes: nodes.map(n => ({ i: n.i, m: n.m, gpu: n.gpu, gpus: n.gpus })), solution, attempt };
   }
-  throw Error(`Cable Hell: no board for ${rk}`);
+  throw Error(`Cable Mania: no board for ${rk}`);
 }
 // The queue: the solution's pieces (shuffled, random rotations) with a spare dealt after every third one (spares must
 // be laid somewhere harmless: a decision, not a dead end), then spares in the same mix plus a few straights and
@@ -122,16 +118,15 @@ function dealQueue(seed, q, solution) {
   while (out.length < solution.length * 2 + 12) out.push({ k: r.pick(mix), r: r.int(0, 3) });
   return out;
 }
-export const primeSeconds = cells => Math.round(Math.max(CABLE.prime.min, Math.min(CABLE.prime.max, CABLE.prime.base + CABLE.prime.perCell * cells)) * 10) / 10;
 
 // ---- Lifecycle --------------------------------------------------------------------------------------------------
 export function startCable(g, spec) {
   if (g.phase !== 'integration' || !spec?.builds?.length) return false;
-  const B = generateCable(g.seed, g.q, spec.recipe, spec.scale || 48), prime = primeSeconds(B.solution.length);
+  const B = generateCable(g.seed, g.q, spec.recipe, spec.scale || 48);
   g.arcade.cable = {
     id: `q${g.q}-cable`, builds: [...spec.builds], recipe: { ...spec.recipe }, w: W, h: H, cells: B.cells, spine: B.spine,
-    nodes: B.nodes.map(n => ({ ...n, online: false, at: null })), solution: B.solution, queue: dealQueue(g.seed, g.q, B.solution), qi: 0,
-    cursor: B.spine, prime: Math.round(prime * 1000), seconds: prime, started: false, done: false, result: null, reason: null,
+    nodes: B.nodes.map(n => ({ ...n, online: false, at: null })), solution: B.solution, queue: dealQueue(g.seed, g.q, B.solution), qi: 0, selected: 0,
+    cursor: B.spine, prime: 0, seconds: 0, started: false, done: false, result: null, reason: null,
     ms: 0, signal: { on: false, fast: false, acc: 0, front: [], steps: 0, sentAt: null }, live: Array(W * H).fill(0), drops: [],
     placed: 0, replaced: 0, energized: 0, last: null, attempt: B.attempt,
   };
@@ -140,22 +135,49 @@ export function startCable(g, spec) {
 const state = g => g?.arcade?.cable;
 const live = g => g?.phase === 'integration' && !!state(g) && !state(g).done;
 export const cableOutcome = g => state(g)?.done ? state(g).result : null;
-export const handPiece = t => t.queue[t.qi] || null;
+export const handPiece = t => t.selected === undefined ? t.queue[t.qi] || null : t.queue[t.selected] && !t.queue[t.selected].used ? t.queue[t.selected] : t.queue.find(p => !p.used) || null;
 export const handMask = t => { const p = handPiece(t); return p ? pieceMask(p) : 0; };
 // A tile can take a cable if it is open floor, or a cable the signal has not reached yet (replace).
-export const canLay = (t, i) => i >= 0 && i < t.cells.length && (t.cells[i].t === 'e' || t.cells[i].t === 'c' && !t.live[i]);
+export const canLay = (t, i) => i >= 0 && i < t.cells.length && t.cells[i].t === 'e' && !t.signal.on;
+// Existing /v119xq/ saves may have an unfinished timed board. Keep its placed cables and remaining hand.
+function normalizeCable(t) {
+  if (t.selected !== undefined) return;
+  for (let i = 0; i < t.qi; i++) t.queue[i].used = true;
+  const assigned = new Set();
+  for (const c of t.cells) if (c.t === 'c' && c.piece === undefined) {
+    const i = t.queue.findIndex((p, n) => n < t.qi && p.k === c.k && !assigned.has(n));
+    if (i >= 0) { c.piece = i; assigned.add(i); }
+  }
+  t.selected = t.queue.findIndex(p => !p.used);
+}
+
+// Preview connectivity without committing the test. Only reciprocal ports carry a link.
+export function connectedCable(t) {
+  const seen = new Set([t.spine]), queue = [t.spine];
+  for (const i of queue) for (const d of DIRS) {
+    if (!(t.cells[i].m & d)) continue;
+    const j = neighbour(i, d), c = t.cells[j];
+    if (c && (c.t === 'c' || c.t === 'n') && c.m & opposite(d) && !seen.has(j)) { seen.add(j); if (c.t === 'c') queue.push(j); }
+  }
+  return seen;
+}
 
 function lay(t, i) {
   const p = handPiece(t);
   if (!p || !canLay(t, i)) return false;
-  if (t.cells[i].t === 'c') t.replaced++;
-  t.cells[i] = { t: 'c', m: pieceMask(p), k: p.k };
-  t.qi++; t.placed++; t.cursor = i; t.last = { i, n: t.placed };
+  const index = t.queue.indexOf(p);
+  t.cells[i] = { t: 'c', m: pieceMask(p), k: p.k, piece: index };
+  p.used = true; t.qi++; t.placed++; t.cursor = i; t.last = { i, n: t.placed };
+  t.selected = t.queue.findIndex(x => !x.used);
   return true;
+}
+function remove(t, i) {
+  if (t.signal.on || t.cells[i]?.t !== 'c') return false;
+  const p = t.queue[t.cells[i].piece]; if (p) { p.used = false; t.selected = t.cells[i].piece; }
+  t.cells[i] = { t: 'e' }; t.qi = Math.max(0, t.qi - 1); t.replaced++; t.cursor = i; return true;
 }
 function send(t) {
   if (!t.signal.on) { t.signal.on = true; t.signal.sentAt = t.ms; t.signal.front = [{ i: t.spine, from: 0 }]; t.live[t.spine] = 1; t.signal.acc = 0; return true; }
-  if (!t.signal.fast) { t.signal.fast = true; return true; }
   return false;
 }
 // One signal step: every front tile pushes the signal through each of its ports. A node goes online; an open end is
@@ -186,11 +208,11 @@ export function evaluateCable(t) {
   return { share, efficiency, perfect, online: t.nodes.filter(n => n.online).length, nodes: t.nodes.length, gpusOnline: online, gpus: total };
 }
 function finish(t, reason) {
-  const e = evaluateCable(t), S = CABLE.score, early = t.signal.sentAt === null ? 0 : Math.max(0, Math.floor((t.prime - t.signal.sentAt) / 1000));
+  const e = evaluateCable(t), S = CABLE.score;
   t.done = true; t.reason = reason; t.signal.front = [];
   t.result = { efficiency: e.efficiency, perfect: e.perfect, skipped: false, reason, seconds: Math.round(t.ms / 100) / 10,
-    score: S.cable * t.energized + S.node * e.online + (e.perfect ? S.perfect + S.second * early : 0),
-    rows: null, placed: t.placed, pieces: t.solution.length, detail: { nodes: e.nodes, online: e.online, drops: t.drops.length, placed: t.placed, replaced: t.replaced, early } };
+    score: S.cable * t.energized + S.node * e.online + (e.perfect ? S.perfect : 0),
+    rows: null, placed: t.placed, pieces: t.solution.length, detail: { nodes: e.nodes, online: e.online, drops: t.drops.length, placed: t.placed, replaced: t.replaced, early: 0 } };
   return true;
 }
 
@@ -200,37 +222,35 @@ function finish(t, reason) {
 export function cableInput(g, action, arg) {
   if (!live(g)) return false;
   const t = state(g);
+  normalizeCable(t);
   if (action === 'start') { if (t.started) return false; t.started = true; return true; }
   if (!t.started) return false;
+  if (t.signal.on && action !== 'move') return false;
   if (action === 'move') {
     const d = { up: 1, right: 2, down: 4, left: 8 }[arg], n = d ? neighbour(t.cursor, d) : -1;
     if (n < 0) return false; t.cursor = n; return true;
   }
   if (action === 'rotate') { const p = handPiece(t); if (!p || p.k === 'X') return false; p.r = (p.r + 1) % 4; return true; }
-  if (action === 'lay') return lay(t, Number.isSafeInteger(arg) ? arg : t.cursor);
+  if (action === 'select') { const i = t.queue.findIndex(p => p.k === arg && !p.used); if (i < 0 || i === t.selected) return false; t.selected = i; return true; }
+  if (action === 'remove') return remove(t, Number.isSafeInteger(arg) ? arg : t.cursor);
+  if (action === 'lay') { const i = Number.isSafeInteger(arg) ? arg : t.cursor; return t.cells[i]?.t === 'c' ? remove(t, i) : lay(t, i); }
   if (action === 'send') return send(t);
   return false;
 }
-// The clock (dt in seconds, at most 1 per call): the countdown to the signal, then one tile per step.
+// Time advances only after TEST NETWORK. Planning never starts a countdown or launches the signal.
 export function cableTick(g, dt) {
   if (!live(g) || !(dt > 0)) return false;
   const t = state(g);
-  if (!t.started) t.started = true;
+  if (!t.signal.on) return false;
   let ms = Math.round(Math.min(dt, 1) * 1000);
   while (ms > 0 && !t.done) {
-    if (!t.signal.on) {
-      const step = Math.min(ms, t.prime - t.ms);
-      t.ms += step; ms -= step;
-      if (t.ms >= t.prime) send(t);
-      continue;
-    }
-    const per = t.signal.fast ? CABLE.fast : CABLE.step, step = Math.min(ms, per - t.signal.acc);
+    const per = CABLE.step, step = Math.min(ms, per - t.signal.acc);
     t.ms += step; t.signal.acc += step; ms -= step;
     if (t.signal.acc >= per) { t.signal.acc = 0; advance(t); }
   }
   return true;
 }
-export const msToNext = t => !t ? 1000 : !t.signal.on ? Math.max(0, t.prime - t.ms) : (t.signal.fast ? CABLE.fast : CABLE.step) - t.signal.acc;
+export const msToNext = t => !t || !t.signal.on ? 1000 : CABLE.step - t.signal.acc;
 export function skipCable(g) {
   if (!live(g) || state(g).started) return false;
   const t = state(g);
@@ -240,53 +260,29 @@ export function skipCable(g) {
 }
 
 // ---- Autoplay: the real game through cableInput / cableTick (bots and tests) ----------------------------------------
-// Each piece in hand: lay it on an unfinished solution tile that takes its kind (rotated to fit), with a seeded
-// chance of a wrong rotation (a careless cable that will drop the link unless it is noticed and replaced); a piece
-// the fabric does not need goes to the floor tile farthest from the fabric. Thinking time is spent on the clock.
-// At high skill the signal is sent as soon as the fabric is done.
-export const cableBotMix = s => ({ pWrong: .55 * (1 - s) ** .6, pFix: 1 - .45 * (1 - s) ** .6, think: .45 + .6 * (1 - s), send: s >= .6 });
+// Bots choose a seeded share of wrong orientations and correct some of them before the single final test.
+export const cableBotMix = s => ({ pWrong: .55 * (1 - s) ** .6, pFix: 1 - .45 * (1 - s) ** .6 });
 export function autoplayCable(g, skill = 1, override = null) {
   if (!live(g)) return false;
-  const t = state(g), s = Math.max(0, Math.min(1, Number.isFinite(Number(skill)) ? Number(skill) : 1)), mix = { ...cableBotMix(s), ...override }; // override: calibration only
+  const t = state(g), s = Math.max(0, Math.min(1, Number.isFinite(Number(skill)) ? Number(skill) : 1));
+  const mix = { ...cableBotMix(s), ...override };
   cableInput(g, 'start');
-  // Whether this player ever notices a careless cable on tile i (decided once per tile).
-  const notices = i => stream(g.seed, 'v119-cable-notice', g.q, Math.round(s * 1000), i).chance(mix.pFix);
-  for (let guard = 0; guard < 400 && !t.done; guard++) {
-    const rng = stream(g.seed, 'v119-cable-bot', g.q, Math.round(s * 1000), t.qi, guard);
-    const want = t.solution.filter(x => canLay(t, x.i) && (t.cells[x.i].t === 'e' || t.cells[x.i].m !== x.m && notices(x.i)));
-    const p = handPiece(t);
-    if (!want.length || !p) {
-      if (mix.send) { cableInput(g, 'send'); cableInput(g, 'send'); }
-      cableTick(g, .5); continue;
-    }
-    const fit = want.filter(x => kindOf(x.m) === p.k);
-    let target = -1, mask = 0;
-    if (fit.length) {
-      // Nearest the switch first (the signal arrives there first).
-      fit.sort((a, b) => manhattan(a.i, t.spine) - manhattan(b.i, t.spine) || a.i - b.i);
-      const x = fit[0]; target = x.i; mask = rng.chance(mix.pWrong) ? rotateMask(x.m, rng.int(1, 3)) : x.m;
-    } else {
-      // A piece the fabric does not need goes to the floor tile farthest from it (the switch and the nodes included:
-      // a spare beside the switch's open ports would take the signal and drop it).
-      const sol = new Set(t.solution.map(x => x.i)), fabric = [...sol, t.spine, ...t.nodes.map(n => n.i)], floor = [];
-      for (let i = 0; i < t.cells.length; i++) if (t.cells[i].t === 'e' && !sol.has(i)) floor.push(i);
-      const far = i => Math.min(...fabric.map(x => manhattan(x, i)));
-      floor.sort((a, b) => far(b) - far(a) || a - b);
-      target = floor[0] ?? -1; mask = pieceMask(p);
-    }
-    if (target < 0) { cableTick(g, .5); continue; }
-    for (let k = 0; k < 4 && handMask(t) !== mask; k++) cableInput(g, 'rotate');
-    cableTick(g, mix.think * (.6 + .8 * rng.next()));
-    if (t.done) break;
-    cableInput(g, 'lay', target);
+  for (const x of t.solution) {
+    const k = kindOf(x.m), r = stream(g.seed, 'v119-cable-bot', g.q, Math.round(s * 1000), x.i);
+    cableInput(g, 'select', k);
+    const wrong = r.chance(mix.pWrong) && !r.chance(mix.pFix);
+    const target = wrong ? rotateMask(x.m, r.int(1, 3)) : x.m;
+    for (let n = 0; n < 4 && handMask(t) !== target; n++) cableInput(g, 'rotate');
+    cableInput(g, 'lay', x.i);
   }
-  while (!t.done) cableTick(g, 1);
-  return true;
+  cableInput(g, 'send');
+  for (let guard = 0; guard < 100 && !t.done; guard++) cableTick(g, 1);
+  return t.done;
 }
 
 // ---- Adapter (integration.js registry) --------------------------------------------------------------------------
 export const ADAPTER = Object.freeze({
-  kind: 'cable', field: 'cable', name: 'Cable Hell', ready: true,
+  kind: 'cable', field: 'cable', name: 'Cable Mania', ready: true,
   start: (g, spec) => startCable(g, spec),
   input: (g, action, arg) => cableInput(g, action, arg),
   tick: (g, dt) => cableTick(g, dt),

@@ -173,7 +173,7 @@ export function buy(g) {
 }
 
 // The bell. With a mixed build waiting to integrate, the bell opens the integration phase first: one challenge,
-// chosen by operational scale (V10.19 integration.js: Node Tetris, Cable Hell or Kernel Snake; the floor clock is
+// chosen by operational scale (V10.19 integration.js: Node Tetris, Cable Mania or Kernel Snake; the floor clock is
 // stopped). Otherwise the round settles at once.
 export function closeQuarter(g) {
   if (g.phase !== 'floor' || g.arcade.active || g.arcade.confirm || g.arcade.signing) return false;

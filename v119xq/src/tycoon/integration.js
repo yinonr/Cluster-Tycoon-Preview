@@ -1,7 +1,7 @@
 // V10.19 The Scale-Up: one integration challenge per bell, chosen by operational scale
 // (contract: docs/V10_19_INTEGRATION_CONTRACT.md).
 //
-// Early game, the company provisions GPUs (Node Tetris); then it networks nodes into clusters (Cable Hell); at fleet
+// Early game, the company provisions GPUs (Node Tetris); then it networks nodes into clusters (Cable Mania); at fleet
 // scale it operates the deployment (Kernel Snake). The game is picked from the infrastructure the company actually
 // runs (GPUs behind live products and owned racks) and the work being integrated at this bell: never the round,
 // the valuation or lifetime purchases. Every game returns the same result shape and the engine applies it through
@@ -17,7 +17,7 @@ export const INTEGRATION = Object.freeze({ skip: tetris.TETRIS.skip, floor: tetr
 // `stay` (85% of `min`): a bell-to-bell wobble never flips the game, a real loss of capacity does.
 export const TIERS = Object.freeze([
   Object.freeze({ id: 'node', game: 'node', min: 0, stay: 0, name: 'Node Tetris', verb: 'Provision', stage: 'Provisioning nodes' }),
-  Object.freeze({ id: 'cluster', game: 'cable', min: 48, stay: 40, name: 'Cable Hell', verb: 'Network', stage: 'Networking a cluster' }),
+  Object.freeze({ id: 'cluster', game: 'cable', min: 48, stay: 40, name: 'Cable Mania', verb: 'Network', stage: 'Networking a cluster' }),
   Object.freeze({ id: 'fleet', game: 'kernel', min: 256, stay: 216, name: 'Kernel Snake', verb: 'Operate', stage: 'Operating a fleet' }),
 ]);
 const tierIndex = id => Math.max(0, TIERS.findIndex(t => t.id === id));

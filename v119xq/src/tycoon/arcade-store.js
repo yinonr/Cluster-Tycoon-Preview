@@ -75,7 +75,7 @@ function validSave(g) {
   if (!c.team.every(h=>{const spec=HIRES.find(x=>x.id===h.id); const grants=c.shares.investors.filter(i=>i.hire===h.build); return grants.length===(spec.equity ? 1 : 0) && grants.every(i=>i.paid===0 && i.kind==='leadership');})) return false;
   if (typeof c.researchClosed !== 'boolean' || !c.products.every(p => p.lost === undefined || p.lost === true)) return false;
   if (g.phase === 'over' && !['exit', 'shutdown', 'acquired'].includes(a.ending)) return false;
-  if (!validIntegrationSave(g)) return false;   // V10.19: the bell's game (Node Tetris, Cable Hell or Kernel Snake)
+  if (!validIntegrationSave(g)) return false;   // V10.19: the bell's game (Node Tetris, Cable Mania or Kernel Snake)
   if (!['floor', 'integration'].includes(g.phase) && a.history.length === 0) return false;
   if (g.phase === 'over' && !a.exit) return false;
   return validCommerce(g) && validStrategicSave(g) && validInstitutionalSave(g) && validMoonshotSave(g) && validScenarioSave(g);

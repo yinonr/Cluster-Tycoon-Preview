@@ -1,13 +1,13 @@
-// V10.19 Cable Hell: the view (engine: tycoon/cable.js; controller: screens/arcade-input.js). The data-hall floor is
+// V10.19 Cable Mania: the view (engine: tycoon/cable.js; controller: screens/arcade-input.js). The data-hall floor is
 // a grid of tile buttons (tap or click lays the cable in hand), drawn as 1-bit SVG in the HSC system: ink cable on
 // paper, the spine switch an ink box, GPU nodes in their H100/H200/B200 colours and textures. The link signal lights
 // cables LED green as it travels; a dropped link shows an orange spark at the open end. paintCable repaints in place.
 import { esc } from '../util.js';
-import { CABLE, DIRS, pieceMask, handPiece, evaluateCable, cableOutcome, canLay } from '../tycoon/cable.js';
+import { CABLE, DIRS, pieceMask, handPiece, connectedCable, evaluateCable, cableOutcome, canLay } from '../tycoon/cable.js';
 import { introCard, resultBlock, footerFor, meterHTML, gpuClass, pct } from './integration.js';
 
-export const RULE = 'Cable every node to the switch before the signal arrives.';
-const KEYS = '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> move · <kbd>R</kbd> rotate · <kbd>Space</kbd> lay · <kbd>F</kbd> send · or tap a tile';
+export const RULE = 'Connect every GPU node to the central switch.';
+const KEYS = 'Tap a cable type, then an empty tile to place it. Tap a placed cable to pick it up; rotate with ⟳. Test when ready.';
 const END = { 1: [20, 0], 2: [40, 20], 4: [20, 40], 8: [0, 20] };
 const PIECE_NAME = { I: 'straight', L: 'corner', T: 'leaf switch', X: 'cross' };
 
@@ -32,44 +32,48 @@ export function tileSVG(cell, { lit = false, drops = [], ghost = 0 } = {}) {
 }
 function tileLabel(t, i) {
   const c = t.cells[i], x = i % t.w + 1, y = Math.floor(i / t.w) + 1;
-  const what = c.t === 's' ? 'spine switch' : c.t === 'n' ? `node, ${t.nodes.find(n => n.i === i)?.gpus} ${c.gpu}${t.live[i] ? ', online' : ''}` : c.t === 'b' ? 'equipment' : c.t === 'c' ? `cable${t.live[i] ? ', live' : ''}` : 'open floor';
+  const what = c.t === 's' ? 'central switch' : c.t === 'n' ? `node, ${t.nodes.find(n => n.i === i)?.gpus} ${c.gpu}${connectedCable(t).has(i) ? ', connected' : ''}` : c.t === 'b' ? 'equipment' : c.t === 'c' ? 'cable, tap to pick up' : 'open floor';
   return `Row ${y}, column ${x}: ${what}`;
 }
 function boardHTML(t) {
-  const hand = handPiece(t), ghost = hand && t.started && !t.done && canLay(t, t.cursor) ? pieceMask(hand) : 0;
+  const hand = handPiece(t), ghost = hand && t.started && !t.done && canLay(t, t.cursor) ? pieceMask(hand) : 0, connected = !t.signal.on ? connectedCable(t) : null;
   const drops = new Map(); for (const d of t.drops) drops.set(d.i, [...(drops.get(d.i) || []), d.d]);
   let out = '';
   for (let i = 0; i < t.cells.length; i++) {
     const c = t.cells[i], node = c.t === 'n' ? t.nodes.find(n => n.i === i) : null;
-    const cls = ['ch-cell', `is-${c.t}`, node ? gpuClass(node.gpu) : '', t.live[i] ? 'is-live' : '', i === t.cursor && t.started && !t.done ? 'is-cursor' : '', t.last?.i === i ? 'is-new' : '', canLay(t, i) ? 'can-lay' : ''].filter(Boolean).join(' ');
-    out += `<button type="button" class="${cls}" data-ch-cell="${i}" aria-label="${esc(tileLabel(t, i))}" tabindex="-1">${tileSVG(c, { lit: !!t.live[i], drops: drops.get(i) || [], ghost: i === t.cursor ? ghost : 0 })}${node ? `<span class="ch-node-label"><b>${node.gpus}</b>${esc(node.gpu)}</span>` : ''}</button>`;
+    const lit = !!t.live[i] || !!connected?.has(i);
+    const cls = ['ch-cell', `is-${c.t}`, node ? gpuClass(node.gpu) : '', lit ? 'is-live' : '', i === t.cursor && t.started && !t.done ? 'is-cursor' : '', t.last?.i === i ? 'is-new' : '', canLay(t, i) ? 'can-lay' : ''].filter(Boolean).join(' ');
+    out += `<button type="button" class="${cls}" data-ch-cell="${i}" aria-label="${esc(tileLabel(t, i))}" tabindex="-1">${tileSVG(c, { lit, drops: drops.get(i) || [], ghost: i === t.cursor ? ghost : 0 })}${node ? `<span class="ch-node-label"><b>${node.gpus}</b>${esc(node.gpu)}</span>` : ''}</button>`;
   }
   return out;
 }
 function queueHTML(t) {
-  const up = t.queue.slice(t.qi, t.qi + CABLE.show);
-  if (!up.length) return '<p class="ch-empty">No cable left</p>';
-  return up.map((p, k) => `<span class="ch-q${k ? ' is-next' : ' is-hand'}${p.spare ? ' is-spare' : ''}" title="${PIECE_NAME[p.k]}">${tileSVG({ t: 'c', m: pieceMask(p) })}${k ? '' : `<small>${PIECE_NAME[p.k]}</small>`}</span>`).join('');
+  const hand = handPiece(t);
+  const available = t.queue.filter((p, i) => p.k && (t.selected === undefined ? i >= t.qi : !p.used));
+  return Object.keys(PIECE_NAME).map(k => { const count = available.filter(p => p.k === k).length, p = hand?.k === k ? hand : available.find(p => p.k === k);
+    return `<button type="button" class="ch-q${hand?.k === k ? ' is-hand' : ''}" data-ch-select="${k}" ${!count || t.signal.on ? 'disabled' : ''} aria-pressed="${hand?.k === k}" aria-label="${PIECE_NAME[k]}, ${count} available${hand?.k === k ? ', selected' : ''}">${tileSVG({ t: 'c', m: p ? pieceMask(p) : 5 })}<small>${PIECE_NAME[k]} ×${count}</small></button>`;
+  }).join('');
 }
 function signalText(t) {
   if (t.done) return t.reason === 'skip' ? 'Crew' : 'Done';
-  if (!t.signal.on) return `${Math.ceil(Math.max(0, t.prime - t.ms) / 1000)}s`;
-  return t.signal.fast ? 'FAST' : 'LIVE';
+  if (!t.signal.on) return 'PLAN';
+  return 'LIVE';
 }
 function stripHTML(t) {
-  const e = evaluateCable(t), left = Math.max(0, t.prime - t.ms) / t.prime;
-  return `<div class="tt-strip arc-strip"><div class="tt-clock${!t.signal.on && t.prime - t.ms <= 3000 && t.started ? ' is-short' : ''}" data-ch-clock><small class="tt-cap">${t.signal.on ? 'SIGNAL' : 'SIGNAL IN'}</small><b data-ch-sec>${signalText(t)}</b><i class="tt-fuse"><i data-ch-fuse style="--left:${left.toFixed(3)}"></i></i></div>` +
-    meterHTML(e.efficiency) +
-    `<div class="tt-rowcount"><small class="tt-cap">NODES</small><b data-ch-nodes>${e.online}/${e.nodes}</b></div></div>`;
+  const e = evaluateCable(t), connected = t.signal.on ? t.nodes.filter(n => n.online).length : t.nodes.filter(n => connectedCable(t).has(n.i)).length;
+  return `<div class="tt-strip arc-strip"><div class="tt-clock" data-ch-clock><small class="tt-cap">NETWORK</small><b data-ch-sec>${signalText(t)}</b></div>` +
+    meterHTML(t.signal.on ? e.efficiency : connected / e.nodes, t.signal.on ? 'ONLINE NOW' : 'CONNECTED') +
+    `<div class="tt-rowcount"><small class="tt-cap">CONNECTED</small><b data-ch-nodes>${connected}/${e.nodes}</b></div></div>`;
 }
 function manifest(t) {
   return `<ul class="arc-nodes">${t.nodes.map(n => `<li class="arc-gpu ${gpuClass(n.gpu)}"><i aria-hidden="true"></i><b>${n.gpus}</b> ${esc(n.gpu)}</li>`).join('')}</ul>`;
 }
 function controls(t) {
   return `<div class="arc-pad ch-pad" role="group" aria-label="Cable controls">` +
-    `<button type="button" class="tt-key mat-key" data-arc-key="rotate" aria-label="Rotate the cable in hand">⟳ <span class="wide">Rotate</span></button>` +
-    `<button type="button" class="tt-key mat-key" data-arc-key="lay" aria-label="Lay the cable at the cursor">Lay</button>` +
-    `<button type="button" class="tt-key tt-key-drop" data-arc-key="send" aria-label="${t.signal.on ? 'Fast-forward the signal' : 'Send the signal now'}">${t.signal.on ? '»» Fast' : 'Send ▶'}</button></div>`;
+    `<button type="button" class="tt-key mat-key" data-arc-key="rotate" ${t.signal.on ? 'disabled' : ''} aria-label="Rotate the cable in hand">⟳ <span class="wide">Rotate</span></button>` +
+    `<button type="button" class="tt-key mat-key" data-arc-key="lay" ${t.signal.on ? 'disabled' : ''} aria-label="Lay the cable at the cursor">Lay</button>` +
+    `<button type="button" class="tt-key mat-key" data-arc-key="remove" ${t.signal.on ? 'disabled' : ''} aria-label="Pick up the cable at the cursor">Pick up</button>` +
+    `<button type="button" class="tt-key tt-key-drop" data-arc-key="send" ${t.signal.on ? 'disabled' : ''} aria-label="Test network; this commits the design">TEST NETWORK</button></div>`;
 }
 function resultHTML(g, t, out) {
   const d = out.detail || {};
@@ -79,7 +83,7 @@ function resultHTML(g, t, out) {
 
 export function cableView(g, ui = {}) {
   const t = g.arcade.cable, out = cableOutcome(g);
-  if (!t?.cells) return { title: 'Cable Hell', role: 'report', desk: 'tetris', exit: null, body: '<div class="desk-center"><p>Integrating…</p></div>', footer: out ? footerFor({ out }) : '' };
+  if (!t?.cells) return { title: 'Cable Mania', role: 'report', desk: 'tetris', exit: null, body: '<div class="desk-center"><p>Integrating…</p></div>', footer: out ? footerFor({ out }) : '' };
   const state = out ? 'is-done' : t.started ? 'is-play' : 'is-intro';
   const intro = !t.started && !out ? introCard(g, { kind: 'cable', rule: RULE, keys: KEYS, manifest: manifest(t) }) : '';
   const result = out ? `<div class="tt-overlay tt-finish">${resultHTML(g, t, out)}</div>` : '';
@@ -88,7 +92,7 @@ export function cableView(g, ui = {}) {
     `<div class="ch-board" data-ch-board style="--cols:${t.w};--rows:${t.h}" role="group" aria-label="Data hall floor, ${t.w} by ${t.h}">${boardHTML(t)}</div>${result}</div>` +
     `<aside class="arc-side"><div class="ch-queue" data-ch-queue aria-label="Cable in hand and next">${queueHTML(t)}</div>${manifest(t)}</aside></div>${intro}</div>` +
     `<span class="tt-say" data-arc-say aria-live="polite"></span></div>`;
-  return { title: 'Cable Hell', role: 'report', desk: 'tetris', exit: null, body, footer: footerFor({ out, started: t.started, name: 'Cable Hell', controls: controls(t) }) };
+  return { title: 'Cable Mania', role: 'report', desk: 'tetris', exit: null, body, footer: footerFor({ out, started: t.started, name: 'Cable Mania', controls: controls(t) }) };
 }
 
 // ---- Partial repaint (the controller calls it after each saved step) --------------------------------------------------
@@ -99,13 +103,13 @@ export function paintCable(root, g) {
   if (board.dataset.painted !== html) { board.dataset.painted = html; board.innerHTML = html; }
   const q = root.querySelector('[data-ch-queue]'), qh = queueHTML(t);
   if (q && q.dataset.painted !== qh) { q.dataset.painted = qh; q.innerHTML = qh; }
-  const e = evaluateCable(t), set = (sel, text) => { const el = root.querySelector(sel); if (el && el.textContent !== text) el.textContent = text; };
-  set('[data-ch-sec]', signalText(t)); set('[data-ch-nodes]', `${e.online}/${e.nodes}`); set('[data-arc-pct]', pct(e.efficiency));
-  root.querySelector('[data-arc-fill]')?.style.setProperty('--v', String(e.efficiency));
-  root.querySelector('[data-ch-fuse]')?.style.setProperty('--left', (Math.max(0, t.prime - t.ms) / t.prime).toFixed(3));
-  const clock = root.querySelector('[data-ch-clock]');
-  if (clock) { clock.classList.toggle('is-short', !t.signal.on && t.prime - t.ms <= 3000); const cap = clock.querySelector('.tt-cap'); if (cap) cap.textContent = t.signal.on ? 'SIGNAL' : 'SIGNAL IN'; }
+  const e = evaluateCable(t), connected = t.signal.on ? e.online : t.nodes.filter(n => connectedCable(t).has(n.i)).length, set = (sel, text) => { const el = root.querySelector(sel); if (el && el.textContent !== text) el.textContent = text; };
+  const shown = t.signal.on ? e.efficiency : connected / e.nodes;
+  set('[data-ch-sec]', signalText(t)); set('[data-ch-nodes]', `${connected}/${e.nodes}`); set('[data-arc-pct]', pct(shown));
+  root.querySelector('[data-arc-fill]')?.style.setProperty('--v', String(shown));
+  const cap = root.querySelector('[data-arc-meter] .tt-cap'); if (cap) cap.textContent = t.signal.on ? 'ONLINE NOW' : 'CONNECTED';
   const send = root.querySelector('[data-arc-key="send"]');
-  if (send) { const label = t.signal.on ? '»» Fast' : 'Send ▶'; if (send.textContent !== label) send.textContent = label; send.disabled = t.signal.fast; }
+  if (send) send.disabled = t.signal.on;
+  for (const a of ['rotate', 'lay', 'remove']) { const b = root.querySelector(`[data-arc-key="${a}"]`); if (b) b.disabled = t.signal.on; }
   return true;
 }

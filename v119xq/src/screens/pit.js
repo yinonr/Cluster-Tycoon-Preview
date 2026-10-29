@@ -267,7 +267,7 @@ root.addEventListener('click', e => {
   if (a === 'sound') { sound = sound ? null : createAudio(); ui.sound = !!sound; prefs.sound = !!sound; prefs.save(); render(); return; }
   if (!g || store.error) return;
   if (a.startsWith('tetris-')) { handleTetrisAction(a, d); return; } // Node Tetris owns its controls
-  if (a.startsWith('int-') || a.startsWith('cable-') || a.startsWith('kernel-')) { handleArcadeAction(a, d); return; } // V10.19: Cable Hell and Kernel Snake
+  if (a.startsWith('int-') || a.startsWith('cable-') || a.startsWith('kernel-')) { handleArcadeAction(a, d); return; } // V10.19: Cable Mania and Kernel Snake
   if (['focus-supplier', 'focus-buyer', 'review-term', 'open-card', 'open-market', 'finish-review', 'review-scenario'].includes(a) && !ui.focusOpen) returnFocus = remember(b);
   if (a === 'open-market') {
     if (g.arcade.active || g.arcade.signing || g.arcade.confirm?.receipt || g.arcade.confirm?.built) return;

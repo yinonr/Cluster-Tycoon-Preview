@@ -1,5 +1,5 @@
 // V10.19 The Scale-Up: the bell's integration desk (contract: docs/V10_19_INTEGRATION_CONTRACT.md). One view per
-// game, chosen by the engine's record of the bell (g.arcade.integration): Node Tetris (ui/tetris.js), Cable Hell
+// game, chosen by the engine's record of the bell (g.arcade.integration): Node Tetris (ui/tetris.js), Cable Mania
 // (ui/cable.js) and Kernel Snake (ui/kernel.js). The new games share this intro card, grade line, result stamp and
 // footer; Node Tetris keeps its own V10.18 view under its new name.
 import { esc } from '../util.js';

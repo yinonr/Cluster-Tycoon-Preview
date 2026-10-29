@@ -344,7 +344,7 @@ function reportView(g) {
   const intLines = integ.map(x => `<li class="${x.delayed ? 'is-delayed' : ''}"><b>${esc(x.name)}</b><span>${x.carried ? 'Delayed capacity: now 100% online' : x.delayed ? `${pct(x.online)} online · ${pct(1 - x.online)} next bell` : `100% online${x.tuned ? ' · TUNED' : ''}`}</span></li>`).join('');
   // V10.15: the grade and the lasting bonus it left, in the same line.
   const bonus = pz?.gains ? Object.entries(pz.gains).map(([k, d]) => ` · +${Math.max(1, Math.round(d * 100))}% ${k === 'readiness' ? 'frontier readiness' : `${k} efficiency`}`).join('') : '';
-  const pzLine = !pz ? '' : (pz.skipped ? `Integration crew baseline: ${pct(pz.efficiency)}` : pz.perfect ? `${pz.kind === 'cable' ? 'PERFECT FABRIC' : pz.kind === 'kernel' ? 'PERFECT RUN' : 'PERFECT RACK'}: 100% online · grade S` : `${({ cable: 'Cable Hell', kernel: 'Kernel Snake' })[pz.kind] || 'Node Tetris'}: ${pct(pz.efficiency)} integrated · grade ${pz.grade || '?'}`) + bonus;
+  const pzLine = !pz ? '' : (pz.skipped ? `Integration crew baseline: ${pct(pz.efficiency)}` : pz.perfect ? `${pz.kind === 'cable' ? 'PERFECT FABRIC' : pz.kind === 'kernel' ? 'PERFECT RUN' : 'PERFECT RACK'}: 100% online · grade S` : `${({ cable: 'Cable Mania', kernel: 'Kernel Snake' })[pz.kind] || 'Node Tetris'}: ${pct(pz.efficiency)} integrated · grade ${pz.grade || '?'}`) + bonus;
   const net = r.revenue - r.paidBurn;
   // Keep the headline legible at large scale. The disclosure below retains the exact ledger figures.
   const figure = (cents, sign = '') => {

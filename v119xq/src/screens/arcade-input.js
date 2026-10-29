@@ -1,11 +1,11 @@
-// V10.19 The Scale-Up: the controller for Cable Hell and Kernel Snake (contract: docs/V10_19_INTEGRATION_CONTRACT.md
+// V10.19 The Scale-Up: the controller for Cable Mania and Kernel Snake (contract: docs/V10_19_INTEGRATION_CONTRACT.md
 // §7; Node Tetris keeps screens/tetris-input.js). pit.js calls attachArcade once and routes data-actions starting with
 // "int-", "cable-" or "kernel-" here. Every input and every tick is one store.act: the elapsed time is flushed with
 // the input in the same saved step, so a reload resumes the same board, signal or stream. Ticks repaint in place
 // (paintCable / paintKernel); full renders happen only at START, at the end (the result moment) and on Continue.
 // Keys run in the capture phase while playing, so Space/Enter never reach another button mid-game.
-//   Cable Hell: arrows/WASD move the cursor, Space/Enter lay, R/X rotate, F send (then fast-forward); tap a tile to
-//   lay the cable in hand there; ROTATE, LAY and SEND buttons.
+//   Cable Mania: arrows/WASD move the cursor, Space/Enter place or pick up, R/X rotate, F tests once;
+//   tap a piece type then a tile, tap a placed cable to pick it up. Planning has no timer.
 //   Kernel Snake: arrows/WASD steer; swipe the fleet; the four-way pad.
 import { integrationInput, integrationTick, skipIntegration, integrationKind, integrationState } from '../tycoon/integration.js';
 import { msToNext } from '../tycoon/cable.js';
@@ -43,7 +43,7 @@ export function handleArcadeAction(action) {
   if (!ctx || ctx.ui.guidanceOpen || !game() && action !== 'int-continue') return false;
   if (action === 'int-start') {
     const ok = ctx.act(g => integrationInput(g, 'start'));
-    if (ok) { startedAt = lastNow = now(); pending = 0; resetSeen(); play('bell', { strikes: 1, ring: 1.2 }); say(ctx.root, kind() === 'cable' ? 'Started. Lay cable from the switch to every node before the signal arrives.' : 'Started. Steer the workload onto the waiting kernels.'); }
+    if (ok) { startedAt = lastNow = now(); pending = 0; resetSeen(); play('bell', { strikes: 1, ring: 1.2 }); say(ctx.root, kind() === 'cable' ? 'Connect every GPU node to the central switch. Test when ready.' : 'Started. Steer the workload onto the waiting kernels.'); }
     return ok;
   }
   if (action === 'int-skip') { const ok = ctx.act(skipIntegration); if (ok) ended(); return ok; }
@@ -63,7 +63,7 @@ function send(action, arg) {
   if (!playing()) return false;
   let moved = false;
   commit(g => (moved = integrationInput(g, action, arg)));
-  if (moved) { if (action === 'rotate') play('blip', 1250, .03); else if (action === 'lay') play('slap'); else if (action === 'send') play('blip', 660, .08); else if (action === 'move' || action === 'turn') play('tap'); }
+  if (moved) { if (action === 'rotate') play('blip', 1250, .03); else if (action === 'lay' || action === 'remove') play('slap'); else if (action === 'send') play('blip', 660, .08); else if (action === 'move' || action === 'turn' || action === 'select') play('tap'); }
   return moved;
 }
 function after() {
@@ -100,6 +100,7 @@ function ended() {
 function tick() {
   const n = now(), dt = Math.max(0, (n - lastNow) / 1000); lastNow = n;
   if (!playing() || document.hidden) { pending = 0; return; }
+  if (kind() === 'cable' && !game().signal.on) { pending = 0; return; }
   pending += Math.min(dt, .25);
   const t = game(), due = kind() === 'cable' ? msToNext(t) : msToMove(t);
   if (pending * 1000 >= Math.min(due, 250)) commit(() => false);
@@ -120,6 +121,7 @@ function onKey(e) {
     if (STEER[k]) { e.preventDefault(); e.stopPropagation(); if (!e.repeat || k.startsWith('Arrow')) send('move', STEER[k]); return; }
     if (k === ' ' || k === 'Enter') { e.preventDefault(); e.stopPropagation(); if (!e.repeat) send('lay'); return; }
     if (k === 'r' || k === 'R' || k === 'x' || k === 'X') { e.preventDefault(); e.stopPropagation(); if (!e.repeat) send('rotate'); return; }
+    if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); e.stopPropagation(); if (!e.repeat) send('remove'); return; }
     if (k === 'f' || k === 'F') { e.preventDefault(); e.stopPropagation(); if (!e.repeat) send('send'); return; }
   }
   if (k === 'Enter' && !e.target.closest?.('[data-arc-key]')) { e.preventDefault(); e.stopPropagation(); }
@@ -150,6 +152,8 @@ function onPointerDown(e) {
     if (playing() && !(startedAt && now() - startedAt < 300)) send('lay', Number(cell.dataset.chCell));
     return;
   }
+  const piece = e.target.closest?.('[data-ch-select]');
+  if (piece && kind() === 'cable') { e.preventDefault(); if (playing()) send('select', piece.dataset.chSelect); return; }
   const board = e.target.closest?.('[data-ks-board]');
   if (board && kind() === 'kernel' && playing()) { e.preventDefault(); swipe = { x: e.clientX, y: e.clientY, id: e.pointerId }; }
 }

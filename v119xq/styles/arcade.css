@@ -1,5 +1,5 @@
 /* =====================================================================================================================
-   V10.19 THE SCALE-UP: Cable Hell and Kernel Snake in the HSC system (paper, ink, Mac windows, one Note Yellow
+   V10.19 THE SCALE-UP: Cable Mania and Kernel Snake in the HSC system (paper, ink, Mac windows, one Note Yellow
    highlight; GPU colours and textures as the one colour exception; LED green only for live links and the strip).
    They reuse Node Tetris's frame: the LED strip (.tt-strip), the intro card (.tt-card), the result stamp (.tt-result)
    and the grade line, so the three games read as one family. Everything that moves is under no-preference motion.
@@ -25,7 +25,7 @@
 /* A long intro (the first-time milestone on a small phone) scrolls from its top instead of being cut at both ends. */
 #pit .arc .tt-overlay.tt-intro { place-items: safe center; }
 
-/* ---- Cable Hell: the data-hall floor ----------------------------------------------------------------------- */
+/* ---- Cable Mania: the data-hall floor ----------------------------------------------------------------------- */
 #pit .arc-cable .arc-stage { --cell: clamp(34px, min(calc((100cqh - 26px) / 7), calc((100cqw - var(--side-w) - 52px) / 7)), 76px); }
 #pit .ch-frame { position: relative; flex: 0 0 auto; padding: 18px 8px 8px; background: var(--hsc-ink); border-radius: 3px; box-shadow: 0 0 0 2px var(--hsc-paper), 0 0 0 4px var(--hsc-ink), 5px 5px 0 4px var(--hsc-ink); }
 #pit .ch-frame .tt-baylabel { left: 10px; top: 5px; }
@@ -59,15 +59,18 @@
 #pit .ch-spark path { stroke: var(--hsc-paper); stroke-width: 1.5; }
 #pit .ch-node-label { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); display: flex; align-items: baseline; gap: 2px; padding: 0 3px; background: var(--hsc-paper); box-shadow: 0 0 0 1px var(--hsc-ink); font: 700 clamp(8px, calc(var(--cell) * .2), 12px)/1.2 var(--hsc-sans); color: var(--hsc-ink); white-space: nowrap; pointer-events: none; }
 #pit .ch-cell.is-n.is-live .ch-node-label { background: var(--hsc-led); }
-#pit .ch-queue { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 8px 10px; background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 2px; box-shadow: var(--hsc-shadow-sm); }
-#pit .ch-q { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+#pit .ch-queue { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 8px 10px; background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 2px; box-shadow: var(--hsc-shadow-sm); }
+#pit .ch-q { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 3px; border: 1px solid var(--hsc-ink); background: var(--hsc-paper); color: var(--hsc-ink); cursor: pointer; }
+#pit .ch-q:disabled { opacity: .45; cursor: default; }
+#pit .ch-q small { font: 700 11px/1.1 var(--hsc-sans); }
 #pit .ch-q svg { width: 34px; height: 34px; background: var(--hsc-paper); box-shadow: 0 0 0 1.5px var(--hsc-ink); }
 #pit .ch-q.is-hand svg { width: 58px; height: 58px; box-shadow: 0 0 0 2px var(--hsc-ink), 0 0 0 5px var(--hsc-note), 0 0 0 6.5px var(--hsc-ink); }
 #pit .ch-q.is-hand small { font: 700 12px/1.2 var(--hsc-sans); color: var(--hsc-ink); text-transform: none; }
 #pit .ch-q.is-next { opacity: .9; }
 #pit .ch-q.is-spare svg { background: var(--pat-12), var(--hsc-paper); }
 #pit .ch-empty { margin: 0; font: italic 13px var(--hsc-serif); color: var(--hsc-grey); }
-#pit .ch-pad { grid-template-columns: 1.1fr .8fr 1.2fr; }
+#pit .ch-pad { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#pit .ch-pad [data-arc-key="send"] { grid-column: 1 / -1; }
 
 /* ---- Kernel Snake: the fleet --------------------------------------------------------------------------------- */
 #pit .arc-kernel .arc-stage { --cell: clamp(17px, min(calc((100cqh - 26px) / 12), calc((100cqw - var(--side-w) - 52px) / 12)), 46px); }
@@ -99,16 +102,16 @@
   #pit .arc-side { flex: 0 0 auto; width: 100%; align-self: stretch; flex-direction: row; justify-content: center; overflow: visible; }
   #pit .arc-side .arc-nodes { display: none; }
   #pit .arc-kernel .arc-side { display: none; }
-  #pit .ch-queue { flex-direction: row; align-items: center; padding: 5px 8px; gap: 8px; }
-  #pit .ch-q svg { width: 28px; height: 28px; }
-  #pit .ch-q.is-hand svg { width: 44px; height: 44px; }
-  #pit .ch-q.is-hand small { font-size: 11px; }
+  #pit .ch-queue { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; padding: 3px; gap: 3px; }
+  #pit .ch-q { flex-direction: column; justify-content: center; gap: 1px; min-width: 0; min-height: 47px; padding: 2px; }
+  #pit .ch-q svg, #pit .ch-q.is-hand svg { width: 25px; height: 25px; }
+  #pit .ch-q small, #pit .ch-q.is-hand small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
   #pit .arc-milestone span { font-size: 13px; }
   #pit .arc-card .arc-nodes { gap: 4px 10px; font-size: 12px; }
   #pit .arc-pad .tt-key { min-height: 50px; }
 }
 @media (max-width: 360px) {
-  #pit .ch-q.is-hand small { display: none; }
+  #pit .ch-q.is-hand small { display: block; }
   #pit .arc-scale { font-size: 12px; }
 }
 @media (max-width: 760px) and (max-height: 700px), (max-width: 360px) {
