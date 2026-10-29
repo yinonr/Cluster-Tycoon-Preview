@@ -1,0 +1,86 @@
+/* V10.3 frame: the Broker's Desk. HUD (never dimmed) / room band / desk / rail.
+   Lead-owned geometry. Instruments inside the desk belong to pit-deals.css and pit-charm.css. */
+:root{--hud-h:56px;--band-h:214px;--rail-h:68px;--desk-wood:#5b3a26;--desk-wood-dark:#3a2418;--brass:#c9a861;--brass-light:#ecd297}
+@media(max-height:730px) and (min-width:769px){:root{--band-h:178px}}
+/* V10.5 phones: the HUD is two rows (company · round · clock, then cash · valuation · runway). */
+@media(max-width:768px){:root{--hud-h:76px;--band-h:140px}}
+@media(max-width:768px) and (max-height:700px){:root{--band-h:104px}}
+@media(max-width:360px){:root{--hud-h:72px;--band-h:104px;--rail-h:64px}}
+@media(max-width:360px) and (max-height:700px){:root{--band-h:92px}}
+
+#pit .pit-focus-scrim{position:fixed;z-index:30;inset:var(--hud-h) 0 0 0;padding:0;display:flex;justify-content:center;backdrop-filter:none;
+ background:linear-gradient(180deg,#0b0e0a8c 0,#0b0e0aa6 calc(var(--band-h) - 40px),#0b0e0ae6 calc(var(--band-h) + 4px))}
+#pit .pit-focus-scrim.is-paper{background:linear-gradient(180deg,#0b0e0a99 0,#0b0e0ae6 120px)}
+#pit .pit-focus{width:min(1180px,100%);height:100%;max-height:none;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:var(--band-h) minmax(0,1fr) auto;
+ position:relative;background:none;border:0;box-shadow:none;animation:none;color:#f2e6cb}
+#pit .pit-focus.is-paper{grid-template-rows:auto minmax(0,1fr) auto;padding-top:10px}
+
+/* Exit and title. With a counterparty, the exit is a tab at the top left of the band and the
+   title is a brass tag on the desk lip. On paper views they share a heading row. */
+#pit .has-identity .pit-focus-heading{display:contents}
+#pit .is-paper .pit-focus-heading{grid-row:1;display:flex;align-items:center;gap:14px;padding:6px 20px 12px;background:none;border:0}
+#pit .pit-focus-close{min-height:44px;min-width:44px;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid #b69553aa;border-radius:3px;background:#1c140ecc;color:#ead9b2;font-size:14px;line-height:1}
+#pit .pit-focus-close:hover{border-color:var(--brass-light);color:#fff3d4}
+#pit .has-identity .pit-focus-close{position:absolute;z-index:6;top:10px;left:12px}
+#pit .has-identity #focus-title{position:absolute;z-index:5;top:calc(var(--band-h) - 13px);left:50%;transform:translateX(-50%);margin:0;max-width:72%;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 12px;background:#24170f;border:1px solid var(--brass);color:var(--brass-light);
+ font:600 12px/1.2 var(--font-mono,monospace);letter-spacing:.12em;font-variant-caps:all-small-caps;box-shadow:0 2px 6px #0008}
+#pit .is-paper #focus-title{margin:0;font:700 24px/1.1 Georgia,serif;color:#f5e5be}
+
+/* Band: the counterparty stands at the far edge of your desk, the room visible behind. */
+#pit .pit-focus .pit-counterparty{grid-row:1;grid-column:1;display:grid;grid-template-columns:260px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;
+ column-gap:18px;align-items:end;min-height:0;overflow:visible;padding:0 24px 10px;background:none;border:0;--side:#729974}
+#pit .pit-focus .pit-counterparty.buyer{--side:#bb8b9c}#pit .pit-focus .pit-counterparty.startup{--side:#c79553}
+#pit .pit-bust{grid-row:1/3;grid-column:1;align-self:end;justify-self:end;height:calc(var(--band-h) - 4px);margin-bottom:-12px;filter:drop-shadow(0 6px 8px #0009)}
+#pit .pit-bust .fig{display:block;height:100%;width:auto}
+#pit .pit-bubble{grid-row:1;grid-column:2;align-self:center;justify-self:start;position:relative;max-width:620px;padding:10px 18px 12px;
+ background:#f4ead2;color:#2b2117;border-radius:16px;box-shadow:0 4px 0 #b9a77e,0 8px 18px #0008}
+#pit .pit-bubble:empty{display:none}
+#pit .pit-bubble:before{content:'';position:absolute;left:-12px;bottom:18px;border:10px solid transparent;border-right:14px solid #f4ead2;border-left:0}
+#pit .pit-bubble .pit-reaction{display:inline-block;margin:0 0 4px;padding:2px 8px;border:2px solid #8d2a1f;color:#8d2a1f;transform:rotate(-2.5deg);
+ font:700 12px/1.3 var(--font-mono,monospace);letter-spacing:.09em;text-transform:uppercase;background:#fff5}
+#pit .pit-bubble blockquote{margin:0;font:italic 22px/1.25 Georgia,serif;color:#2b2117}
+#pit .pit-nameplate{grid-row:2;grid-column:2;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;color:#f4e5c3;text-shadow:0 1px 3px #000}
+#pit .pit-nameplate .pit-counterparty-role{font:10px var(--font-mono,monospace);letter-spacing:.14em;color:#d7bf86}
+#pit .pit-nameplate h3{margin:0;font:700 19px/1.1 Georgia,serif;color:#fbecc8}
+#pit .pit-nameplate p{margin:0;font-size:13px;color:#e5d7b6}
+
+/* Desk: mahogany with a brass lip. The instrument never needs the scrollbar in normal play. */
+#pit .pit-focus-body{grid-row:2;grid-column:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:18px 22px 14px;position:relative;
+ background:radial-gradient(ellipse at 50% -20%,#7b5034 0,transparent 70%),repeating-linear-gradient(92deg,#ffffff06 0 3px,transparent 3px 11px),linear-gradient(#5d3b27,#45291b);
+ border-top:6px solid var(--brass);box-shadow:inset 0 3px 0 #f6dc9f55,inset 0 12px 18px #0006;scrollbar-color:#9b8153 #2a1b12}
+#pit .is-paper .pit-focus-body{background:linear-gradient(#21362a,#182a20);border-top:3px double var(--brass);margin:0 12px;border-inline:1px solid #8d7448}
+
+/* Rail: commits only, fixed geometry at the bottom. */
+#pit .pit-focus-footer{grid-row:3;grid-column:1;min-height:var(--rail-h);display:flex;align-items:center;justify-content:flex-end;gap:10px;
+ padding:10px 22px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(#3d2818,#22160e);border-top:3px double var(--brass);box-shadow:0 -6px 14px #0006}
+#pit .pit-focus-footer:empty{display:flex}
+#pit .pit-focus-footer>*{flex:0 0 auto}
+#pit .pit-focus-footer .rail-fact{flex:1 1 auto;min-width:0;margin-right:auto;font-size:13px;color:#d9c79f;line-height:1.3}
+#pit .pit-focus-footer>button,#pit .pit-focus-footer .rail-commit{min-height:48px;min-width:44px}
+
+@media(max-width:768px){
+ #pit .pit-focus .pit-counterparty{grid-template-columns:104px minmax(0,1fr);column-gap:10px;padding:0 10px 8px 48px}
+ #pit .pit-bust{margin-bottom:-8px}
+ #pit .has-identity .pit-focus-close{top:6px;left:4px;padding:8px 10px}
+ #pit .has-identity .pit-focus-close .exit-label{display:none}
+ #pit .pit-bubble{padding:7px 11px 8px;border-radius:12px;max-width:100%}
+ #pit .pit-bubble:before{bottom:12px}
+ #pit .pit-bubble .pit-reaction{font-size:10px;padding:1px 6px;margin-bottom:2px}
+ #pit .pit-bubble blockquote{font-size:15px;line-height:1.22;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ #pit .pit-nameplate{gap:2px 8px}#pit .pit-nameplate .pit-counterparty-role{display:none}
+ #pit .pit-nameplate h3{font-size:15px}#pit .pit-nameplate p{font-size:11px}
+ /* The desk tag collides with the nameplate on phones; keep it for the dialog's accessible name only. */
+ #pit .has-identity #focus-title{width:1px;height:1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%)}
+ #pit .pit-focus-body{padding:12px 10px 10px}
+ #pit .pit-focus-footer{padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
+ #pit .pit-focus-footer .rail-fact{font-size:11px}
+ #pit .is-paper .pit-focus-body{margin:0 6px}
+ #pit .is-paper #focus-title{font-size:20px}
+}
+@media(max-width:360px){
+ #pit .pit-focus .pit-counterparty{grid-template-columns:86px minmax(0,1fr);padding-left:46px}
+ #pit .pit-bubble blockquote{font-size:13px;-webkit-line-clamp:2}
+ #pit .pit-nameplate p{display:none}
+ #pit .pit-focus-body{padding:10px 8px 8px}
+}
