@@ -5,7 +5,7 @@
 // from people (world-content PERSONAS) with a thesis, a price, patience, memory and rivals.
 import { stream } from '../util.js';
 import { negotiationTime } from './exchange.js';
-import { enterpriseValue, revenueNow, prepaidNow, burnOf, totalShares, founderPct } from './founder.js';
+import { enterpriseValue, revenueNow, prepaidNow, burnOf, totalShares, founderPct, cardState } from './founder.js';
 import { facts, holds, sentimentOf, WORLD } from './world.js';
 import { PERSONAS } from './world-content.js';
 import { deliverCompute, deliveryText } from './strategic.js';
@@ -149,11 +149,39 @@ function planGeneric(g) {
     at, until: a.seconds, status: 'open', valuation: value, tape: [{ speaker: name, text: `${money(amount)} for ${pct / 100}% of the company. ${I.pitch}` }] };
 }
 
-export const termLive = (g, t) => !!t && g.phase === 'floor' && t.status === 'open' && t.at <= g.arcade.time && g.arcade.time < t.until && (t.institutional !== 'sovereign' || frontierPossible(g) || ladderPossible(g));
+const vultureBlocked = (g, card) => {
+  if (!card || !Number.isSafeInteger(card.cashCost) || card.cashCost <= 0) return false;
+  const st = cardState(g, card);
+  return st.live && st.cashNeeded > 0 && st.rows.length > 0 && st.rows.every(r => r.held + r.free >= r.need);
+};
+export const termLive = (g, t) => !!t && g.phase === 'floor' && t.status === 'open' && t.at <= g.arcade.time && g.arcade.time < t.until &&
+  (!t.vulture || vultureBlocked(g, g.arcade.objectives.find(c => c.id === t.cardId))) &&
+  (t.institutional !== 'sovereign' || frontierPossible(g) || ladderPossible(g));
+
+// One seeded chance on the first cash-blocked, fully stocked card encountered each round.
+// A rejected roll is persisted too, so reopening cards or reloading cannot reroll the offer.
+export function maybeVulture(g, cardId) {
+  const a = g.arcade, card = a.objectives.find(c => c.id === cardId), v = g.world.vulture || { offers: 0, attemptQ: 0 };
+  if (a.active || a.signing || a.confirm || a.terms.some(t => t.vulture) || v.offers >= 2 || v.attemptQ === g.q || !vultureBlocked(g, card)) return false;
+  v.attemptQ = g.q; g.world.vulture = v;
+  if (stream(g.seed, 'v119-vulture-round', g.q, card.id).next() >= .18) return 'passed';
+  const shortfall = cardState(g, card).cashNeeded, buffer = Math.min(100_000_000, Math.max(1_000_000, Math.round(card.cashCost * .05)));
+  const amount = shortfall + buffer, pct = 4000 + 100 * stream(g.seed, 'v119-vulture-price', g.q, card.id).int(0, 9);
+  if (!Number.isSafeInteger(amount) || amount <= 0) return 'passed';
+  const name = 'Mortimer Kestrel', pitch = "You've got the GPUs. We've got the cash. And we both know you're out of options.";
+  const t = { id: `q${g.q}-vulture`, kind: 'bridge', investor: 'vulture-round', vulture: true, cardId, shortfall, buffer,
+    fund: 'Last Light Special Situations', label: 'The Vulture Round', name, pitch, amount, pct, openingPct: pct, floorPct: pct,
+    patience: 0, at: a.time, until: a.seconds, status: 'open', valuation: equityValue(g),
+    conditions: `For ${card.name}. Cash goes to the company. You must still BUILD the project. This offer expires at the bell.`,
+    tape: [{ speaker: name, text: pitch }] };
+  a.terms.push(t); v.offers++;
+  a.confirm = { termId: t.id };
+  return 'offer';
+}
 export const liveTerm = g => g.arcade.terms.find(t => termLive(g, t)) || null;
 export const liveTerms = g => g.arcade.terms.filter(t => termLive(g, t));
 // The other live sheet the founder could show this investor (a competing offer on the table).
-export const rivalTerm = (g, t) => g.arcade.terms.find(x => x.id !== t?.id && termLive(g, x)) || null;
+export const rivalTerm = (g, t) => t?.vulture ? null : g.arcade.terms.find(x => x.id !== t?.id && !x.vulture && termLive(g, x)) || null;
 
 // Exact cap-table effect of signing the current terms.
 export function termQuote(g, id = g.arcade.confirm?.termId) {

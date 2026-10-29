@@ -77,8 +77,9 @@ function controls(t) {
 }
 function resultHTML(g, t, out) {
   const d = out.detail || {};
-  return resultBlock(g, t.builds, out, { perfectLine: 'Every node online, a clean fabric · the build is tuned',
+  const result = resultBlock(g, t.builds, out, { perfectLine: 'Every node online, a clean fabric · the build is tuned',
     line: `${d.online}/${d.nodes} nodes online${d.drops ? ` · ${d.drops} dropped link${d.drops > 1 ? 's' : ''}` : ''}` });
+  return d.lean?.bonus ? result.replace(/<\/div>$/, `<p class="tt-score">LEAN NETWORK · ${d.lean.saved} fewer cable${d.lean.saved === 1 ? '' : 's'} · +${d.lean.bonus} score</p></div>`) : result;
 }
 
 export function cableView(g, ui = {}) {

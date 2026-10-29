@@ -115,7 +115,7 @@ export function whatLine(card, g) {
   if (card.kind === 'hire') return 'Leadership · upfront capital, recurring salary and disclosed equity';
   const odds = researchOdds(g, card);
   if (card.strategic) return `Due at this bell. ${card.mixed ? '75% integration delivers; otherwise one-round delay. ' : ''}${card.strategic.stage + 1 < card.strategic.total ? 'Next stage follows delivery; missing it ends the partnership.' : 'Final deployment; recurring customer revenue.'}`;
-  if (card.kind === 'agi') return `Fictional, speculative · capital ${short(card.cashCost)} · 75% integration to run`;
+  if (card.kind === 'agi') return `Capital ${short(card.cashCost)} · 75% integration to run`;
   // V10.17.3 combinations: one short clause, checked when already met.
   const boost = card.boost ? ` · +${pct(BOOSTS[card.boost].pct)} ${BOOSTS[card.boost].label}${boostMet(g.company, card.boost) ? ' ✓' : ''}` : '';
   if (card.flagship) return (card.lane === 'product' ? `Flagship · integrates at the bell` : 'Flagship fleet · integrates at the bell') + boost;

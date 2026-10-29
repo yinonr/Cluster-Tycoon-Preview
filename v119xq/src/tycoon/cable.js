@@ -209,12 +209,19 @@ export function evaluateCable(t) {
   const efficiency = perfect ? 1 : Math.min(.99, Math.round((CABLE.floor + (1 - CABLE.floor) * share) * 100) / 100);
   return { share, efficiency, perfect, online: t.nodes.filter(n => n.online).length, nodes: t.nodes.length, gpusOnline: online, gpus: total };
 }
+// Display-score only: a clean, fully connected fabric earns at most 150 points for a shorter route.
+// Count cables left on the board, never placement actions, so extra pieces cannot improve the bonus.
+export function leanNetwork(t, e = evaluateCable(t)) {
+  const used = t.cells.filter(c => c.t === 'c').length;
+  const saved = e.perfect ? Math.max(0, t.solution.length - used) : 0;
+  return { saved, bonus: Math.min(3, saved) * 50 };
+}
 function finish(t, reason) {
-  const e = evaluateCable(t), S = CABLE.score;
+  const e = evaluateCable(t), S = CABLE.score, lean = leanNetwork(t, e);
   t.done = true; t.reason = reason; t.signal.front = [];
   t.result = { efficiency: e.efficiency, perfect: e.perfect, skipped: false, reason, seconds: Math.round(t.ms / 100) / 10,
-    score: S.cable * t.energized + S.node * e.online + (e.perfect ? S.perfect : 0),
-    rows: null, placed: t.placed, pieces: t.solution.length, detail: { nodes: e.nodes, online: e.online, drops: t.drops.length, placed: t.placed, replaced: t.replaced, early: 0 } };
+    score: S.cable * t.energized + S.node * e.online + (e.perfect ? S.perfect : 0) + lean.bonus,
+    rows: null, placed: t.placed, pieces: t.solution.length, detail: { nodes: e.nodes, online: e.online, drops: t.drops.length, placed: t.placed, replaced: t.replaced, early: 0, lean } };
   return true;
 }
 

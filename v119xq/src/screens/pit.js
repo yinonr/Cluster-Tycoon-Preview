@@ -10,7 +10,7 @@ import { arcadeStore } from '../tycoon/arcade-store.js';
 import { V7, advance, available, activeLot, cents, claim, leave, haggle, closeQuarter, openQuarter } from '../tycoon/arcade.js';
 import { buyerLive, reviewBuyer, counterBuyer } from '../tycoon/arcade-buyers.js';
 import { prepareSigning, signTrade } from '../tycoon/arcade-signing.js';
-import { liveTerm, reviewTerm, counterTerm, declineTerm, playRivalTerm } from '../tycoon/investors.js';
+import { liveTerm, reviewTerm, counterTerm, declineTerm, playRivalTerm, maybeVulture } from '../tycoon/investors.js';
 import { chooseMemo } from '../tycoon/world.js';
 import { reviewMoonshot, acceptMoonshot, declineMoonshot } from '../tycoon/moonshot.js';
 import { reviewScenario, liveOffers, cureStage } from '../tycoon/scenarios.js';
@@ -277,7 +277,13 @@ root.addEventListener('click', e => {
     openPanel('market');
   }
   else if (a === 'market-page') { ui.page = Math.max(0, ui.page + Number(d.step)); render(); }
-  else if (a === 'open-card') { if (g.phase !== 'floor') return; ui.cardId = d.card; openPanel('card'); }
+  else if (a === 'open-card') {
+    if (g.phase !== 'floor') return;
+    let offered = false;
+    ui.panel = 'floor';
+    act(g => { const result = maybeVulture(g, d.card); offered = result === 'offer'; return !!result; });
+    if (!offered) { ui.cardId = d.card; openPanel('card'); }
+  }
   else if (a === 'focus-supplier') { ui.panel = 'floor'; clearInputs(); act(g => claim(g, d.id)); }
   else if (a === 'focus-buyer') { ui.panel = 'floor'; clearInputs(); act(g => reviewBuyer(g, d.id)); }
   else if (a === 'review-term') { ui.panel = 'floor'; clearInputs(); act(g => { if (g.arcade.confirm?.termId && !g.arcade.signing) g.arcade.confirm = null; return reviewTerm(g, d.id); }); } // switching to a rival's sheet

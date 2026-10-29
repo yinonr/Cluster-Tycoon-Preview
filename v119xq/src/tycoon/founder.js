@@ -118,7 +118,7 @@ export const CATALOG = Object.freeze({
      { name: 'Tool-use RL run', blurb: 'Millions of tasks, graded and learned from.', recipe: { H100: 4, H200: 4, B200: 12 } }],
     [{ name: 'Automated researcher', blurb: 'A model that runs experiments on itself.', recipe: { H100: 6, H200: 8, B200: 18 } },
      { name: 'Self-improving training loop', blurb: 'The model writes its own curriculum.', recipe: { H100: 4, H200: 6, B200: 16 } }],
-    [{ name: 'The AGI attempt', blurb: 'Fictional and speculative. Everything you built, one roll.', recipe: { H200: 12, B200: 36 }, agi: true }],
+    [{ name: 'The AGI attempt', blurb: 'Everything you built, one roll.', recipe: { H200: 12, B200: 36 }, agi: true }],
   ],
   infra: [null,
     [{ name: 'Lease a rack', blurb: 'Your own H100s, every round.', recipe: { H100: 3 }, rack: { gpu: 'H100', qty: 2 } },
