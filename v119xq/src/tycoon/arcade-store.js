@@ -77,6 +77,11 @@ function validSave(g) {
   if (!c.team.every(h=>{const spec=HIRES.find(x=>x.id===h.id); const grants=c.shares.investors.filter(i=>i.hire===h.build); return grants.length===(spec.equity ? 1 : 0) && grants.every(i=>i.paid===0 && i.kind==='leadership');})) return false;
   if (typeof c.researchClosed !== 'boolean' || !c.products.every(p => p.lost === undefined || p.lost === true)) return false;
   if (g.phase === 'over' && !['exit', 'shutdown', 'acquired'].includes(a.ending)) return false;
+  // New AGI commitments snapshot their scale-dependent terms; old saves keep fixed terms.
+  for (const b of [...a.objectives, ...c.builds]) if (b.agiStakes !== undefined) {
+    const s = b.agiStakes, A = FOUNDER.agi;
+    if (b.kind !== 'agi' || !s || !['capital','tech','partialTech','failBurn'].every(k => int(s[k]) && s[k] >= 0) || s.capital !== b.cashCost || s.capital < A.capital || s.tech !== Math.max(A.tech, s.capital * 8) || s.partialTech !== Math.max(A.partialTech, s.capital * 3) || s.failBurn !== Math.max(A.failBurn, Math.round(s.capital * .15))) return false;
+  }
   if (!validIntegrationSave(g)) return false;   // V10.19: the bell's game (Node Tetris, Cable Mania or Kernel Snake)
   if (!['floor', 'integration'].includes(g.phase) && a.history.length === 0) return false;
   if (g.phase === 'over' && !a.exit) return false;

@@ -116,6 +116,7 @@ export function whatLine(card, g) {
   if (card.kind === 'hire') return 'Leadership · upfront capital, recurring salary and disclosed equity';
   const odds = researchOdds(g, card);
   if (card.strategic) return `Due at this bell. ${card.mixed ? '75% integration delivers; otherwise one-round delay. ' : ''}${card.strategic.stage + 1 < card.strategic.total ? 'Next stage follows delivery; missing it ends the partnership.' : 'Final deployment; recurring customer revenue.'}`;
+  if (card.kind === 'agi' && card.agiStakes) return '75% integration to run · outcome stakes on the card desk';
   if (card.kind === 'agi') return `Capital ${short(card.cashCost)} · 75% integration to run`;
   // V10.17.3 combinations: one short clause, checked when already met.
   const boost = card.boost ? ` · +${pct(BOOSTS[card.boost].pct)} ${BOOSTS[card.boost].label}${boostMet(g.company, card.boost) ? ' ✓' : ''}` : '';
@@ -281,7 +282,7 @@ export function cardDeskView(g, ui) {
   }).join('');
   const next = businessNext(card);
   const run=researchRunway(g,card);
-  const economics=`<section class="cd-economics" aria-label="This build's economics"><b>THIS BUILD</b><span>GPUs: ${st.rows.map(r=>`${r.need} ${r.gpu}`).join(' + ')||'none'}</span><span>Additional capital: ${money(card.cashCost||0)}</span><span>Expected reward: ${esc(rewardLine(g,card))}</span>${card.repeat?`<small>${esc(repeatNote(card))}</small>`:''}</section>`;
+  const economics=`<section class="cd-economics" aria-label="This build's economics"><b>THIS BUILD</b><span>GPUs: ${st.rows.map(r=>`${r.need} ${r.gpu}`).join(' + ')||'none'}</span><span>Additional capital: ${money(card.cashCost||0)}</span>${card.agiStakes ? `<span>Success: +${money(card.agiStakes.tech)} IP and +25% revenue</span><span>Partial: +${money(card.agiStakes.partialTech)} IP</span><span>Failure: capital spent; ${money(card.agiStakes.failBurn)}/round remediation for 2 rounds</span>` : ''}<span>Expected reward: ${esc(rewardLine(g,card))}</span>${card.repeat?`<small>${esc(repeatNote(card))}</small>`:''}</section>`;
   const block = batchAvailability(g, card), showBulk = st.live && batchableCard(card) && (g.company.scale || 1) >= 2;
   const bulk = showBulk ? `<section class="cd-bulk" aria-label="Build multiple projects"><b>BUILD ×</b>${[1,5,10,'max'].map(n => button('build-batch', n === 'max' ? 'MAX' : `×${n}`, `data-card="${esc(card.id)}" data-count="${n}" ${block ? `disabled title="${esc(batchReason(block))}"` : ''} aria-label="Build ${n === 'max' ? 'as many eligible projects as stock allows' : `up to ${n} eligible ${n === 1 ? 'project' : 'projects'}`} in one action${block ? `: ${esc(batchReason(block))}` : ''}"`)).join('')}${block ? `<small>${esc(batchReason(block))}</small>` : '<small>Uses only free GPUs. Each follow-up is checked separately.</small>'}</section>` : '';
   const runway=run?`<p class="cd-runway">At the current run rate, next round's operating costs (${money(run.burn)}) exceed ${card.cashCost?'cash after this build’s capital':'cash'} (${money(run.remaining)}) plus recurring cash revenue (${money(run.revenue)}). Research could leave you short at the bell.</p>`:'';

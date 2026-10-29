@@ -66,6 +66,8 @@ function makeTerm(g, p, r, { at, mods = {}, returning = false, rivalOf = null, i
   // Proven profit improves price; scale brings larger checks for the same dilution model.
   const profitable = revenueNow(g.company) > burnOf(g.company);
   if (profitable) factor = Math.min(1.25, factor + .10);
+  // Mature cash rounds price deployment risk rather than the full public-market mark.
+  if (g.company.scale === 3 && p.stage !== 'bridge') factor *= .75;
   const pre = Math.max(100000, Math.round(value * factor));
   let amount = Math.round(r.range(...check) * (g.company.scale === 3 ? Math.min(100, Math.max(5, value / 1500000000)) : g.company.scale === 2 ? 3 : 1) * (mods.check || 1) * (p.special?.kind === 'upsize' ? 1.5 : 1) / 100000) * 100000 || 100000;
   let pct = Math.round(10000 * amount / (pre + amount) / 50) * 50;

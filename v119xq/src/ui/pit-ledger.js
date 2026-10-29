@@ -65,7 +65,7 @@ export function buildChange(g, b) {
     return { tone: 'product', head: `+${money(add)}/round`, text: `Revenue now ${money(revenueNow(c))} a round` };
   }
   if (R.agi) {
-    const o = b.agiOutcome, A = FOUNDER.agi;
+    const o = b.agiOutcome, A = { ...FOUNDER.agi, ...b.agiStakes };
     return !o ? { tone: 'mixed', head: 'Racked', text: `The attempt runs once ${Math.round(FOUNDER.researchOnline * 100)}% is online` }
       : o === 'agi' ? { tone: 'research', head: 'AGI', text: `General intelligence (fictional) · +${short(A.tech)} technology value, +${Math.round((A.revenue - 1) * 100)}% revenue` }
       : o === 'partial' ? { tone: 'research', head: 'Superhuman researcher', text: `Partial success · +${short(A.partialTech)} technology value` }

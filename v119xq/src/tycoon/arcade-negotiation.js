@@ -12,7 +12,10 @@ export function counteroffer(g, offer) {
   n.haggles++;n.patience--;negotiationTime(g);
   n.tape.push({speaker:'YOU',text:`$${(offer/100).toFixed(2)} per GPU-hour`,offer});
   let text, outcome;
-  if(offer<l.floor || before-offer>room*.85){
+  const aggressive = offer < l.floor || before - offer > room * .5;
+  const walk = aggressive && stream(g.seed, 'v119-counter-risk', l.id, n.haggles).next() < (offer < l.floor ? .4 : .2);
+  if (walk) { outcome='walk'; text='That is too much pressure. I am taking another buyer.'; n.closed=true; l.status='walked'; const f=g.firms[l.firm]||={trust:0,deals:0}; f.trust=Math.max(-12,f.trust-1); delete f.lock; }
+  else if(offer<l.floor || before-offer>room*.85){
     n.patience=Math.max(0,n.patience-1);outcome='hold';text='Too light. My quote stands. One more offer like that and I am out.';
     if(!n.patience){outcome='walk';text='We are done. Find another desk.';n.closed=true;l.status='walked';const f=g.firms[l.firm]||={trust:0,deals:0};f.trust=Math.max(-12,f.trust-1);delete f.lock;}
   }else if(n.posture==='firm' && offer<before){outcome='hold';const f=g.firms[l.firm]||={trust:0,deals:0};f.trust=Math.max(-12,f.trust-1);text='That number does not work for me. My quote stands.';}

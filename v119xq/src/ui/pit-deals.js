@@ -321,7 +321,7 @@ function buildLine(g, b) {
   if (b.status === 'delayed') return `${Math.round(b.online * 100)}% online · the rest next bell${outcomeTag(b)}`;
   if (R.hire) { const h=c.team.find(h=>h.build===b.id); return h ? `Hired · ${Math.round(h.effect*100)}% effectiveness · salary begins this bell` : 'Hire awaiting integration'; }
   if (R.pilotRevenue) return b.pilotResult === 'customer' ? `Pilot won · recurring customer ${short(R.pilotRevenue)}/round` : 'Pilot failed · trial fee only';
-  if (R.agi) { const A = FOUNDER.agi; return b.agiOutcome === 'agi' ? `AGI (fictional) · +${short(A.tech)} technology value · +${Math.round((A.revenue - 1) * 100)}% revenue`
+  if (R.agi) { const A = { ...FOUNDER.agi, ...b.agiStakes }; return b.agiOutcome === 'agi' ? `AGI (fictional) · +${short(A.tech)} technology value · +${Math.round((A.revenue - 1) * 100)}% revenue`
     : b.agiOutcome === 'partial' ? `Superhuman researcher · +${short(A.partialTech)} technology value` : b.agiOutcome === 'failure' ? `Failed · capital spent · remediation ${short(A.failBurn)}/round for ${A.failRounds} rounds` : 'Racked'; }
   const why = whyOf(g, b), tail = `${outcomeTag(b)}${why ? ` · ${why}` : ''}`;
   if (R.revenue) { const p = c.products.find(p => p.build === b.id); return p ? `Live · earns ${money(Math.round(Math.round(p.revenue * p.online) * m))}/round${tail}` : 'Live'; }

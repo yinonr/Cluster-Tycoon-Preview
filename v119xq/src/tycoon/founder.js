@@ -23,7 +23,7 @@ export const FOUNDER = Object.freeze({
   // Product revenue is paid at every bell: base × (1 + quality × model level).
   quality: .08,
   // Team burn per round, paid at every bell after revenue.
-  burn: Object.freeze({ base: 300000, perLevel: 500000, perProduct: 50000 }),
+  burn: Object.freeze({ base: 200000, perLevel: 300000, perProduct: 50000 }),
   // Equity value = cash + EV. EV = 4 × revenue × multiple(level) + tech(level) + infra, × hype.
   multiple: Object.freeze([4, 5, 6, 7, 8, 9, 10, 11]),
   tech: Object.freeze([36000000, 60000000, 110000000, 180000000, 290000000, 430000000, 720000000, 1080000000]),
@@ -57,7 +57,7 @@ export const FOUNDER = Object.freeze({
   // this share of the product multiple. It pays the same cash; it is worth less at the exit.
   contractMultiple: .4,
   // V10.15 company scale: recomputed at each round open, never falls. Valuation = cash + EV.
-  scale: Object.freeze({ scaleup: Object.freeze({ value: 250000000, cash: 75000000 }), giant: Object.freeze({ value: 900000000, cash: 200000000 }) }),
+  scale: Object.freeze({ scaleup: Object.freeze({ value: 400000000, cash: 100000000 }), giant: Object.freeze({ value: 2000000000, cash: 400000000 }) }),
   // Flagship fleets are valued at more rounds of output than an ordinary rack.
   fleetYears: 10,
   // Ordinary cards: at most this many copies of one catalog project (the second earns 60%).
@@ -262,6 +262,8 @@ export function updateScale(g) { const c = g.company; c.scale = Math.max(c.scale
 // Research efficiency shrinks training recipes (each GPU type at least one).
 export const researchRecipe = (c, recipe) => Object.fromEntries(GPUS.filter(k => recipe[k]).map(k => [k, Math.max(1, Math.round(recipe[k] * (1 - opsOf(c).research)))]));
 // Market cost of a recipe this round (asks drift 3.5% a round; founder-market uses the same drift).
+export const expansionCapital = (g, recipe) => Math.round(marketCost(g, recipe) * [0, 0, .25, .75][g.company.scale || 1]);
+export const agiStakes = (g, capital = Math.max(FOUNDER.agi.capital, Math.round(enterpriseValue(g.company) * .02))) => ({ capital, tech: Math.max(FOUNDER.agi.tech, capital * 8), partialTech: Math.max(FOUNDER.agi.partialTech, capital * 3), failBurn: Math.max(FOUNDER.agi.failBurn, Math.round(capital * .15)) });
 const marketCost = (g, recipe) => Math.round(recipeCost(recipe) * (1 + .035 * (g.q - 1)));
 const copiesOf = (c, name) => c.builds.filter(b => b.catalog === name).length;
 // A lane's flagship, when the gates pass: scale, model level, two copies at most, one flagship per lane
@@ -277,7 +279,7 @@ export function flagshipFor(g, lane, salt = 0) {
   const least = Math.min(...tierPool.map(f => copiesOf(c, f.name))), pool = tierPool.filter(f => copiesOf(c, f.name) === least);
   const f = pool[r.int(0, pool.length - 1)], repeat = copiesOf(c, f.name), k = repeat ? FOUNDER.flagshipRepeat : 1;
   c.cardSeq++;
-  return { id: `q${g.q}-${lane}-${c.cardSeq}`, lane, tier: f.tier, catalog: f.name, repeat, flagship: true, cluster: true, name: repeat ? `${f.name} · second site` : f.name, blurb: f.blurb, recipe: { ...f.recipe }, mixed: isMixed(f.recipe),
+  return { id: `q${g.q}-${lane}-${c.cardSeq}`, lane, tier: f.tier, catalog: f.name, repeat, cashCost: expansionCapital(g, f.recipe), flagship: true, cluster: true, name: repeat ? `${f.name} · second site` : f.name, blurb: f.blurb, recipe: { ...f.recipe }, mixed: isMixed(f.recipe),
     reward: lane === 'product' ? { revenue: Math.round(f.revenue * k) } : { rack: { gpu: f.rack.gpu, qty: Math.max(1, Math.floor(f.rack.qty * k)), fleet: true }, lease: Math.round(f.lease * k) }, q: g.q, status: 'open', ...(f.boost ? { boost: f.boost } : {}) };
 }
 export function drawCard(g, lane, salt = 0) {
@@ -303,7 +305,7 @@ export function drawCard(g, lane, salt = 0) {
     reward: lane === 'product' ? { revenue: Math.round(pick.revenue * (repeat ? FOUNDER.expansion : 1)) } : lane === 'research' ? (pick.agi ? { agi: true } : { level: tier }) : { rack: { ...pick.rack, qty: Math.max(1, Math.floor(pick.rack.qty * (repeat ? .6 : 1))) } }, q: g.q, status: 'open' };
   // Big training runs (16+ GPUs) and the AGI attempt are clusters: they always integrate.
   if (lane === 'research' && sumRecipe(recipe) >= FOUNDER.ops.readinessGpus) card.cluster = true;
-  if (pick.agi) Object.assign(card, { kind: 'agi', cashCost: FOUNDER.agi.capital, cluster: true });
+  if (pick.agi) { const stakes = agiStakes(g); Object.assign(card, { kind: 'agi', cashCost: stakes.capital, agiStakes: stakes, cluster: true }); }
   if (pick.boost) card.boost = pick.boost;
   if (supply) card.labSupply = true;
   if (lane !== 'research') {
@@ -312,6 +314,7 @@ export function drawCard(g, lane, salt = 0) {
     if (card.reward.revenue) card.reward.revenue *= size;
     if (card.reward.rack) card.reward.rack.qty *= size;
   }
+  if (lane === 'research' && !pick.agi) card.cashCost = expansionCapital(g, card.recipe);
   return card;
 }
 // Productive research between milestone results: consumes GPUs and cash, creates IP only.
@@ -463,7 +466,7 @@ export function build(g, cardId) {
   if (card.flagship) b.flagship = true;
   if (card.boost) b.boost = card.boost;
   if (card.contract) b.contract = true;
-  if (card.kind === 'agi') b.cashCost = cashCost;
+  if (card.kind === 'agi') { b.cashCost = cashCost; if (card.agiStakes) b.agiStakes = structuredClone(card.agiStakes); }
   if (card.scenario) { b.scenario = structuredClone(card.scenario); if (cashCost) b.cashCost = cashCost; }
   const customer = card.customer || customerOf(card);
   if (customer) b.customer = customer;
@@ -698,7 +701,7 @@ export function agiOdds(g, grade = null, exec = 0) {
   return { agi: round4(agi), partial: round4(1 - agi - failure), failure: round4(failure) };
 }
 function resolveAgi(g, b) {
-  const c = g.company, A = FOUNDER.agi, odds = agiOdds(g, b.grade, b.exec || 0), u = stream(g.seed, 'v115-agi', b.id).next();
+  const c = g.company, A = { ...FOUNDER.agi, ...b.agiStakes }, odds = agiOdds(g, b.grade, b.exec || 0), u = stream(g.seed, 'v115-agi', b.id).next();
   const outcome = u < odds.agi ? 'agi' : u < odds.agi + odds.partial ? 'partial' : 'failure';
   c.agi = { outcome, odds, build: b.id, q: g.q, tech: outcome === 'agi' ? A.tech : outcome === 'partial' ? A.partialTech : 0 };
   b.result = outcome === 'failure' ? 'setback' : 'breakthrough'; b.agiOutcome = outcome;

@@ -17,7 +17,7 @@ export const BUSINESSES = Object.freeze([
  ['inference', ['Inference service','Inference capacity network','Agent marketplace','Global inference utility'], {H100:2,H200:3}, [6000000,65000000,380000000,1500000000], .35,.09,0,.03],
 ]);
 export const businessSpec = id => BUSINESSES.find(x=>x[0]===id);
-const stepScale=[1,4,12,28], capex=[1000000,25000000,180000000,950000000];
+const stepScale=[1,4,12,28], capex=[1000000,60000000,400000000,1800000000], legacyCapex=[1000000,25000000,180000000,950000000];
 function card(g,lane,name,recipe,reward,extra) {
  const c=g.company; c.cardSeq++;
  return {id:`q${g.q}-${lane}-${c.cardSeq}`,lane,tier:extra.stage+1,name, catalog:name, blurb:extra.blurb,recipe,mixed:Object.keys(recipe).length>1,cluster:extra.stage>0, ...(extra.stage>0 ? {flagship:true} : {}),reward,q:g.q,status:'open',...extra};
@@ -33,7 +33,7 @@ export function businessCard(g) {
  if(!options.length) return null;
  const top=Math.max(...options.map(x=>x.stage)), pool=options.filter(x=>x.stage===top);
  const {spec:s,stage}=stream(g.seed,'v1172-business',g.q).pick(pool), recipe=Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]));
- return card(g,'product',s[1][stage],recipe,{revenue:Math.round(s[3][stage]*[1,.6,.35,.25][stage])}, {business:s[0],stage,...(stage>=1 && ['security','synthetic','biotech','finance','vertical'].includes(s[0]) ? {customer:s[1][stage]+' customer'} : {}),cashCost:capex[stage],commercial:{cost:s[4],growth:s[5]*.6,risk:s[7]},
+ return card(g,'product',s[1][stage],recipe,{revenue:Math.round(s[3][stage]*[1,.6,.35,.5][stage])}, {business:s[0],stage,...(stage>=1 && ['security','synthetic','biotech','finance','vertical'].includes(s[0]) ? {customer:s[1][stage]+' customer'} : {}),cashCost:capex[stage],commercial:{cost:s[4],growth:s[5]*.6,risk:s[7]},
   blurb:stage===0?'Launch a business. Grow it in later rounds.':`Expand ${s[1][stage-1]}. New customers, new recurring revenue.`});
 }
 export function campusCard(g) {
@@ -45,12 +45,12 @@ export function campusCard(g) {
  return card(g,'infra',name,recipe,{rack:{gpu,qty,fleet:true},lease},{campus:true,stage,cashCost,commercial:{cost:.30,growth:.04,risk:.02},blurb:'Owned power and capacity. Lease income plus GPUs each round.'});
 }
 export const HIRES=Object.freeze([
- {id:'sales',name:'Enterprise sales leader',cost:8000000,salary:2500000,equity:0,commercial:.09,desc:'+9% commercial growth × effectiveness'},
+ {id:'sales',name:'Enterprise sales leader',cost:8000000,salary:2500000,equity:0,commercial:.09,desc:'+3.15% commercial growth × effectiveness'},
  {id:'scientist',name:'Distinguished scientist',cost:18000000,salary:4500000,equity:150,research:.08,desc:'+8% research quality × effectiveness'},
  {id:'systems',name:'Hyperscaler systems architect',cost:25000000,salary:5000000,equity:200,margin:.18,desc:'18% operating-cost saving × effectiveness'},
- {id:'growth',name:'Startup growth executive',cost:12000000,salary:3500000,equity:300,commercial:.18,desc:'+18% growth × effectiveness; wider outcome risk'},
+ {id:'growth',name:'Startup growth executive',cost:12000000,salary:3500000,equity:300,commercial:.18,desc:'+6.3% growth × effectiveness; wider outcome risk'},
  {id:'coo',name:'Scaling COO',cost:40000000,salary:6500000,equity:400,quality:.08,margin:.10,desc:'+8% outcome quality and 10% cost saving × effectiveness'},
- {id:'cro',name:'Chief Revenue Officer',cost:50000000,salary:8000000,equity:500,commercial:.20,desc:'+20% growth × effectiveness; 5% newly issued equity'},
+ {id:'cro',name:'Chief Revenue Officer',cost:50000000,salary:8000000,equity:500,commercial:.20,desc:'+7% growth × effectiveness; 5% newly issued equity'},
 ]);
 export const staffEffect=(c,key)=>(c.team||[]).reduce((n,h)=>n+(HIRES.find(x=>x.id===h.id)?.[key]||0)*h.effect,0);
 export function hiringCard(g) {
@@ -91,7 +91,7 @@ export function commerceReward(g,b) {
 }
 export function growProduct(c,p) {
  const specialty=c.specialties?.includes('efficiency') ? .03 : 0;
- const growth=p.commercial?Math.min(.42,p.commercial.growth+staffEffect(c,'commercial')+specialty):.03;
+ const growth=p.lease ? (p.commercial?.growth ?? .03) : p.commercial ? Math.min(.24,p.commercial.growth+staffEffect(c,'commercial')*.35+specialty):.03;
  return Math.round(p.revenue*(1+growth));
 }
 
@@ -117,7 +117,9 @@ export function validCommerce(g) {
    const spec=businessSpec(b.business), prior=c.builds.filter(x=>x.business===b.business&&x.q<b.q);
    if(!spec||!int(b.stage)||b.stage!==prior.length||prior.some(x=>x.online!==1)||c.builds.filter(x=>x.business&&x.q===b.q).length!==1)return false;
    if(JSON.stringify(b.commercial)!==JSON.stringify({cost:spec[4],growth:spec[5]*.6,risk:spec[7]}))return false;
-   if(b.cashCost!==capex[b.stage]||b.reward.revenue!==Math.round(spec[3][b.stage]*[1,.6,.35,.25][b.stage]))return false;
+   const current = b.cashCost === capex[b.stage] && b.reward.revenue === Math.round(spec[3][b.stage]*[1,.6,.35,.5][b.stage]);
+   const legacy = b.cashCost === legacyCapex[b.stage] && b.reward.revenue === Math.round(spec[3][b.stage]*[1,.6,.35,.25][b.stage]);
+   if (!current && !legacy) return false;
   }
   if(b.reward.hire) { const h=HIRES.find(x=>x.id===b.reward.hire); if(!h||b.cashCost!==h.cost)return false; }
   if(b.pilotResult) {
@@ -141,5 +143,5 @@ export function validCommerce(g) {
 export function businessNext(card) {
  const s=businessSpec(card.business), stage=card.stage+1;
  if(!s||stage>=4)return null;
- return {name:s[1][stage],round:1+stage*2,scale:Math.min(3,stage+1),level:s[6]+Math.max(0,stage-1),capital:capex[stage],revenue:Math.round(s[3][stage]*[1,.6,.35,.25][stage]),recipe:Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]))};
+ return {name:s[1][stage],round:1+stage*2,scale:Math.min(3,stage+1),level:s[6]+Math.max(0,stage-1),capital:capex[stage],revenue:Math.round(s[3][stage]*[1,.6,.35,.5][stage]),recipe:Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]))};
 }
