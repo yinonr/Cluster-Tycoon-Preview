@@ -3,8 +3,18 @@
 // is ink, its head a Note Yellow scheduler; jobs wait as GPU-coloured kernels; a GPU that has run a job stays lit;
 // throttled GPUs are hatched with an orange LED. paintKernel repaints the grid in place.
 import { esc } from '../util.js';
+import { baburSays } from './babur.js';
 import { evaluateKernel, kernelOutcome } from '../tycoon/kernel.js';
 import { introCard, resultBlock, footerFor, meterHTML, gpuClass, pct } from './integration.js';
+
+// The first real deployment gets one short report-time introduction. Practice
+// never consumes this campaign flag; acknowledgement belongs to the engine.
+export function campaignSnakeIntroView(g) {
+  if (g?.arcade?.practice || g?.phase !== 'report' || !g?.arcade?.snakeIntro?.pending) return null;
+  return {title:'Your first cluster',role:'report',desk:'paper',exit:null,
+    body:`<section class="campaign-snake-intro">${baburSays('You’ve built your first cluster. In Cluster Snake, steer jobs across its GPUs and keep the workload moving.',{expression:'explaining'})}<p>Use the arrow keys, WASD, or swipe to steer. Reach the jobs; avoid the edge and your own queue.</p></section>`,
+    footer:'<button type="button" data-action="cancel-campaign-snake" class="mat-exit rail-quiet">Not now</button><button type="button" data-action="start-campaign-snake" class="mat-move rail-commit" data-autofocus>Play Cluster Snake</button>'};
+}
 
 export const RULE = 'Run the workload over every job. Don’t stall.';
 const KEYS = '<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> or <kbd>WASD</kbd> steer · or swipe the fleet';

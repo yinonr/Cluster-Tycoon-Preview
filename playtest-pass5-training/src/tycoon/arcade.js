@@ -1,4 +1,4 @@
-import { CORE_ROUNDS, campaignLimit, qualification } from './extension.js';
+import { CORE_ROUNDS, MAX_ROUNDS, campaignLimit, qualification, createExtension, normalizeExtension } from './extension.js';
 // V10.6 The Living World: the round engine (V10.5 The Founder plus the integration phase).
 // You are one AI startup with company cash and a cap table. Buy GPU capacity on the floor,
 // allocate it to objectives, build, raise, resell, and exit after five rounds. Integer cents
@@ -42,13 +42,13 @@ export function record(g, kind, amount) {
   if (!L || !Number.isSafeInteger(amount) || !(kind in L)) return;
   L[kind] += amount;
 }
-export const ledgerCash = L => V7.cash + L.raised + L.revenue + L.contracts + L.resale + (L.workshops || 0) - L.purchases - L.burn - L.research - L.capex - L.penalties;
+export const ledgerCash = (L, initialCash=V7.cash) => initialCash + L.raised + L.revenue + L.contracts + L.resale + (L.workshops || 0) - L.purchases - L.burn - L.research - L.capex - L.penalties;
 
 export function createArcade(seed, name = '', { scenarios = true } = {}) {
   const g = { v: V7.version, seed, q: 1, phase: 'ready', cash: V7.cash / 100, profit: 0, clout: 0, firms: {}, company: createCompany(seed, name), world: createWorld() };
   g.arcade = { version: V7.version, rev: 0, seconds: V7.seconds, time: 0, active: null, confirm: null, signing: null, history: [], receipts: [], lots: [], inventory: [], purchases: [],
     buyers: [], sales: [], objectives: [], reservations: [], built: [], terms: [], event: null, message: null, sourcingFor: null,
-    extension: {version:1,choice:null,bankedFive:null}, workshops: {seq:0,awards:[]}, ledger: { workshops: 0, raised: 0, inKind: 0, revenue: 0, contracts: 0, resale: 0, purchases: 0, burn: 0, research: 0, capex: 0, penalties: 0, expired: 0 }, exit: null, ending: null };
+    initialCash: V7.cash, extension: createExtension(), snakeIntro:{version:1,seen:false,pending:false,q:null}, workshops: {seq:0,awards:[]}, ledger: { workshops: 0, raised: 0, inKind: 0, revenue: 0, contracts: 0, resale: 0, purchases: 0, burn: 0, research: 0, capex: 0, penalties: 0, expired: 0 }, exit: null, ending: null };
   g.world.scen = createScenarios(scenarios);
   g.arcade.replays=campaignReplayAccess();
   openQuarter(g);
@@ -273,28 +273,29 @@ function settle(g, out) {
   worldBell(g, report);
   // 5. Out of money: payroll cannot be met, the company shuts down now.
   if (shortfall) { c.shutdown = true; return finish(g, 'shutdown'); }
-  if (q === CORE_ROUNDS && !a.extension?.bankedFive) {
-    const result=qualification(g), canonical=structuredClone(g);
-    finish(canonical,'exit');
-    a.extension={version:1,choice:null,eligible:result.qualified,paths:result.paths,
-      bankedFive:{exit:structuredClone(canonical.arcade.exit),finalScore:structuredClone(canonical.arcade.finalScore)}};
-    if(result.qualified) {g.phase='extension';notice(g,'Five-round result banked. Finish here or continue for two more rounds.','good');return true;}
+  if (q >= campaignLimit(g)) {
+    const result=qualification(g);
+    normalizeExtension(g);a.extension.lastCheck={q,qualified:result.qualified,reason:q>=MAX_ROUNDS?'cap':result.qualified?'qualified':'progress',paths:result.paths};
+    if(q>=CORE_ROUNDS && q<MAX_ROUNDS && result.qualified) {
+      normalizeExtension(g);a.extension.pending={q,eligible:true,paths:result.paths};g.phase='extension';
+      notice(g,`Round ${q} complete. Finish with your company’s total bag or play one more round.`,'good');return true;
+    }
+    return finish(g,'exit');
   }
-  if (q >= campaignLimit(g)) return finish(g, 'exit');
   g.q = q + 1; g.phase = 'report';
   notice(g, `Round ${q} closed. Revenue ${money(revenue)}, burn ${money(burn)}.`);
   return true;
 }
 
-// The bank is a score snapshot, never a cash transfer or liquidation of the live company.
+// One deliberate additional round; no snapshot payout or duplicate score.
 export function chooseExtension(g, choice) {
   const e=g?.arcade?.extension;
-  if(g?.phase!=='extension' || g.q!==CORE_ROUNDS || !e?.eligible || e.choice!==null || !e.bankedFive || !['finish','extend'].includes(choice))return false;
-  e.choice=choice;
+  if(g?.phase!=='extension' || !['finish','extend'].includes(choice) || e?.version!==2 ||
+    e.pending?.q!==g.q || !e.pending.eligible || g.q!==e.limit || g.q>=MAX_ROUNDS || !qualification(g).qualified)return false;
+  e.decisions.push({q:g.q,choice});e.pending=null;
   if(choice==='finish')return finish(g,'exit');
-  g.q=CORE_ROUNDS+1;g.phase='report';
-  notice(g,'Your five-round result is banked. Prepare for two final scaling rounds.','good');
-  return true;
+  e.limit=g.q+1;g.q++;g.phase='report';
+  notice(g,`Round ${g.q} earned. Grow your company to earn the next opportunity.`,'good');return true;
 }
 
 function finish(g, ending) {
@@ -314,7 +315,7 @@ function finish(g, ending) {
   if (ending === 'exit') a.exitIntegrated = pendingIntegration(g).filter(b => !b.reward.cash).map(b => { integrate(g, b.id, 1); return b.id; });
   a.exit = ending === 'acquired' ? saleOutcome(g) : exitOutcome(g, m => exitMarket(g, m));
   a.exit.epilogue = epilogue(g, a.exit);
-  a.finalScore = { payout: a.exit.payout, founderPct: a.exit.founderPct, equity: a.exit.equity, kind: a.exit.kind, rounds: a.history.length, campaignRounds: campaignLimit(g) };
+  a.finalScore = { payout: a.exit.payout, founderPct: a.exit.founderPct, equity: a.exit.equity, kind: a.exit.kind, rounds: g.q, settledRounds: a.history.length, campaignRounds: g.q };
   notice(g, ending === 'shutdown' ? 'Payroll missed. The company shuts down.' : `${a.exit.title}. Founder payout ${money(a.exit.payout)}.`, ending === 'shutdown' ? 'bad' : 'good');
   return true;
 }

@@ -22,7 +22,7 @@ export function short(c) {
 // Ownership: a share of the cap table, one decimal (two when it is small).
 export const pctOf = p => p >= .99995 ? '100%' : `${(p * 100).toFixed(p < .1 ? 2 : 1)}%`;
 export const bpsText = b => `${(b / 100).toFixed(b % 100 ? (b % 10 ? 2 : 1) : 0)}%`;
-export const phaseName = q => PHASES[Math.max(1, Math.min(7, q))]?.name || '';
+export const phaseName = q => PHASES[Math.max(1, Math.min(PHASES.length-1, q))]?.name || '';
 export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 // ---- Objective cards ------------------------------------------------------------------------
@@ -38,14 +38,15 @@ export function pilotResultLine(b) {
 }
 export function rackDeliveryLine(g, card) {
   const first = g && !g.company.starterRackDelivered, immediate = !!g && !g.arcade.practice && ordinaryTask(card);
+  const choicePossible = g && !g.arcade.practice && g.q >= 5 && g.q < 10 && g.q === campaignLimit(g);
   const later = g?.q === campaignLimit(g)
-    ? 'no later GPU delivery this run; owned capacity counts at exit.'
+    ? choicePossible ? 'later GPU deliveries require earning and accepting another round; owned capacity counts if you finish.' : 'no later GPU delivery this run; owned capacity counts at exit.'
     : 'then at later round opens.';
   if (first) return (card.mixed || card.cluster) && !immediate
     ? `First rack: commissioning GPUs at full integration; ${later}`
     : `First rack: ${card.reward.rack.qty} ${card.reward.rack.gpu} added to stock on BUILD; ${later}`;
   return g?.q === campaignLimit(g)
-    ? 'Final round: no later GPU delivery this run; owned capacity still counts at exit.'
+    ? choicePossible ? 'If you earn and accept another round, GPUs arrive at its open. Owned capacity counts if you finish here.' : 'Final round: no later GPU delivery this run; owned capacity still counts at exit.'
     : immediate ? 'GPUs arrive at the next round open.' : 'GPUs arrive at the next round open; output scales with integration.';
 }
 export function infrastructureTerms(card, g) {

@@ -32,7 +32,7 @@
 #pit .open-pit .floor-secondary { margin-top:6px; gap:8px; }
 @media (min-width:769px) {
  #pit .open-pit .floor-main { overflow:auto; }
- #pit .open-pit .trading-room { grid-template-rows:auto minmax(550px,1fr) auto; }
+ #pit .open-pit .trading-room { grid-template-rows:max-content minmax(660px,1fr) max-content; }
 }
 @media (min-width:769px) and (max-width:1100px) {
  #pit .open-pit .floor-main { grid-template-columns:minmax(0,1.4fr) minmax(300px,1fr); gap:18px; }
@@ -135,3 +135,29 @@
 /* Training instructions are an auto-height row above the playable board. */
 #pit .tt.is-training:not(.arc-kernel) { grid-template-rows:auto auto minmax(0,1fr) auto; }
 #pit .tt.is-training:not(.arc-kernel).is-done { grid-template-rows:auto minmax(0,1fr) auto; }
+
+/* Pass 13: expose early demand and four stable offers per page on phones. */
+#pit .floor-demand { flex:0 0 100%; display:flex; gap:8px; margin:4px 0 8px; }
+#pit .floor-demand-button { flex:1 1 0; min-width:0; min-height:48px; padding:7px 9px; border:1px solid var(--hsc-grey-light); background:var(--hsc-paper); color:var(--hsc-ink); text-align:left; }
+#pit .floor-demand-button b, #pit .floor-demand-button span { display:block; font:13px/1.35 var(--hsc-sans); }
+#pit .floor-demand-button b { font-weight:600; }
+#pit .floor-demand-button.has-stock { background:var(--hsc-note); }
+#pit .floor-live-button { min-height:44px; padding:6px 10px; }
+#pit .focus-training-skip, #pit .guide-training-skip { min-height:44px; padding:8px 12px; border:1px solid var(--hsc-grey-light); background:var(--hsc-paper); color:var(--hsc-ink); font:14px/1.3 var(--hsc-sans); cursor:pointer; }
+#pit .focus-training-skip { margin-left:auto; flex-shrink:0; }
+#pit .guide-training-skip { margin-top:16px; }
+#pit .focus-training-skip:focus-visible, #pit .guide-training-skip:focus-visible, #pit .floor-demand-button:focus-visible { outline:3px solid var(--hsc-ink); outline-offset:2px; }
+@media (max-width:600px) {
+ #pit .floor-demand { gap:5px; }
+ #pit .floor-demand-button { padding:6px; }
+ #pit .floor-demand-button :is(b,span) { font-size:11px; }
+ #pit .open-pit .floor-scene { height:390px; min-height:390px; }
+ #pit .open-pit .floor-scene.has-floor-funding { height:565px; min-height:565px; }
+ #pit .open-pit .pit-seat-0, #pit .open-pit .pit-seat-1 { top:0; }
+ #pit .open-pit .pit-seat-2, #pit .open-pit .pit-seat-3 { top:195px; }
+ #pit .open-pit .pit-seat-0, #pit .open-pit .pit-seat-2 { left:0; }
+ #pit .open-pit .pit-seat-1, #pit .open-pit .pit-seat-3 { right:0; }
+ #pit .open-pit .floor-funding-person { top:395px; }
+ #pit .is-paper .pit-focus-heading { gap:8px; padding-inline:12px; }
+ #pit .focus-training-skip { padding:8px; font-size:13px; }
+}

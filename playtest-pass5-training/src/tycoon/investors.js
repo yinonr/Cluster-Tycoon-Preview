@@ -87,11 +87,12 @@ function makeTerm(g, p, r, { at, mods = {}, returning = false, rivalOf = null, i
 // One term sheet a round at most, plus (rarely) a rival trying to steal it. Who comes depends on
 // the company's state and the founder's history with them; nobody is a guaranteed rescue.
 export function planInvestor(g) {
-  if(g.q>=6 && campaignLimit(g)===7) {
-    const value=equityValue(g), amount=g.q===6?125000000:175000000;
+  if(g.q>=4 && g.q<=campaignLimit(g)) {
+    // One optional, paid-in primary investment per round; never an automatic grant.
+    const value=equityValue(g), amount=[0,0,0,0,100000000,150000000,175000000,200000000,225000000,250000000,275000000][g.q];
     const pre=Math.max(100000000,Math.round(value*.8));
     const pct=Math.min(3000,Math.max(500,Math.ceil(10000*amount/(pre+amount)/50)*50));
-    return [{id:`q${g.q}-vc`,kind:'growth',investor:`extension-${g.q}`,name:g.q===6?'Pacific Scaling Partners':'Frontier Deployment Fund',label:'Scaling investment',
+    return [{id:`q${g.q}-vc`,kind:'growth',investor:`scaling-${g.q}`,name:g.q%2===0?'Pacific Scaling Partners':'Frontier Deployment Fund',label:'Scaling investment',
       pitch:'Finance a major deployment. Cash goes to the company; newly issued shares reduce your ownership.',
       amount,pct,openingPct:pct,floorPct:pct,patience:0,at:0,until:g.arcade.seconds,status:'open',valuation:value,
       tape:[{speaker:'Scaling investor',text:`${money(amount)} for ${pct/100}% of the company.`}]}];
@@ -99,7 +100,7 @@ export function planInvestor(g) {
   const spec=ECONOMY.funding[g.q];
   if (!spec) return [];
   const {amount,pct,name}=spec, value=equityValue(g), kind=g.q===2?'angel':'seed', I=INVESTORS[kind];
-  return [{id:`q${g.q}-vc`,kind,investor:`pass2-${g.q}`,name,label:I.label,pitch:'Capital for the next deployment. Your retained ownership determines your founder payout.',
+  return [{id:`q${g.q}-vc`,kind,investor:`pass2-${g.q}`,name,label:I.label,pitch:'Capital for the next deployment. Your retained ownership contributes to your total bag.',
     amount,pct,openingPct:pct,floorPct:pct,patience:0,at:0,until:g.arcade.seconds,status:'open',valuation:value,
     tape:[{speaker:name,text:`${money(amount)} for ${pct/100}% of the company. New shares; cash belongs to the company.`}]}];
 }

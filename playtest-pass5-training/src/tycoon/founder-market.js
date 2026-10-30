@@ -49,7 +49,7 @@ export function makeRoundLots(g) {
     const i = lots.length, firm = SELLER_FIRMS[(i + g.q * 5) % SELLER_FIRMS.length];
     let gpu = r.weighted(GPUS.map(k => ({ w: w[k] * (ev.kind === 'shortage' && ev.gpu === k ? .4 : ev.kind === 'glut' && ev.gpu === k ? 2 : 1), v: k })));
     const at = ECONOMY.waveAt[wave] + (wave && n > 1 ? slot * 2 : 0), until = seconds;
-    // Later rounds carry fewer lots with larger commitments.
+    // Every round keeps overlapping small and large commitments; each book is finite.
     const qty = r.pick(P.qty);
     const shift = ev.gpu === gpu ? (ev.kind === 'shortage' ? 1.12 : ev.kind === 'glut' ? .90 : 1) : 1;
     const ask = Math.round(ASK[gpu] * (1 + DRIFT * (g.q - 1)) * shift) + r.int(-18, 26);
@@ -64,10 +64,22 @@ export function makeRoundLots(g) {
     Object.assign(lots[0], {id:'q1-start',gpu:'H100',qty:2,ask:235,at:0});
     Object.assign(lots[1], {id:'q1-rack',gpu:'H100',qty:2,ask:239,at:0});
     lots[2].gpu='H200'; lots[2].qty=1; lots[2].ask=ASK.H200;
+    Object.assign(lots[3],{gpu:'H200',qty:2,ask:ASK.H200});
+    Object.assign(lots[4],{gpu:'B200',qty:1,ask:ASK.B200});
   } else {
     for (let i=0;i<3;i++) {
       const l=lots[i], gpu=GPUS[i]; l.gpu=gpu;
       l.ask=Math.round(ASK[gpu]*(1+DRIFT*(g.q-1)));
+    }
+  }
+  // Each arriving wave includes all three GPU types. Its first three offers are
+  // smaller working lots, so a cash-constrained company need not buy a huge block.
+  for(let wave=1;wave<WAVES.length;wave++) {
+    const offset=P.waves.slice(0,wave).reduce((n,x)=>n+x,0);
+    for(let j=0;j<3;j++) {
+      const lot=lots[offset+j],gpu=GPUS[j];
+      lot.gpu=gpu;lot.qty=Math.max(1,Math.min(4,Math.ceil(P.qty[0]/2)));
+      lot.ask=Math.round(marketAsk(g,gpu));
     }
   }
   // One named capacity house keeps an attainable lower-end principal allocation available.
@@ -96,7 +108,7 @@ export const BLOCK = Object.freeze({
     { qty: [32, 40, 48], at: 30, until: 45, big: 64, bigFrom: 8, bigChance: .15 }]),
   discount: .97,
   // Sourcing orders: a dedicated block for one project, at a premium, a few seconds later.
-  source: Object.freeze({ premium: 1.18, delay: 3, window: 20, min: 4, latest: 35, orders: Object.freeze([0, 0, 1, 2]) }),
+  source: Object.freeze({ premium: 1.18, delay: 3, window: 20, min: 2, latest: 35, orders: Object.freeze([0, 1, 2, 3]) }),
   // Offtake mandates on the resale desk for big sellers.
   // A company with flagship fleets is offered its fleet's GPU, sized to fleetShare of the fleet's output (max fleetMax).
   offtake: Object.freeze({ chance: Object.freeze([0, 0, .5, .85]), qty: Object.freeze([12, 16, 20, 24]), low: 1.10, high: 1.45, fleetShare: .75, fleetMax: 128,
@@ -167,9 +179,9 @@ export function sourcedLot(g, quote) {
 export function makeResaleBids(g, cents) {
   const P = PHASES[g.q], r = stream(g.seed, 'v105-resale', g.q), bids = [], seconds = g.arcade.seconds;
   for (let i = 0; i < P.bids; i++) {
-    const gpu = GPUS[(i + g.q) % 3], qty = r.pick([2, 3, 4, 6]), posture = r.pick(['firm', 'cautious', 'flexible']);
+    const gpu = GPUS[i % 3], qty = r.pick(P.bidQty || [2, 3, 4, 6]), posture = r.pick(['firm', 'cautious', 'flexible']);
     const room = posture === 'firm' ? r.int(3, 8) : posture === 'cautious' ? r.int(10, 25) : r.int(25, 55);
-    const rate = Math.round(ASK[gpu] * (1 + DRIFT * (g.q - 1)) * r.range(.95, 1.02)), at = i === 0 ? 0 : 10 + 8 * i, until = seconds;
+    const rate = Math.round(ASK[gpu] * (1 + DRIFT * (g.q - 1)) * r.range(.95, 1.02)), at = i < 3 ? 0 : 10 + 10 * (i - 3), until = seconds;
     const budget = cents(qty, rate + room);
     bids.push({ id: `q${g.q}-b${i}`, slot: i, name: BUYER_NAMES[(i + g.q * 3) % BUYER_NAMES.length], gpu, qty, filled: 0, rate, openingRate: rate, ceiling: rate + room, budget, initialBudget: budget, at, until, posture, flash: false, premium: false,
       reason: { firm: 'Fixed spot bid', cautious: 'A narrow budget', flexible: 'Room for a sensible proposal' }[posture],

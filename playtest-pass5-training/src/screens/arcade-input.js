@@ -145,6 +145,7 @@ function tick() {
 
 // ---- Keyboard ------------------------------------------------------------------------------------------------
 function onKey(e) {
+  if (e.target.closest?.('[data-action="training-skip"]')) return;
   if (drag) {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancelDrag(); return; }
     cancelDrag();
@@ -178,6 +179,7 @@ function onKey(e) {
   if (k === 'Enter' && !e.target.closest?.('[data-arc-key]')) { e.preventDefault(); e.stopPropagation(); }
 }
 function onKeyUp(e) {
+  if (e.target.closest?.('[data-action="training-skip"]')) { trainingKeyHeld=false; return; }
   if (trainingKeyHeld && (e.key === ' ' || e.key === 'Enter')) { trainingKeyHeld=false; e.preventDefault(); e.stopPropagation(); return; }
   const t = game();
   if (t && e.key === ' ' && ((t.started && !t.done) || (t.done && !t.training && now() - endedAt < GUARD))) { e.preventDefault(); e.stopPropagation(); }

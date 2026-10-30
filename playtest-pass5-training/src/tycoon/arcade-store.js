@@ -1,4 +1,4 @@
-import { campaignLimit, validExtension } from './extension.js';
+import { campaignLimit, validExtension, normalizeExtension } from './extension.js';
 import { HIRES, BUSINESSES, validCommerce } from './commerce.js';
 import { createArcade, V7 } from './arcade.js';
 import { FOUNDER, EXECUTION, OUTCOME, OUTCOME_NAMES, normalizeOrdinaryProgress } from './founder.js';
@@ -8,7 +8,7 @@ import { validInstitutionalSave } from './institutional.js';
 import { validMoonshotSave } from './moonshot.js';
 import { validScenarioSave } from './scenarios.js';
 import { validIntegrationSave, validWorkshopSave, normalizeMinigameSave } from './integration.js';
-import { validReplayAccess, normalizeReplayAccess } from './replay-access.js';
+import { validReplayAccess, normalizeReplayAccess, validSnakeIntro, normalizeSnakeIntro } from './replay-access.js';
 import { validPendingMemo } from './world.js';
 import { validResaleSave } from './resale.js';
 import { normalizeLanternSave } from './lantern-retirement.js';
@@ -18,13 +18,15 @@ const GPU = ['H100', 'H200', 'B200'];
 // V10.15 save validation: a damaged or foreign save is preserved and never half-loaded.
 export function validSave(g,{legacyMinigames=false}={}) {
   const a = g?.arcade, c = g?.company, L = a?.ledger;
-  if(!validExtension(g))return false;
+  if(!validExtension(g) || !validSnakeIntro(g))return false;
   if (typeof c?.name !== 'string' || (c.name && nameError(c.name))) return false;
   if (!(a?.version === V7.version && int(a.rev) && a.rev >= 0 && ['floor', 'integration', 'report', 'extension', 'over'].includes(g.phase) && int(g.q) && g.q > 0 && g.q <= campaignLimit(g))) return false;
   if (![g.cash, g.profit, g.clout, a.time].every(Number.isFinite) || g.cash < 0 || !g.firms || typeof g.firms !== 'object') return false;
   if (!['lots', 'inventory', 'purchases', 'buyers', 'sales', 'receipts', 'history', 'objectives', 'reservations', 'built', 'terms'].every(k => Array.isArray(a[k]))) return false;
   if (!L || !['workshops', 'raised', 'revenue', 'contracts', 'resale', 'purchases', 'burn', 'research', 'capex', 'penalties', 'expired'].every(k => int(L[k]) && L[k] >= 0)) return false;
-  if (V7.cash + L.raised + L.revenue + L.contracts + L.resale + L.workshops - L.purchases - L.burn - L.research - L.capex - L.penalties !== Math.round(g.cash * 100)) return false;
+  const initialCash=a.initialCash ?? 6500000;
+  if(!int(initialCash) || initialCash<=0)return false;
+  if (initialCash + L.raised + L.revenue + L.contracts + L.resale + L.workshops - L.purchases - L.burn - L.research - L.capex - L.penalties !== Math.round(g.cash * 100)) return false;
   if (!c || !int(c.level) || c.level < 0 || c.level > 7 || !int(c.shares?.founder) || c.shares.founder <= 0 || !Array.isArray(c.shares.investors) || !c.shares.investors.every(i => int(i.shares) && i.shares > 0 && int(i.paid) && i.paid >= 0)) return false;
   if (c.shares.investors.reduce((n, i) => n + i.paid, 0) !== L.raised || c.raised !== L.raised) return false;
   if (!['products', 'racks', 'builds'].every(k => Array.isArray(c[k])) || !c.builds.every(b => typeof b.id === 'string' && b.online >= 0 && b.online <= 1)) return false;
@@ -63,7 +65,7 @@ export function validSave(g,{legacyMinigames=false}={}) {
   if (![1, 2, 3].includes(c.scale) || !c.ops || !['serving', 'research', 'readiness'].every(k => Number.isFinite(c.ops[k]) && c.ops[k] >= 0 && c.ops[k] <= FOUNDER.ops.cap[k] + 1e-9)) return false;
   if (!Array.isArray(c.grades) || c.grades.length > campaignLimit(g) || !c.grades.every(x => int(x.q) && ['S', 'A', 'B', 'C', 'CREW'].includes(x.grade) && x.gains && typeof x.gains === 'object')) return false;
   if (c.agi !== null && !(typeof c.agi === 'object' && ['agi', 'partial', 'failure'].includes(c.agi.outcome) && int(c.agi.tech) && c.agi.tech >= 0 && c.builds.some(b => b.id === c.agi.build && b.kind === 'agi'))) return false;
-  if (c.builds.filter(b => b.kind === 'agi').length > 1 || a.sourced !== undefined && !(int(a.sourced) && a.sourced >= 0 && a.sourced <= 2)) return false;
+  if (c.builds.filter(b => b.kind === 'agi').length > 1 || a.sourced !== undefined && !(int(a.sourced) && a.sourced >= 0 && a.sourced <= 3)) return false;
   // V10.17.3: research IP (benchmarks, exceeded and breakthrough runs) is a non-negative cent amount.
   if (c.ip !== undefined && !(int(c.ip) && c.ip >= 0)) return false;
   // V10.17.3: execution quality from a voluntary early bell (0 on a timeout), capped.
@@ -117,8 +119,8 @@ export function arcadeStore(storage) {
   }
   if (state && !error) {
     const next=structuredClone(state),oldFinal=state.phase==='over' && state.arcade.ending!=='acquired'?state.arcade.exit?.payout:null;
-    const retiredChanged=normalizeLanternSave(next),accessChanged=normalizeReplayAccess(next),gameChanged=normalizeMinigameSave(next),progressChanged=normalizeOrdinaryProgress(next);
-    if (retiredChanged || accessChanged || gameChanged || progressChanged) {
+    const continuationChanged=normalizeExtension(next),snakeChanged=normalizeSnakeIntro(next),retiredChanged=normalizeLanternSave(next),accessChanged=normalizeReplayAccess(next),gameChanged=normalizeMinigameSave(next),progressChanged=normalizeOrdinaryProgress(next);
+    if (continuationChanged || snakeChanged || retiredChanged || accessChanged || gameChanged || progressChanged) {
       if (!validSave(next)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';
       else if(commit(next) && retiredChanged && Number.isSafeInteger(oldFinal) && oldFinal!==next.arcade.exit?.payout)retiredFinal=Object.freeze({seed:next.seed,oldPayout:oldFinal,newPayout:next.arcade.exit.payout});
     } else if (!validSave(state)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';

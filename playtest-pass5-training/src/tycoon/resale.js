@@ -1,3 +1,4 @@
+import { campaignLimit } from './extension.js';
 // Focused resale projections and adapters. Pricing and settlement remain the
 // production buyer -> signing -> signed receipt transaction, in integer cents.
 import { GPUS } from './founder.js';
@@ -97,7 +98,7 @@ export function validResaleSave(g) {
     if(!r || r.version!==1 || !Number.isSafeInteger(r.qty) || r.qty<=0 || typeof g.arcade.confirm.buyerId!=='string' ||
       !g.arcade.buyers.some(b=>b.id===g.arcade.confirm.buyerId))return false;
     const s=r.expected;
-    if(s!==null && (!s || s.version!==1 || !Number.isSafeInteger(s.round) || s.round<1 || s.round>5 || s.buyer?.id!==g.arcade.confirm.buyerId ||
+    if(s!==null && (!s || s.version!==1 || !Number.isSafeInteger(s.round) || s.round<1 || s.round>campaignLimit(g) || s.buyer?.id!==g.arcade.confirm.buyerId ||
       !Array.isArray(s.inventory) || !s.inventory.every(x=>x && typeof x.id==='string' && GPUS.includes(x.gpu) && Number.isSafeInteger(x.left) && x.left>=0 && Number.isSafeInteger(x.qty) && x.left<=x.qty && Number.isSafeInteger(x.unitCost) && x.unitCost>=0) ||
       !Array.isArray(s.reservations) || !s.reservations.every(x=>x && typeof x.inv==='string' && typeof x.card==='string' && GPUS.includes(x.gpu) && Number.isSafeInteger(x.qty) && x.qty>0) ||
       s.quote?.buyerId!==s.buyer.id || s.quote.gpu!==s.buyer.gpu || s.quote.qty!==r.qty ||

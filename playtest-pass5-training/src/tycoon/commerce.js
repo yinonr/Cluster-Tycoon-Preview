@@ -29,7 +29,7 @@ export function businessCard(g) {
  const options=BUSINESSES.map(spec=>{
   const completed=c.builds.filter(b=>b.business===spec[0]); const stage=completed.length;
   return {spec,stage,last:completed.at(-1)};
- }).filter(({spec,stage,last})=>stage<4&&(!last||(last.online===1))&&c.level>=spec[6]+Math.max(0,stage-1));
+ }).filter(({spec,stage,last})=>stage<4&&(!last||(last.online===1))&&c.level>=spec[6]);
  if(!options.length) return null;
  const top=Math.max(...options.map(x=>x.stage)), pool=options.filter(x=>x.stage===top);
  const {spec:s,stage}=stream(g.seed,'v1172-business',g.q).pick(pool), recipe=Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]));
@@ -143,5 +143,5 @@ export function validCommerce(g) {
 export function businessNext(card) {
  const s=businessSpec(card.business), stage=card.stage+1;
  if(!s||stage>=4)return null;
- return {name:s[1][stage],level:s[6]+Math.max(0,stage-1),capital:capex[stage],revenue:Math.round(s[3][stage]*ECONOMY.business.revenue[stage]),recipe:Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]))};
+ return {name:s[1][stage],level:s[6],capital:capex[stage],revenue:Math.round(s[3][stage]*ECONOMY.business.revenue[stage]),recipe:Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]))};
 }

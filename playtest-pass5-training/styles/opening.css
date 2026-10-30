@@ -362,3 +362,7 @@
 }
 
 }
+
+/* The named briefing is read at the player's pace; skipping starts in training. */
+.brief-skip-note { margin:12px 0 0; color:#514e49; font:14px/1.4 "Libre Franklin",Arial,sans-serif; }
+.brief-skip-note + .brief-go { text-transform:none; margin-top:12px; }

@@ -15,6 +15,8 @@ import { reviewTerm } from './investors.js';
 import { prepareSigning, signTrade } from './arcade-signing.js';
 import { ASK } from './founder-market.js';
 import { rackNodes } from './cable.js';
+import { normalizeExtension } from './extension.js';
+import { normalizeSnakeIntro } from './replay-access.js';
 
 export const TRAINING_VERSION = 3;
 export const TRAINING_STEPS = Object.freeze(['meet','h100','h200','model','node','network','cable','funding','large','snake','ready']);
@@ -120,26 +122,47 @@ function normalizeHandoffCopy(g) {
   if (!g) return g;
   normalizeLanternSave(g);
   normalizeOrdinaryProgress(g);
-  if (g.arcade) { delete g.arcade.replays; g.arcade.rev=0; g.arcade.extension ||= {version:1,choice:null,bankedFive:null}; }
+  normalizeExtension(g);
+  normalizeSnakeIntro(g);
+  if (g.arcade) { delete g.arcade.replays; g.arcade.rev=0; g.arcade.initialCash ??=6500000; }
   return g;
 }
+
+const handoffJSON = value => JSON.stringify(value, (_, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(k => [k,v[k]])) : v);
 
 // Restart increments a storage revision; every economic/progression field must
 // still match the full canonical company. An unrelated tab's progress is never
 // mistaken for a launch to overwrite or for a completed training handoff.
+// An older first-time launch could have committed its pristine $65k company
+// before the next deployment. Recognize only that untouched target; never rebuild
+// it with new economics or accept any elapsed/traded/owned campaign progress.
+function pristineLegacyLaunch(t,g) {
+  if(t.launchTarget || t.launchFrom!=='null' || !g || !validSave(g) || g.seed!==t.seed || g.company.name!==t.name || g.q!==1 || g.phase!=='floor')return false;
+  const a=g.arcade,c=g.company;
+  if(a.practice || (a.initialCash??6500000)!==6500000 || g.cash!==65000 || a.time!==0 || g.profit!==0 || g.clout!==0 || Object.keys(g.firms).length)return false;
+  if(a.active || a.confirm || a.signing || a.exit || a.ending || a.workshop || a.workshopResult || a.snakeIntro?.seen || a.snakeIntro?.pending)return false;
+  if(a.message?.text!=='Round 1 of 5. Buy the GPUs your company needs, then build.' || a.message?.tone!=='plain')return false;
+  if(Object.values(a.ledger).some(n=>n!==0) || ['history','receipts','inventory','purchases','sales','reservations','built'].some(k=>a[k]?.length))return false;
+  if(a.lots.some(l=>l.status!=='open'||l.negotiation) || a.objectives.some(o=>o.status!=='open') || a.terms.some(x=>x.status!=='open'))return false;
+  if(c.level!==0 || c.builds.length || c.racks.length || c.products.length || c.shares.investors.length || c.shutdown || c.deploy)return false;
+  const canonical=canonicalRoundOne(t).company;
+  return c.shares.founder===canonical.shares.founder && c.shares.pool===canonical.shares.pool;
+}
+
 export function trainingHandoffStatus(t, main) {
   if (!t?.launchPending || t.replay) return 'none';
+  if (pristineLegacyLaunch(t,main)) return 'complete';
   if (main) {
     const copy=normalizeHandoffCopy(structuredClone(main));
     // A pending launch from the earlier local pass may have committed the same
     // canonical resources before learned-access metadata existed. Its handoff
     // may finish after granting access; no company deployment is copied.
-    const canonical=normalizeHandoffCopy(canonicalRoundOne(t));
-    if (JSON.stringify(copy)===JSON.stringify(canonical)) return 'complete';
+    const canonical=normalizeHandoffCopy(t.launchTarget ? JSON.parse(t.launchTarget) : canonicalRoundOne(t));
+    if (handoffJSON(copy)===handoffJSON(canonical)) return 'complete';
   }
   try {
     const current=normalizeHandoffCopy(main?structuredClone(main):null),previous=normalizeHandoffCopy(JSON.parse(t.launchFrom));
-    return JSON.stringify(current)===JSON.stringify(previous) ? 'retry' : 'conflict';
+    return handoffJSON(current)===handoffJSON(previous) ? 'retry' : 'conflict';
   } catch {return 'conflict';}
 }
 
@@ -175,7 +198,7 @@ export function trainingMutate(t, fn) {
   // The first purchase teaches signing only. Charm belongs to the H200 deal;
   // a resolved attempt is enough, without making precision a learning gate.
   if (g.arcade.signing?.kind==='purchase' && t.step==='h200' && !t.charmed.H200) return false;
-  return g.q===1 && ['floor','integration'].includes(g.phase) && cash(g)===ledgerCash(g.arcade.ledger);
+  return g.q===1 && ['floor','integration'].includes(g.phase) && cash(g)===ledgerCash(g.arcade.ledger,g.arcade.initialCash ?? 6500000);
 }
 
 function puzzle(t, kind) {
@@ -344,7 +367,12 @@ export function validTraining(t) {
       if (t.replay || typeof t.launchFrom!=='string' || t.launchFrom.length>4000000) return false;
       const previous=JSON.parse(t.launchFrom);
       if (previous!==null && !validSave(previous)) return false;
-    } else if (t.launchFrom!=null) return false;
+      if (t.launchTarget!=null) {
+        if (typeof t.launchTarget!=='string' || t.launchTarget.length>4000000) return false;
+        const target=JSON.parse(t.launchTarget);
+        if (!validSave(target) || target.seed!==t.seed || target.company.name!==t.name || target.q!==1 || target.phase!=='floor' || target.arcade.practice || target.arcade.time!==0) return false;
+      }
+    } else if (t.launchFrom!=null || t.launchTarget!=null) return false;
     if (!g || g.seed!==t.seed || g.company?.name!==t.name || g.q!==1 || a?.time!==0 || a.practice!==true || !validSave(g)) return false;
     if(t.legacySequence!==undefined && typeof t.legacySequence!=='boolean')return false;
     if(!t.legacySequence)return validCurrentTraining(t);

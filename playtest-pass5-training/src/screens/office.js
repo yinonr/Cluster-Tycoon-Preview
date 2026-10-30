@@ -142,8 +142,9 @@ const GLYPH = {
 const NAME = Symbol('name');
 function briefParts(name) {
   return [
-    ['You’re the CEO of ', NAME, '. You have an idea, a team, and your savings.'],
-    ['One thing’s missing: compute. Click the screen to chase down your GPUs.'],
+    ['You’re the CEO of ', NAME, '. You built a product, hired a team, and secured funding (your savings).'],
+    ['One thing’s missing. Compute. ', NAME, ' needs you to be a Cluster Tycoon.'],
+    ['Babur will show you how:'],
   ];
 }
 export const briefText = (name) => briefParts(name).map((p) => p.map((x) => (x === NAME ? name : x)).join(''));
@@ -336,8 +337,15 @@ export default function office(root, ctx) {
   function showBrief() {
     stage = 'brief';
     const brief = $(root, '.brief');
-    $(brief, '.brief-copy').innerHTML = ctx.training ? `<p>One thing’s missing: compute. <span class="brief-name">${esc(forName())}</span> needs you to be a Cluster Tycoon.</p><p>Babur will show you how:</p>` : briefHTML(forName());
-    if (ctx.training) $(brief, '.brief-go').innerHTML = 'MEET BABUR <span aria-hidden="true">→</span>';
+    $(brief, '.brief-copy').innerHTML = briefHTML(forName());
+    if (ctx.training) {
+      $(brief, '.brief-go').textContent = 'Meet Babur.';
+      brief.querySelector('.brief-skip-note')?.remove();
+      const note = document.createElement('p');
+      note.className = 'brief-skip-note';
+      note.textContent = 'You can skip training once it starts.';
+      $(brief, '.brief-go').before(note);
+    }
     $(root, '.office-desk').inert = true;
     brief.hidden = false;
     ctx.audio.rustle();

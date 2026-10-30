@@ -20,7 +20,7 @@ export const minigameRound = g => g?.arcade?.workshop?.q || g.q;
 export function minigameEligibility(g,kind) {
   const unlocked=replayAvailable(g,kind),betweenRounds=g?.phase==='report',round=betweenRounds?completedRound(g):null;
   const a=g?.arcade,available=!!(unlocked && betweenRounds && Number.isSafeInteger(round) && round===g.q-1 && round>=1 && round<campaignLimit(g) &&
-    !a.active && !a.confirm && !a.signing && !a.workshop);
+    !a.active && !a.confirm && !a.signing && !a.workshop && !a.snakeIntro?.pending);
   return {unlocked,betweenRounds,available,round,reason:!unlocked?'locked':!betweenRounds?'between-rounds-only':available?'ready':'busy'};
 }
 export function gameLaunchAllowed(g,kind,training=false) {
@@ -28,6 +28,7 @@ export function gameLaunchAllowed(g,kind,training=false) {
   if (g?.phase!=='integration' || !a) return false;
   if (training) return a.practice===true && a.integration?.training===true && a.integration.kind===kind;
   if (!replayAvailable(g,kind)) return false;
+  if(kind==='kernel' && a.snakeIntro && !a.snakeIntro.seen)return false;
   if (a.workshop) return a.workshop.kind===kind && a.workshop.returnPhase==='report' && a.workshop.q===completedRound(g) && g.q===a.workshop.q+1 &&
     a.workshop.q<campaignLimit(g) && a.integration?.kind===kind && a.integration.workshop===true;
   return a.bellIntegration?.q===g.q && a.bellIntegration.kind===kind &&
@@ -53,3 +54,25 @@ export function grantTrainingReplays() {
   return false;
 }
 export const migrateLearnedAccess = () => false;
+
+// Practice and campaign introductions have independent state. Unlock alone is
+// not evidence that an older save has already played the campaign game.
+export function normalizeSnakeIntro(g) {
+  const a=g?.arcade;
+  if(!a || a.snakeIntro!==undefined)return false;
+  const played=!a.practice && replayAvailable(g,'kernel') && (!!(a.kernel && !a.kernel.training) || a.workshopResult?.kind==='kernel' ||
+    a.history?.some(h=>h.puzzle?.kind==='kernel' && h.puzzle.reason!=='crew-locked'));
+  a.snakeIntro={version:1,seen:!!played,pending:false,q:null};return true;
+}
+export function validSnakeIntro(g) {
+  const a=g?.arcade,s=a?.snakeIntro;
+  if(!a)return false;
+  if(s===undefined)return true;
+  if(!s || s.version!==1 || typeof s.seen!=='boolean' || typeof s.pending!=='boolean' ||
+    !(s.q===null || Number.isSafeInteger(s.q) && s.q>=1 && s.q<=10))return false;
+  if(s.pending && (a.practice || s.seen || g.phase!=='report' || s.q!==completedRound(g) || g.q!==s.q+1 ||
+    !replayAvailable(g,'kernel') || a.workshop || a.active || a.confirm || a.signing))return false;
+  if(a.practice && (s.seen || s.pending))return false;
+  if(s.seen && !replayAvailable(g,'kernel'))return false;
+  return true;
+}

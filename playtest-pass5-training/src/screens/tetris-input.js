@@ -117,6 +117,7 @@ function tick() {
 
 // ---- Keyboard ------------------------------------------------------------------------------------------
 function onKey(e) {
+  if (e.target.closest?.('[data-action="training-skip"]')) return;
   if (ctx.ui.guidanceOpen) return;
   const g = ctx.store.state;
   if (g?.phase !== 'integration' || !g.arcade.tetris || g.arcade.confirm || e.target.closest?.('input,textarea,select')) return;
@@ -135,6 +136,7 @@ function onKey(e) {
   if (k === 'Enter' && !e.target.closest?.('[data-tt-pad]')) { e.preventDefault(); e.stopPropagation(); }
 }
 function onKeyUp(e) {
+  if (e.target.closest?.('[data-action="training-skip"]')) { trainingKeyHeld=false; return; }
   if (trainingKeyHeld && (e.key === ' ' || e.key === 'Enter')) { trainingKeyHeld=false; e.preventDefault(); e.stopPropagation(); return; }
   if (ctx.ui.guidanceOpen) return;
   const g = ctx.store.state;

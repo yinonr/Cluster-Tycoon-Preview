@@ -1,7 +1,7 @@
 // V10.14 The World Gets Bigger: the controller. Every mutation goes through store.act (one atomic, saved
 // engine step); the page re-renders from authoritative state and pit-fx animates what changed.
 // Reading any desk pauses the floor: the 250ms ticker only advances with no desk or overlay open.
-import { startWorkshop } from '../tycoon/integration.js';
+import { startWorkshop, startCampaignSnake, cancelCampaignSnake } from '../tycoon/integration.js';
 import { parseRate, stepRate, formatRate } from '../ui/offers.js';
 import { stage, focusFrame, directoryView, utilityView } from '../ui/pit-stage.js';
 import * as deals from '../ui/pit-deals.js';
@@ -40,7 +40,7 @@ import { nameError, renameStartup } from '../tycoon/startup-name.js';
 import { guidePreferences, foundingView, hintView, TIPS } from '../ui/founding.js';
 import { helpView } from '../ui/help.js';
 import { reconcileMigratedBest } from '../ui/best-migration.js';
-import { recordCampaignResults } from '../ui/results.js';
+import { recordCampaignResults, resultRounds } from '../ui/results.js';
 import { FIGURE_DEFS } from '../ui/character.js';
 
 const root = document.querySelector('#pit');
@@ -67,7 +67,7 @@ ui.nameDraft = 'My AI Startup';
 scorecardReady.then(() => { if (store.state?.phase === 'over' && !officeCleanup) render(); });
 let officeCleanup = null, introReturn = null, introInputUntil = 0;
 for (const type of ['pointerdown', 'click', 'keydown', 'keyup']) root.addEventListener(type, e => {
-  if (performance.now() < introInputUntil) { e.preventDefault(); e.stopImmediatePropagation(); }
+  if (performance.now() < introInputUntil && !e.target.closest?.('[data-action="training-skip"]')) { e.preventDefault(); e.stopImmediatePropagation(); }
 }, true);
 let sound = prefs.sound === true ? createAudio() : null, last = performance.now(), paintKey = '', returnFocus = null, meterFrame = 0, meterKey = null, meterStart = 0;
 ui.sound = !!sound;
@@ -144,7 +144,7 @@ function render() {
     if (deck.card) taskView.choose(g,deck.card.id);
     ui.taskId=deck.card?.id || null;ui.taskLane=deck.card?.lane || null;ui.taskRound=g.q;
   }
-  ui.trainingCanSkip = training.completed || !!campaign.state;
+  ui.trainingCanSkip = !!training.state;
   ui.hint = null; // Babur teaches actions in training; later guidance is available through Help.
   if (ui.hint) { prefs.seen.add(ui.hint); prefs.save(); }
   ui.guidanceOpen = !!(ui.entry || ui.guide);
@@ -158,7 +158,9 @@ function render() {
   }
   ui.focusOpen = !!view; if (view) ui.memo = null;
   const challenge = !training.state && new URLSearchParams(location.search).get('challenge') === '1' && urlSeed() !== null && !ui.challengeDismissed && ui.entry !== 'found';
-  root.innerHTML = `<div class="pit-background">${training.state ? trainingStage(training.state, ui) : stage(g, ui)}</div>${view && !ui.guidanceOpen ? focusFrame(g, view) : ''}${challenge ? `<aside class="challenge-invite" role="note">${new URLSearchParams(location.search).get('rounds') === '7' ? 'Seven-round challenge: earn the extension to compare seven-round results.' : new URLSearchParams(location.search).get('rounds') === '5' ? 'Five-round challenge.' : 'Same-market challenge: compare results of the same length.'} Seed ${urlSeed()} is ready. <button type="button" data-action="start-challenge">Start a fresh challenge</button><button type="button" data-action="dismiss-challenge" aria-label="Dismiss challenge notice">×</button></aside>` : ''}<span class="pit-announcement" role="status" aria-live="polite">${!training.state && g.arcade.message?.text ? esc(`${g.company.name}: ${g.arcade.message.text}`) : ''}</span>`;
+  const referenceRounds=Number(new URLSearchParams(location.search).get('rounds'));
+  const challengeContext=Number.isInteger(referenceRounds)&&referenceRounds>=1&&referenceRounds<=10?` The shared bag was earned over ${referenceRounds} rounds.`:'';
+  root.innerHTML = `<div class="pit-background">${training.state ? trainingStage(training.state, ui) : stage(g, ui)}</div>${view && !ui.guidanceOpen ? focusFrame(g, view) : ''}${challenge ? `<aside class="challenge-invite" role="note">Same market. Build your biggest total bag.${challengeContext} Your run starts with five rounds; earn each extra round. Seed ${urlSeed()} is ready. <button type="button" data-action="start-challenge">Start a fresh challenge</button><button type="button" data-action="dismiss-challenge" aria-label="Dismiss challenge notice">×</button></aside>` : ''}<span class="pit-announcement" role="status" aria-live="polite">${!training.state && g.arcade.message?.text ? esc(`${g.company.name}: ${g.arcade.message.text}`) : ''}</span>`;
   // The HUD stays live and uncovered during a desk; only the room and the board go inert.
   if (view) for (const el of root.querySelectorAll('.pit-background .pit-main')) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
   const focus = root.querySelector('.pit-focus');
@@ -193,6 +195,7 @@ function render() {
   if (ui.guidanceOpen) {
     for (const el of root.children) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
     root.insertAdjacentHTML('beforeend', ui.guide === 'help' ? helpView(!!training.state) : foundingView(ui, prefs, g));
+    if (training.state) root.querySelector('.founding-dialog')?.insertAdjacentHTML('beforeend','<button type="button" data-action="training-skip" class="guide-training-skip">Skip training</button>');
     root.querySelector('.founding-dialog [data-autofocus]')?.focus({ preventScroll: true });
   }
 }
@@ -222,7 +225,7 @@ function shareAction(g, action, element) {
   if (action === 'copy-caption') { write(copy.caption); return; }
   if (action === 'copy-challenge') { write(copy.url); return; }
   if (action === 'download-scorecard') {
-    try { const a = document.createElement('a'); a.href = scorecardDataUrl(g); a.download = `cluster-tycoon-seed-${g.seed}.png`; document.body.append(a); a.click(); a.remove(); shareStatus(g, 'Scorecard downloaded'); }
+    try { const a = document.createElement('a'); a.href = scorecardDataUrl(g); a.download = `cluster-tycoon-total-bag-seed-${g.seed}-over-${resultRounds(g)}-rounds.png`; document.body.append(a); a.click(); a.remove(); shareStatus(g, 'Scorecard downloaded'); }
     catch { shareStatus(g, 'Image download unavailable'); }
     return;
   }
@@ -279,7 +282,7 @@ function focusTaskSupply(g,d) {
   ui.taskId=card.id;ui.taskLane=card.lane;ui.taskRound=g.q;ui.panel='floor';ui.floorGpu=d.gpu;ui.floorNeed=Math.max(1,Number(d.need)||1);ui.floorPage=0;
   // This deliberate sourcing action may choose the first page with matching
   // live supply. Ordinary arrivals never reshuffle the occupied broker seats.
-  ui.floorPage=stableOfferSeats(g,ui,innerWidth<=600?2:4).firstLivePage ?? 0;
+  ui.floorPage=stableOfferSeats(g,ui,4).firstLivePage ?? 0;
   clearInputs();const clock=last;render();last=clock;
   const target=root.querySelector('[data-floor-filter]') || root.querySelector('[data-task-area]');
   target?.focus({preventScroll:true});
@@ -288,7 +291,7 @@ function focusTaskSupply(g,d) {
 }
 function completeTraining(skip = false) {
   const t = training.state;
-  if (!t || (!t.launchPending && !skip && t.step !== 'ready') || (skip && !training.completed && !campaign.state)) return;
+  if (!t || (!t.launchPending && !skip && t.step !== 'ready')) return;
   if (!t.replay) {
     if (!training.prepareFinish(campaign.state)) { render(); return; }
     const status = trainingHandoffStatus(training.state, campaign.state);
@@ -392,6 +395,7 @@ root.addEventListener('click', e => {
   }
   if (a === 'rename-startup') { ui.guide = 'rename'; ui.nameDraft = g.company.name; render(); return; }
   if (a === 'help') { if (!g || charmActor(g)?.negotiation.running) return; ui.guideReturnFocus = remember(b); ui.guide = 'help'; render(); return; }
+  if (a === 'training-skip' && training.state) { completeTraining(true); return; }
   if (ui.guidanceOpen) return;
   if (a === 'start') { fresh(seed()); return; }
   if (a === 'sound') { sound = sound ? null : createAudio(); ui.sound = !!sound; prefs.sound = !!sound; prefs.save(); render(); return; }
@@ -405,6 +409,7 @@ root.addEventListener('click', e => {
   if (a==='task-prev' || a==='task-next') {changeTask(a==='task-prev'?-1:1,remember(b));return;}
   if (a==='task-source') {focusTaskSupply(g,d);return;}
   if (a==='floor-filter-reset') {ui.floorGpu=null;ui.floorNeed=0;ui.floorPage=0;returnFocus=remember(b);const clock=last;render();last=clock;return;}
+  if (a==='floor-live') { if (!taskNavigationReady()) return; ui.floorPage=stableOfferSeats(g,ui,4).firstLivePage ?? 0; const clock=last; render(); last=clock; return; }
   if (a==='floor-page') {
     if (!taskNavigationReady()) return;
     const pages=Math.max(1,Number(ui.floorPageCount)||1);
@@ -417,6 +422,8 @@ root.addEventListener('click', e => {
     returnFocus = remember(b); ui.panel = 'floor';
     act(g => startWorkshop(g, d.kind)); return;
   }
+  if (a === 'start-campaign-snake') { act(startCampaignSnake); return; }
+  if (a === 'cancel-campaign-snake') { act(cancelCampaignSnake); return; }
   if (a.startsWith('tetris-')) { handleTetrisAction(a, d); return; } // Node Tetris owns its controls
   if (a.startsWith('int-') || a.startsWith('cable-') || a.startsWith('kernel-')) { handleArcadeAction(a, d); return; } // V20: Cable Mania and Kernel Snake
   if (['focus-supplier', 'focus-buyer', 'review-sale', 'review-term', 'open-card', 'open-market', 'finish-review', 'review-scenario'].includes(a) && !ui.focusOpen) returnFocus = remember(b);
@@ -563,11 +570,13 @@ document.addEventListener('keydown', e => {
     }
     return;
   }
-  if (!root.querySelector('.pit-focus') || store.state?.phase === 'integration') return; // the puzzle owns its keys
+  if (!root.querySelector('.pit-focus')) return;
+  if (e.key === 'Tab') { const all = controls(), first = all[0], end = all.at(-1); if (!all.length) return; if (e.shiftKey && (document.activeElement === first || document.activeElement.classList.contains('pit-focus'))) { e.preventDefault(); end.focus(); } else if (!e.shiftKey && document.activeElement === end) { e.preventDefault(); first.focus(); } }
+  if (store.state?.phase === 'integration') return; // the puzzle owns its play keys; its header remains keyboard-accessible
+  if (e.target.closest?.('[data-action="training-skip"]')) return;
   if (e.repeat && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); return; }
   if ((e.key === ' ' || e.key === 'Enter') && charmActor(store.state)?.negotiation.running) { e.preventDefault(); if (!e.repeat) stopMeter(); return; }
   if (e.key === 'Escape') { e.preventDefault(); if (charmActor(store.state)?.negotiation.running) act(recoverRizz); else if (store.state?.phase === 'floor') closeFocus(); return; }
-  if (e.key === 'Tab') { const all = controls(), first = all[0], end = all.at(-1); if (!all.length) return; if (e.shiftKey && (document.activeElement === first || document.activeElement.classList.contains('pit-focus'))) { e.preventDefault(); end.focus(); } else if (!e.shiftKey && document.activeElement === end) { e.preventDefault(); first.focus(); } }
 });
 // The floor clock: 250ms ticks while no desk or overlay is open.
 setInterval(() => {

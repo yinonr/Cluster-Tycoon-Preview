@@ -1,4 +1,4 @@
-import { resultHorizon, resultLabel } from './results.js';
+import { resultRounds, resultLabel, resultAmounts } from './results.js';
 // A self-contained, client-side final receipt. All text comes from the finalized game state.
 import { MODEL_NAMES, focusOf } from '../tycoon/founder.js';
 import { short, pctOf } from './pit-ledger.js';
@@ -6,17 +6,18 @@ export const challengeUrl = (seed, href = location.href, rounds = 5) => {
   const u = new URL('./', href);
   u.search = `?seed=${Number(seed) >>> 0}`;
   u.searchParams.set('challenge', '1');
-  u.searchParams.set('rounds', String(rounds));
+  if (Number.isSafeInteger(rounds) && rounds >= 1 && rounds <= 10) u.searchParams.set('rounds', String(rounds));
   u.hash = '';
   return u.toString();
 };
 export const scorecardModel = g => {
   const x = g.arcade.exit;
   if (g.phase !== 'over' || !x) throw Error('A finalized game is required');
-  return { name: g.company.name?.trim() || 'My AI Startup', wealth: x.payout, ownership: x.founderPct,
-    title: x.title, kind: x.kind, mark: !!x.mark, realized: x.realized ?? (x.mark ? 0 : x.payout),
-    retained: x.retained ?? (x.mark ? x.payout : 0), focus: focusOf(g.company),
-    model: MODEL_NAMES[g.company.level], seed: g.seed, rounds: g.arcade.history.length, horizon: resultHorizon(g), label: resultLabel(g) };
+  const amounts = resultAmounts(g);
+  return { name: g.company.name?.trim() || 'My AI Startup', wealth: amounts.total, ownership: x.founderPct,
+    title: x.title, kind: x.kind, mark: !!x.mark, realized: amounts.realized,
+    retained: amounts.retained, focus: focusOf(g.company),
+    model: MODEL_NAMES[g.company.level], seed: g.seed, rounds: resultRounds(g), label: resultLabel(g) };
 };
 // HSC design pass: the scorecard follows HSC's live social post (Figma 643:2): Paper ground with a light print grain,
 // a Display-size number, an ink LED ticker band in Doto, and the original ink lockup bottom right. The text is the
@@ -48,17 +49,21 @@ export function scorecardCanvas(g) {
   grain(c, m.seed);
   c.textBaseline = 'alphabetic';
   // Header rail: what this is, and which market.
-  c.fillStyle = INK; c.font = `700 26px ${SANS}`; c.textAlign = 'left'; c.fillText('Founder wealth', L, 82);
+  c.fillStyle = INK; c.font = `700 26px ${SANS}`; c.textAlign = 'left'; c.fillText('TOTAL BAG', L, 82);
   c.textAlign = 'right'; c.fillText('Cluster Tycoon', R, 82);
   c.fillStyle = GREY; c.font = `400 22px ${SANS}`; c.fillText(`Seed ${m.seed} · ${m.label}`, R, 112);
   c.textAlign = 'left';
   // The hero: founder wealth, a Display number in lining figures.
   const amount = m.wealth >= 1e8 ? short(m.wealth) : '$' + (m.wealth / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if ('letterSpacing' in c) c.letterSpacing = '-6px';
-  const hero = fitSize(c, amount, W - 260, 196, 72, s => `400 ${s}px ${SERIF}`);
-  c.font = `400 ${hero}px ${SERIF}`; c.fillStyle = INK;
+  let hero = fitSize(c, amount, W - 260, 196, 72, s => `400 ${s}px ${SERIF}`), bounds;
+  // Gelasio's numerals can descend below the baseline. Measure the painted
+  // bounds so large scores leave real space above the company name.
+  do { c.font = `400 ${hero}px ${SERIF}`; bounds = c.measureText(amount); }
+  while (bounds.actualBoundingBoxAscent + bounds.actualBoundingBoxDescent > 164 && --hero > 72);
+  c.fillStyle = INK;
   if ('fontVariantNumeric' in c) c.fontVariantNumeric = 'lining-nums';
-  c.fillText(amount, L - 4, 254);
+  c.fillText(amount, L - 4, 268 - (bounds.actualBoundingBoxDescent || 0));
   if ('letterSpacing' in c) c.letterSpacing = '0px';
   // The company and how it ended.
   c.font = `italic 400 46px ${SERIF}`; c.fillText(ellipsize(c, m.name, W), L, 314);
@@ -67,7 +72,7 @@ export function scorecardCanvas(g) {
   c.fillStyle = INK; c.fillRect(0, 380, 1200, 76);
   const led = shut ? LED_WARN : LED, arrow = shut ? down : up;
   arrow(c, L, 434, 26, led);
-  c.font = `900 36px ${DOTS}`; c.fillStyle = led; c.fillText('Can you build a bigger fortune?', L + 44, 432);
+  c.font = `900 36px ${DOTS}`; c.fillStyle = led; c.fillText('Can you build a bigger bag?', L + 44, 432);
   // The details, in the deck's small-label voice.
   c.fillStyle = INK; c.font = `700 26px ${SANS}`; c.fillText(`Ownership ${pctOf(m.ownership)}`, L, 506);
   c.font = `400 24px ${SANS}`; c.fillText(ellipsize(c, `${m.focus} · Model ${m.model}`, 820), L, 542);
@@ -81,10 +86,11 @@ export const scorecardDataUrl = g => scorecardCanvas(g).toDataURL('image/png');
 export function scorecardFile(g) {
   const data = atob(scorecardDataUrl(g).split(',')[1]), bytes = new Uint8Array(data.length);
   for (let i=0;i<data.length;i++) bytes[i]=data.charCodeAt(i);
-  return new File([bytes],`cluster-tycoon-${resultHorizon(g)}-round-campaign-seed-${g.seed}.png`,{type:'image/png'});
+  return new File([bytes],`cluster-tycoon-total-bag-seed-${g.seed}-over-${resultRounds(g)}-rounds.png`,{type:'image/png'});
 }
 export const scoreMillions = cents => `$${(cents/100000000).toLocaleString('en-US',{maximumFractionDigits:cents<100000000?8:2})}M`;
 export function shareCopy(g, href) {
-  const m=scorecardModel(g),url=challengeUrl(m.seed, href, m.horizon),score=scoreMillions(m.wealth);
-  return {url,caption:`My ${m.label}: ${score} on Cluster Tycoon, a GPU live trading game. ${url}`};
+  const m=scorecardModel(g),url=challengeUrl(m.seed, href, m.rounds),score=scoreMillions(m.wealth);
+  const basis=m.retained>0 ? ` (${short(m.realized)} cash proceeds + ${short(m.retained)} retained equity)` : ' in cash proceeds';
+  return {url,caption:`My total bag: ${score}${basis}, ${m.label} in Cluster Tycoon. Same market; how big can you build yours? ${url}`};
 }

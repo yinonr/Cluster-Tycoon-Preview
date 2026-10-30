@@ -1,6 +1,6 @@
 import { V7 } from './arcade.js';
 import { validSave } from './arcade-store.js';
-import { createTraining, validTraining, trainingAction, upgradeTraining } from './training.js';
+import { createTraining, validTraining, trainingAction, upgradeTraining, canonicalRoundOne } from './training.js';
 import { normalizeReplayAccess } from './replay-access.js';
 
 export const TRAINING_KEY = `${V7.key}-training`;
@@ -53,6 +53,7 @@ export function trainingStore(storage) {
         if (from.length>4000000) return false;
         const next=structuredClone(profile);
         next.session.launchPending=true; next.session.launchFrom=from;
+        next.session.launchTarget=JSON.stringify(canonicalRoundOne(next.session));
         return commit(next);
       } catch {return false;}
     },

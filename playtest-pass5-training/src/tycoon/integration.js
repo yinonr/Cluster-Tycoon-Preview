@@ -8,7 +8,7 @@ import { campaignLimit, EXTENDED_ROUNDS } from './extension.js';
 // the valuation or lifetime purchases. Every game returns the same result shape and the engine applies it through
 // the V10.18 code paths (gradeOf, integrate, applyGrade): same 0.55 floor, 0.75 crew skip, same grades and bonuses.
 import { ECONOMY } from './economy-balance.js';
-import { replayAvailable, normalizeReplayAccess, minigameEligibility, completedRound, gameSessionAllowed, gameLaunchAllowed } from './replay-access.js';
+import { replayAvailable, normalizeReplayAccess, minigameEligibility, completedRound, gameSessionAllowed, gameLaunchAllowed, normalizeSnakeIntro } from './replay-access.js';
 import { finishIntegration } from './arcade.js';
 import { validPendingMemo } from './world.js';
 import { stream } from '../util.js';
@@ -167,6 +167,8 @@ export function workshopQuote(g, kind) {
 export function startWorkshop(g, kind) {
   if (!workshopQuote(g,kind)?.available) return false;
   const a=g.arcade;
+  normalizeSnakeIntro(g);
+  if(kind==='kernel' && !a.snakeIntro.seen) {a.snakeIntro.pending=true;a.snakeIntro.q=completedRound(g);return true;}
   a.workshops ||= {seq:0,awards:[]};
   const round=completedRound(g),seq=++a.workshops.seq,id=`workshop-${round}-${kind}-${seq}`;
   const recipe={...ECONOMY.workshop.recipe}, seed=stream(g.seed,'v20-workshop',round,kind,seq).int(1,2147483646);
@@ -178,6 +180,19 @@ export function startWorkshop(g, kind) {
     const memo=a.workshop.returnMemo;delete a.workshop;clearIntegration(g);g.phase='report';if(memo)g.world.memo=memo;return false;
   }
   return true;
+}
+export function startCampaignSnake(g) {
+  const s=g?.arcade?.snakeIntro;
+  if(g?.arcade?.practice || g?.phase!=='report' || !s?.pending || s.seen || s.q!==completedRound(g) || !replayAvailable(g,'kernel'))return false;
+  s.pending=false;s.seen=true;
+  if(!startWorkshop(g,'kernel')) {s.pending=true;s.seen=false;return false;}
+  GAMES.kernel.input(g,'start');
+  return true;
+}
+export function cancelCampaignSnake(g) {
+  const s=g?.arcade?.snakeIntro;
+  if(g?.phase!=='report' || !s?.pending)return false;
+  s.pending=false;s.q=null;return true;
 }
 export function finishWorkshop(g) {
   if (!g.arcade.workshop || g.arcade.workshop.returnPhase!=='report' || !gameSessionAllowed(g,g.arcade.workshop.kind)) return false;
