@@ -89,7 +89,7 @@ function floorFunding(g,term,live) {
  if(!term)return '';
  const a=g.arcade,capital=term.funding==='compute'?'Compute value':'Capital',deadlineId=`funding-deadline-${term.id.replace(/[^a-zA-Z0-9_-]/g,'-')}`;
  const label=`Review funding from ${term.name}: ${sum(term.amount)} ${capital.toLowerCase()} for ${bpsText(term.pct)} ownership.`;
- const inside=`<span class="funding-person-art" aria-hidden="true">${person('investor',term.name)}</span><span class="funding-invitation">Let’s talk funding</span><span class="funding-person-name">${esc(term.name)}</span><span class="funding-person-terms"><b>${sum(term.amount)}</b><span>for ${bpsText(term.pct)} equity</span></span><span class="funding-person-deadline" id="${esc(deadlineId)}">Offer closes in ${fuse(term.until,term.at,a.time)}</span>`;
+ const inside=`<span class="funding-person-art" aria-hidden="true">${person('investor',term.name)}</span><span class="funding-invitation">${term.funding==='compute'?'Compute value offer':'Let’s talk funding'}</span><span class="funding-person-name">${esc(term.name)}</span><span class="funding-person-terms"><b>${sum(term.amount)}</b><span>for ${bpsText(term.pct)} equity</span></span><span class="funding-person-deadline" id="${esc(deadlineId)}">Offer closes in ${fuse(term.until,term.at,a.time)}</span>`;
  return control(live,'review-term','floor-funding-person',inside,`data-floor-funding data-id="${esc(term.id)}" aria-label="${esc(label)}" aria-describedby="${esc(deadlineId)}"`);
 }
 export function stage(g,ui={}) {

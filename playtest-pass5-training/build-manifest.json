@@ -1,7 +1,7 @@
 {
   "version": "HSC Pass 8 Open pit and campaign-earned minigames preview",
   "baseline_commit": "7acd6aa30283b2973fb9ee60faba001d1ea28c0c",
-  "source_commit": "e74e2d4563163189405dd0f9f1efbc8127cdd0f1",
+  "source_commit": "42f2eb9cc8a2b951f057c2d0460ffe74b7c3ddcc",
   "source_path": "v20/",
   "babur_art": {
     "status": "ready",
@@ -24,7 +24,7 @@
     "hsc-tycoon-preview-pass5-training-training",
     "hsc-tycoon-preview-pass5-training-view"
   ],
-  "source_date": "2026-10-30T06:40:27Z",
+  "source_date": "2026-10-30T06:49:44Z",
   "transforms": {
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
     "src/tycoon/economy-balance.js": "Only the save-key string changes; all game values/rules remain identical.",
@@ -135,7 +135,7 @@
     "src/ui/pit-deals.js": "5af9d6c0731a881f1299ffc9544e32e9e67ac25c4f9f8444f391767a982be383",
     "src/ui/pit-fx.js": "e3df4fa0b9cd8626627ba4555795269ab45272524357e617c2d410de54a06b20",
     "src/ui/pit-ledger.js": "616da23e1f53aa7c54faab5c563975c01ba86015c0bed9474a5ee8db32a307fe",
-    "src/ui/pit-stage.js": "fbf7e3c64ddf3d2664ab0b9be0705c6dbf2ac5db1b481928346ef895f48a0dad",
+    "src/ui/pit-stage.js": "8915792485977b489fa9029b4b17a547ed479c847dafe6996f11d54d9957dd4f",
     "src/ui/scenarios.js": "fc768de152348303c07af0d91e6165f20202f1dc8b8b1782743f9f7f21dac541",
     "src/ui/scorecard.js": "3b45d5777acaf83ce002d16d39c97a7f833120954e9766c6eda73dcb53204b68",
     "src/ui/tetris.js": "7ca4d1f9c0404a0ef48f7784597ade9b39174cd92e4b7efdecc6ff1c2bc836fb",
@@ -268,7 +268,7 @@
     "src/ui/pit-deals.js": "5af9d6c0731a881f1299ffc9544e32e9e67ac25c4f9f8444f391767a982be383",
     "src/ui/pit-fx.js": "e3df4fa0b9cd8626627ba4555795269ab45272524357e617c2d410de54a06b20",
     "src/ui/pit-ledger.js": "616da23e1f53aa7c54faab5c563975c01ba86015c0bed9474a5ee8db32a307fe",
-    "src/ui/pit-stage.js": "fbf7e3c64ddf3d2664ab0b9be0705c6dbf2ac5db1b481928346ef895f48a0dad",
+    "src/ui/pit-stage.js": "8915792485977b489fa9029b4b17a547ed479c847dafe6996f11d54d9957dd4f",
     "src/ui/scenarios.js": "fc768de152348303c07af0d91e6165f20202f1dc8b8b1782743f9f7f21dac541",
     "src/ui/scorecard.js": "3b45d5777acaf83ce002d16d39c97a7f833120954e9766c6eda73dcb53204b68",
     "src/ui/tetris.js": "7ca4d1f9c0404a0ef48f7784597ade9b39174cd92e4b7efdecc6ff1c2bc836fb",
