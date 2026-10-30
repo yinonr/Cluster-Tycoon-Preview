@@ -3,7 +3,7 @@
 // Nothing here writes state, ranks counterparties, or invents a number the engine did not record.
 import { CHARM_RULES } from '../tycoon/rizz.js';
 import { cents, V7 } from '../tycoon/arcade.js';
-import { FOUNDER, MODEL_NAMES, LANE, openCards, revenueOf, revenueNow, totalShares, opsOf, agiOdds, BOOSTS, boostMet } from '../tycoon/founder.js';
+import { FOUNDER, MODEL_NAMES, LANE, openCards, revenueOf, revenueNow, totalShares, opsOf, agiOdds, BOOSTS, boostMet, ordinaryTask } from '../tycoon/founder.js';
 import { PHASES } from '../tycoon/founder-market.js';
 
 export const money = n => `${n < 0 ? '−' : ''}$${(Math.abs(n) / 100).toLocaleString('en-US', { minimumFractionDigits: n % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
@@ -36,25 +36,26 @@ export function pilotResultLine(b) {
   return b.pilotResult === 'customer' ? `${fee} · customer revenue ${short(b.reward.pilotRevenue)} base/round` : `${fee} · no recurring customer`;
 }
 export function rackDeliveryLine(g, card) {
-  const first = g && !g.company.starterRackDelivered;
+  const first = g && !g.company.starterRackDelivered, immediate = !!g && !g.arcade.practice && ordinaryTask(card);
   const later = g?.q === V7.rounds
     ? 'no later GPU delivery this run; owned capacity counts at exit.'
     : 'then at later round opens.';
-  if (first) return card.mixed || card.cluster
+  if (first) return (card.mixed || card.cluster) && !immediate
     ? `First rack: commissioning GPUs at full integration; ${later}`
     : `First rack: ${card.reward.rack.qty} ${card.reward.rack.gpu} added to stock on BUILD; ${later}`;
   return g?.q === V7.rounds
     ? 'Final round: no later GPU delivery this run; owned capacity still counts at exit.'
-    : 'GPUs arrive at the next round open; output scales with integration.';
+    : immediate ? 'GPUs arrive at the next round open.' : 'GPUs arrive at the next round open; output scales with integration.';
 }
 export function infrastructureTerms(card, g) {
   const R = card.reward;
   if (!R.rack) return [];
+  const immediate = !!g && !g.arcade.practice && ordinaryTask(card);
   return [
-    `GPU supply: +${R.rack.qty} ${R.rack.gpu}/round at full integration. ${rackDeliveryLine(g, card)}`,
-    ...(R.lease ? [`Lease income: ${money(R.lease)} base/round at full integration.`] : []),
+    `GPU supply: +${R.rack.qty} ${R.rack.gpu}/round${immediate ? '' : ' at full integration'}. ${rackDeliveryLine(g, card)}`,
+    ...(R.lease ? [`Lease income: ${money(R.lease)} base/round${immediate ? '' : ' at full integration'}.`] : []),
     ...(R.lease && card.commercial ? [`Operating cost: ${pct(card.commercial.cost)} of base lease income, before efficiency savings.`] : []),
-    'Base figures; integration and performance bonuses affect output and income, and growth changes income. GPU purchases are separate from build capital.',
+    immediate ? 'Base figures; performance bonuses affect output and income, and growth changes income. GPU purchases are separate from build capital.' : 'Base figures; integration and performance bonuses affect output and income, and growth changes income. GPU purchases are separate from build capital.',
   ];
 }
 // Offer terms: infrastructure quotes explicit base rates; completed builds use their live records.
@@ -103,7 +104,7 @@ export function buildChange(g, b) {
   }
   if (R.level) {
     if (b.result === 'breakthrough') return { tone: 'research', head: 'Breakthrough', text: `Model → ${MODEL_NAMES[c.level]}${b.ipPaid ? ` · +${short(b.ipPaid)} research IP` : ''}` };
-    if (b.result === 'setback') return { tone: 'setback', head: 'Setback', text: `Model stays ${MODEL_NAMES[c.level]}. The run returns next round.` };
+    if (b.result === 'setback') return { tone: 'setback', head: 'Setback', text: `Model stays ${MODEL_NAMES[c.level]}. ${b.immediate ? 'Another research task is available.' : 'The run returns next round.'}` };
     return { tone: 'research', head: `Model → ${MODEL_NAMES[c.level]}`, text: 'Solid training run' };
   }
   if (R.rack) {

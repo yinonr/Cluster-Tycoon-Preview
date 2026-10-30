@@ -4,6 +4,7 @@
 // recipes, allocation, builds, integration and the company's growth. Rules: docs/V10_5_FOUNDER.md.
 // Money is integer cents. Every random draw comes from a named seeded stream.
 import { ECONOMY } from './economy-balance.js';
+import { recordDeployment } from './integration.js';
 import { contextualUnlocks, unlockBuiltGames } from './replay-access.js';
 import { stream } from '../util.js';
 import { businessCard, campusCard, hiringCard, researchProject, commercialBurn, commerceReward, staffEffect } from './commerce.js';
@@ -176,7 +177,7 @@ export const recipeCost = r => GPUS.reduce((n, k) => n + (r[k] || 0) * FOUNDER.u
 export function researchOdds(g, run) {
   const U = FOUNDER.run, odds = g?.company.mods?.odds;
   const engineer = !!g?.world.flags.engineerHired && !g.world.flags.engineerUsed;
-  // V10.14: a scenario talent bonus (Mara retained, the Okafor team, the Lantern team) applies to
+  // V10.14: a scenario talent bonus (Mara retained, the Okafor team) applies to
   // the next completed training run once, alongside the existing one-shot odds.
   const talent = talentBonus(g);
   return {
@@ -195,7 +196,6 @@ export function createCompany(seed, name = '') {
     tiers: { product: 1, research: 1, infra: 1 }, shutdown: false, researchClosed: false,
     // V10.6 world modifiers (empty in a quiet world): temporary revenue multipliers, burn changes,
     // prepaid revenue, and the next training run's odds.
-    // V10.14: tech is a proprietary-model discount (Lantern-70) that lifts at a model level.
     mods: { revenue: [], burn: [], prepaid: [], odds: null, tech: null },
     // V10.15: company scale (1–3), integration bonuses, the AGI attempt's outcome.
     scale: 1, ops: { serving: 0, research: 0, readiness: 0 }, grades: [], agi: null,
@@ -230,7 +230,7 @@ export const rackOutput = c => GPUS.map(gpu => [gpu, c.racks.filter(r => r.gpu =
 // on everything: research already lifts product revenue 8% a level and adds its own IP.
 export function valuation(c) {
   const contract = contractRevenueNow(c), lease = leaseRevenueNow(c), product = revenueNow(c) - contract, V = FOUNDER.value;
-  const t = c.mods?.tech, model = Math.round(FOUNDER.tech[c.level] * (t && c.level < t.until ? t.mult : 1));
+  const model = FOUNDER.tech[c.level];
   const products = 4 * product * V.product, contracts = Math.round(4 * (contract - lease) * V.product * FOUNDER.contractMultiple);
   const research = model + (c.ip || 0) + (c.agi?.tech || 0);
   // Owned capacity: rack output at unit value × rounds, plus the leases those racks earn (long-term capacity
@@ -286,7 +286,7 @@ export function flagshipFor(g, lane, salt = 0) {
 }
 export function drawCard(g, lane, salt = 0) {
   const c = g.company, tier = lane === 'research' && c.level === MAX_LEVEL - 1 && g.q >= FOUNDER.agi.earlyFrom ? MAX_LEVEL + 1 : laneTier(c, lane);
-  if (lane === 'research' && (c.researchClosed || c.agi || c.builds.some(b=>b.kind === 'agi' || ((b.reward.level || b.moonshot !== undefined) && b.online < 1) || (b.q === g.q && (b.reward.level || b.moonshot !== undefined))) || !CATALOG.research[tier])) return researchWork(g, salt);
+  if (lane === 'research' && (c.researchClosed || c.agi || c.builds.some(b=>b.kind === 'agi' || ((b.reward.level || b.moonshot !== undefined) && b.online < 1)) || !CATALOG.research[tier])) return researchWork(g, salt);
   if (lane === 'infra' && !c.racks.length && !c.builds.some(b=>b.reward.rack)) {
     c.cardSeq++; return {id:`q${g.q}-infra-${c.cardSeq}`,lane:'infra',tier:1,catalog:'Lease a rack',name:'Lease a rack',blurb:'Two H100s now, and two at every later round open.',recipe:{...ECONOMY.starter.rackRecipe},mixed:false,reward:{rack:{gpu:'H100',qty:ECONOMY.starter.rackQty}},q:g.q,status:'open'};
   }
@@ -335,7 +335,7 @@ function researchWork(g, salt) {
   const [name, base] = r.pick(jobs), recipe = scaleRecipe(base, size), cost = marketCost(g, recipe);
   c.cardSeq++;
   return {id:`q${g.q}-research-${c.cardSeq}`, lane:'research', kind:'benchmark', tier:0,
-    name, blurb:'Research IP for your company; results integrate at the bell.', recipe, mixed:true, cluster:true,
+    name, blurb:'Research IP for your company; results resolve when built.', recipe, mixed:true, cluster:true,
     cashCost:Math.round(cost * .15), reward:{ip:Math.round(cost * 1.1)}, q:g.q, status:'open'};
 }
 // V10.17.3 combinations: some projects earn more when another lane already delivered (checked when the
@@ -477,26 +477,63 @@ export function build(g, cardId) {
   const customer = card.customer || customerOf(card);
   if (customer) b.customer = customer;
   c.builds.push(b);
-  unlockBuiltGames(g,b,previousReplayAccess);
   if (moonshot) {
     b.moonshot = card.moonshot; b.cashCost = cashCost;
     m[card.moonshot ? 'trainingBuild' : 'clusterBuild'] = b.id;
     m.state = card.moonshot ? 'training-integrating' : 'cluster-integrating';
   }
   a.built.push(b.id);
-  // V10.17.3: a homogeneous training run trains until the bell (its result uses the round's execution).
-  if (!card.mixed && !card.cluster) { if (card.lane === 'research' && b.reward.level) b.status = 'training'; else applyReward(g, b, 1); }
+  if(!a.practice && ordinaryTask(b)) completeOrdinaryBuild(g,b);
+  // Explicit commitments and practice retain their integration lifecycle.
+  else if (!card.mixed && !card.cluster) { if (card.lane === 'research' && b.reward.level) b.status = 'training'; else applyReward(g, b, 1); }
+  unlockBuiltGames(g,b,previousReplayAccess);
   // Follow-up: the lane deals its next card at once (the dynamic objective).
   if (LANES.includes(card.lane)) {
     if (card.lane === 'product') c.tiers.product = Math.min(5, card.tier + 1);
     if (card.lane === 'infra') c.tiers.infra = Math.min(5, card.tier + 1);
-    // Research takes the quarter. Other lanes always replace their committed project.
+    // Completed ordinary results immediately reveal their valid next project.
     const next = drawCard(g, card.lane, 1);
     const i = a.objectives.indexOf(card);
     if (next) a.objectives.splice(i, 1, card, next); // the built card stays visible, stamped
+    if(!a.practice)b.nextCard=next?.id || null;
     if (card.lane === 'product' && !['offered', 'waiting', 'next'].includes(g.world.strategic?.state) && !a.objectives.some(o => o.lane === 'opportunity' && o.status === 'open')) a.objectives.push(opportunityCard(g, 'pilot', Object.keys(card.recipe).at(-1)));
   }
   return b;
+}
+
+// Ordinary projects resolve through the same reward and outcome engine at BUILD.
+// Commitments still wait for their explicit bell/integration result; practice is scripted.
+export const ordinaryTask = b => LANES.includes(b?.lane) && !b.strategic && !b.scenario && b.moonshot===undefined &&
+  !b.contract && b.kind!=='agi' && !b.reward?.agi;
+export function completeOrdinaryBuild(g,b) {
+  if(g.arcade.practice || !ordinaryTask(b) || b.online===1)return false;
+  b.exec ??= executionOf(g.arcade.time,g.arcade.seconds);
+  b.quality ??= qualityOf(g,b,b.exec);
+  b.efficiency=1;applyReward(g,b,1-b.online);
+  if(!b.outcome && outcomeEligible(b))resolveOutcome(g,b);
+  b.immediate=true;b.completedAt=g.arcade.time;updateScale(g);recordDeployment(g);
+  return true;
+}
+// Already-playing legacy bell boards keep their saved settlement. Other pending
+// ordinary work can finish once, without another purchase, payout, or allocation.
+export function normalizeOrdinaryProgress(g) {
+  if(g.arcade.practice || g.phase==='integration' || g.phase==='over')return false;
+  let changed=false;
+  const lanes=new Set();
+  for(const b of g.company.builds)if(ordinaryTask(b) && b.online<1 && ['training','integrating','delayed'].includes(b.status)) {
+    if(completeOrdinaryBuild(g,b)){changed=true;lanes.add(b.lane);}
+  }
+  if(g.phase!=='floor')return changed;
+  for(const lane of lanes) {
+    const old=g.arcade.objectives.find(o=>o.lane===lane && o.status==='open');
+    if(old && g.arcade.reservations.some(r=>r.card===old.id))continue;
+    if(old)old.status='lapsed';
+    const next=drawCard(g,lane,2);
+    if(next)g.arcade.objectives.push(next);
+    const last=g.company.builds.filter(b=>b.lane===lane).at(-1);
+    if(last)last.nextCard=next?.id || null;
+  }
+  return changed;
 }
 
 // Only ordinary catalog cards repeat here. Staged businesses, campuses, flagships, research,

@@ -37,7 +37,7 @@ export function gameSessionAllowed(g,kind) {
   return !!board && gameLaunchAllowed(g,kind,board.training===true);
 }
 export function unlockBuiltGames(g,b,previous) {
-  const access=contextualUnlocks(g),earned=['node','cable'].filter(k=>access[k] && !previous[k]);
+  const access=contextualUnlocks(g),earned=['node','cable','kernel'].filter(k=>access[k] && !previous[k]);
   if (!earned.length) return;
   g.arcade.replays={version:2,...access};b.replayUnlocks=earned;
 }

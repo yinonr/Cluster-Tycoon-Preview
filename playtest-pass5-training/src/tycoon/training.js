@@ -3,7 +3,8 @@
 // balance, hardware, grade or reward is ever copied into the five-round company.
 import { createArcade, claim, activeLot, cash, ledgerCash } from './arcade.js';
 import { validSave } from './arcade-store.js';
-import { fill, heldFor, build, integrate, updateScale, expansionCapital, FOUNDER } from './founder.js';
+import { fill, heldFor, build, integrate, updateScale, expansionCapital, FOUNDER, normalizeOrdinaryProgress } from './founder.js';
+import { normalizeLanternSave } from './lantern-retirement.js';
 import { postReceipt } from './pit-transactions.js';
 import { recoverRizz } from './rizz.js';
 import { GAMES, clearIntegration, integrationOutcome, recordDeployment, snakeAvailable } from './integration.js';
@@ -111,24 +112,31 @@ export function upgradeTraining(previous) {
 
 export const canonicalRoundOne = t => createArcade(t.seed,t.name);
 
+// Apply the same save migrations to both sides of a handoff comparison. These
+// operate on copies only; unrelated economic and progression changes still conflict.
+function normalizeHandoffCopy(g) {
+  if (!g) return g;
+  normalizeLanternSave(g);
+  normalizeOrdinaryProgress(g);
+  if (g.arcade) { delete g.arcade.replays; g.arcade.rev=0; }
+  return g;
+}
+
 // Restart increments a storage revision; every economic/progression field must
 // still match the full canonical company. An unrelated tab's progress is never
 // mistaken for a launch to overwrite or for a completed training handoff.
 export function trainingHandoffStatus(t, main) {
   if (!t?.launchPending || t.replay) return 'none';
   if (main) {
-    const copy=structuredClone(main);
-    if (copy.arcade) copy.arcade.rev=0;
+    const copy=normalizeHandoffCopy(structuredClone(main));
     // A pending launch from the earlier local pass may have committed the same
     // canonical resources before learned-access metadata existed. Its handoff
     // may finish after granting access; no company deployment is copied.
-    const canonical=canonicalRoundOne(t);
-    delete copy.arcade.replays;delete canonical.arcade.replays;
+    const canonical=normalizeHandoffCopy(canonicalRoundOne(t));
     if (JSON.stringify(copy)===JSON.stringify(canonical)) return 'complete';
   }
   try {
-    const current=main?structuredClone(main):null,previous=JSON.parse(t.launchFrom);
-    for (const value of [current,previous]) if (value?.arcade) {delete value.arcade.replays;value.arcade.rev=0;}
+    const current=normalizeHandoffCopy(main?structuredClone(main):null),previous=normalizeHandoffCopy(JSON.parse(t.launchFrom));
     return JSON.stringify(current)===JSON.stringify(previous) ? 'retry' : 'conflict';
   } catch {return 'conflict';}
 }

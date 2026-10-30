@@ -1,4 +1,3 @@
-import { baburSays, selectBaburExpression } from './babur.js';
 import { V7 } from '../tycoon/arcade.js';
 import { esc } from '../util.js';
 import { gchip } from './pit-company.js';
@@ -49,8 +48,6 @@ const steps = () => `<ol class="founding-steps">
   <li class="step-company">${gchip('B200')}<div><b>3. BUILD YOUR COMPANY</b><p>Complete projects, raise VC money when you need it, and protect your ownership.</p></div></li>
 </ol>`;
 export function foundingView(ui, prefs, g) {
-  if (ui.guide === 'help') return `<div class="founding-scrim"><section class="founding-dialog pass5-help" role="dialog" aria-modal="true" aria-labelledby="help-title" tabindex="-1"><h1 id="help-title">Ask Babur</h1>${baburSays(ui.training ? 'One step at a time. Your practice money and hardware stay in this lesson.' : 'Pick a task. Its empty GPU tiles highlight matching floor offers. Fill the task with your GPUs, then build.',{expression:selectBaburExpression(ui.training,{context:'help'})})}<div class="help-notes"><p>Charm can change a quote. Review the GPU type, quantity and total before you sign a contract.</p><p>Node Tetris places hardware; Cable Mania connects it. In a main round, integration determines how much of your build comes online.</p>${ui.training ? '<p>There is no countdown here. Mistakes can be retried for free.</p>' : '<p>Funding trades ownership for company cash. Review both numbers before accepting.</p><p>Each company starts with minigames locked. Real builds earn access; play between rounds from the board update. Prizes pay only improvements to your best result for the completed round. Buyers handles resale; Suppliers shows all offers.</p><p>The round clock pauses while you inspect an offer or view. End round is beside the current task.</p>'}</div><footer><button type="button" class="founding-primary" data-action="guide-close" data-autofocus>Back to ${ui.training ? 'training' : 'company'} →</button>${!ui.training ? '<div class="founding-links"><button type="button" data-action="replay-training">Replay training</button><button type="button" data-action="rename-startup">Edit startup name</button></div>' : ''}</footer></section></div>`;
-
   if (ui.entry === 'welcome' || ui.guide === 'help') return `<div class="founding-scrim"><section class="founding-dialog welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="welcome-title" tabindex="-1">
     <div class="welcome-content" tabindex="0" aria-label="Welcome guide. Scroll to read all three steps.">
     <header><p class="founding-kicker">CLUSTER TYCOON · V20</p><h1 id="welcome-title">WELCOME TO THE HAIGHT STREET COMPUTE MARKET!</h1>

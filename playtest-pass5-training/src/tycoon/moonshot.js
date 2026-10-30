@@ -16,7 +16,7 @@ export function frontierPossible(g) {
   if (frontierClosed(g) || ['declined', 'expired', 'abandoned', 'resolved'].includes(m?.state)) return false;
   if (moonshotActive(g)) return g.q + (m.state.startsWith('cluster') ? 1 : 0) <= Math.min(5, m.deadline);
   const ready = c.level >= 3 || c.level >= 2 && (c.breakthroughs > 0 || !!armed(g)?.frontier);
-  const researchBusy = c.builds.some(b => b.q === g.q && b.lane === 'research');
+  const researchBusy = c.builds.some(b => b.lane === 'research' && b.online < 1);
   return g.q + Math.max(researchBusy ? 1 : 0, ready ? 0 : 3 - c.level) <= 4;
 }
 const armed = g => { const b = g.world.scen?.bonus; return b && !b.used ? b : null; };
@@ -67,7 +67,7 @@ export function reviewMoonshot(g) {
 export function acceptMoonshot(g) {
   const m = g.world.institutional?.moonshot, a = g.arcade;
   if (g.phase !== 'floor' || !a.confirm?.moonshot || a.signing || m?.state !== 'offered' || g.q > 4 || frontierClosed(g) ||
-    g.company.builds.some(b => b.q === g.q && b.lane === 'research')) return false;
+    g.company.builds.some(b => b.lane === 'research' && b.online < 1)) return false;
   Object.assign(m, { state: 'cluster', startedQ: g.q, deadline: Math.min(5, g.q + 2) });
   const old = new Set(a.objectives.filter(o => o.lane === 'research').map(o => o.id));
   a.reservations = a.reservations.filter(r => !old.has(r.card)); a.confirm = null;

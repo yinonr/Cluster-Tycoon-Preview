@@ -491,7 +491,7 @@ function personalBest(g, best) {
   if (!best) return '';
   const f = g.arcade.finalScore, mine = best.payout === f.payout && best.seed === g.seed;
   return mine ? `<p class="final-pb is-new"><b>NEW PERSONAL BEST</b>${best.prev != null ? `<span>beat ${short(best.prev)}</span>` : '<span>first exit on this device</span>'}</p>`
-    : `<p class="final-pb"><span>Your best</span><b>${short(best.payout)}</b><span>seed ${esc(String(best.seed))}</span></p>`;
+    : `<p class="final-pb"><span>Your best</span><b>${short(best.payout)}</b>${Number.isSafeInteger(best.seed) ? `<span>seed ${esc(String(best.seed))}</span>` : ''}</p>`;
 }
 
 export function dealView(g, ui = {}) {

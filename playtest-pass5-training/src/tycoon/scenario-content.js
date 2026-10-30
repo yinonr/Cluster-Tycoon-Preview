@@ -11,7 +11,6 @@ export const CAST = Object.freeze({
   lastlight: { org: 'Last Light Special Situations', who: 'Mortimer Kestrel', role: 'Managing Partner' },
   northline: { org: 'Northline Logistics', who: 'Rhea Castellane', role: 'Head of Procurement' },
   orbit: { org: 'Orbit Retail Group', who: 'Theo Marchetti', role: 'Chief Digital Officer' },
-  lantern: { org: 'The Lantern Collective', who: 'lantern-bot', role: 'Open-weights release' },
   tensorbay: { org: 'Tensorbay', who: 'Trust & Safety desk', role: 'Model hub' },
   mara: { org: 'Your lab', who: 'Mara Vale', role: 'ML engineer' },
   okafor: { org: 'The Okafor team', who: 'Dr. Ines Okafor', role: 'Ex-Tessellate research lead' },
@@ -67,15 +66,6 @@ export const BUYOUT = Object.freeze({
 });
 
 // ---- Small scenarios -------------------------------------------------------------------------------
-export const LANTERN = Object.freeze({
-  rounds: [4, 4], chance: 1, b200Ask: .92, moat: Object.freeze({ mult: .8, until: 4 }),
-  buyer: Object.freeze({ gpu: 'H200', qty: 8, open: 1.15, ceiling: 1.45, window: 30 }),
-  endpoint: Object.freeze({ recipe: { H100: 4, H200: 2 }, revenue: 3500000 }),
-  team: Object.freeze({ capex: 3000000, breakthrough: .10, legendary: .05 }),
-  productBoost: Object.freeze({ mult: 1.06, rounds: 2 }),
-  headline: 'The Lantern Collective releases Lantern-70: open weights, near the frontier, free.',
-  line: 'weights are up. license is permissive. have fun. — the collective',
-});
 export const CRISIS = Object.freeze({
   rounds: [5, 5], share: .3, minRevenue: 1000000, base: .15, slope: .5, cap: .6,
   discount: .6, redeploy: Object.freeze({ gpus: .5, revenue: .7, cap: 12 }), settle: 1.5, sentiment: -.08,

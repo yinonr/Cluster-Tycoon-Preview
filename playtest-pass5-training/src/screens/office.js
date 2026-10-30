@@ -336,7 +336,7 @@ export default function office(root, ctx) {
   function showBrief() {
     stage = 'brief';
     const brief = $(root, '.brief');
-    $(brief, '.brief-copy').innerHTML = ctx.training ? `<p>You’re the CEO of <span class="brief-name">${esc(forName())}</span>. You have an idea, a team, and your savings.</p><p>One thing’s missing: compute. Babur will help you make your first GPU deal.</p>` : briefHTML(forName());
+    $(brief, '.brief-copy').innerHTML = ctx.training ? `<p>One thing’s missing: compute. <span class="brief-name">${esc(forName())}</span> needs you to be a Cluster Tycoon.</p><p>Babur will show you how:</p>` : briefHTML(forName());
     if (ctx.training) $(brief, '.brief-go').innerHTML = 'MEET BABUR <span aria-hidden="true">→</span>';
     $(root, '.office-desk').inert = true;
     brief.hidden = false;

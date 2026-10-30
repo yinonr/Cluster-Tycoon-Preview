@@ -16,12 +16,12 @@ import { HOURS_PER_MONTH } from '../data/gpus.js';
 import { strategicBusy, partnershipStarts } from './strategic.js';
 import { moonshotActive, moonshotOdds, MOONSHOT } from './moonshot.js';
 import { sovereignEligible } from './institutional.js';
-import { CAST, ANCHOR, FIRESALE, BUYOUT, LANTERN, CRISIS, CAPACITY, TALENT, PROVIDER, CHECKPOINT, PACE } from './scenario-content.js';
+import { CAST, ANCHOR, FIRESALE, BUYOUT, CRISIS, CAPACITY, TALENT, PROVIDER, CHECKPOINT, PACE } from './scenario-content.js';
 
 export const SCENARIOS_ENABLED = true;
 // Small scenarios share a two-a-game budget. The Customer Crisis is not one of them: it is the
 // consequence of a concentration the founder chose, so it is never crowded out.
-export const SMALL = Object.freeze(['lantern', 'capacity', 'talent', 'provider', 'checkpoint']);
+export const SMALL = Object.freeze(['capacity', 'talent', 'provider', 'checkpoint']);
 const MAJOR = Object.freeze(['anchor', 'firesale', 'buyout']);
 const OFFER_STATES = Object.freeze(['open', 'chosen', 'declined', 'expired', 'walked']);
 const CHAIN_STATES = Object.freeze(['active', 'waiting', 'completed', 'defaulted', 'lapsed', 'ended', 'assumed', 'settled', 'deferred']);
@@ -30,7 +30,7 @@ const CHAIN_STATES = Object.freeze(['active', 'waiting', 'completed', 'defaulted
 export function createScenarios(enabled = true) {
   return { v: 1, enabled: !!enabled, offers: [], chains: [], buyers: [], dues: [], due: [], log: [], smalls: 0, quietQ: 0, lastQ: 0, seq: 0, pending: null,
     cash: { in: 0, capex: 0, penalties: 0 }, bonus: null, sale: null,
-    anchor: null, firesale: null, buyout: null, lantern: null, crisis: null, capacity: null, talent: null, provider: null, checkpoint: null };
+    anchor: null, firesale: null, buyout: null, crisis: null, capacity: null, talent: null, provider: null, checkpoint: null };
 }
 
 // ---- Small shared helpers ----------------------------------------------------------------------------
@@ -170,13 +170,13 @@ const pendingB200Next = g => g.company.compute.flatMap(k => k.tranches).filter(d
 
 const HANDLERS = {};
 // Ordered: callbacks, majors, smalls. The first that passes its gate and its seeded roll fires.
-const ORDER = ['buyout-return', 'crisis', 'buyout-forced', 'anchor', 'firesale', 'buyout', 'provider', 'capacity', 'talent', 'lantern', 'checkpoint'];
+const ORDER = ['buyout-return', 'crisis', 'buyout-forced', 'anchor', 'firesale', 'buyout', 'provider', 'capacity', 'talent', 'checkpoint'];
 
 export function scenarioPlan(g) {
   const s = S(g); s.quietQ = 0; s.pending = null;
-  if (!s.enabled || !SCENARIOS_ENABLED || g.q<4) return;
+  if (!s.enabled || !SCENARIOS_ENABLED || g.q<5) return;
   // One predictable late shock each round; the final call responds to customer concentration.
-  const key=g.q===4 ? 'lantern' : HANDLERS.crisis.eligible(g) ? 'crisis' : 'checkpoint';
+  const key=HANDLERS.crisis.eligible(g) ? 'crisis' : 'checkpoint';
   s.pending={key}; s.quietQ=g.q;
 
 }
@@ -191,7 +191,7 @@ export function scenarioOpen(g) {
   }
   for (const d of s.due.filter(d => d.q === g.q)) HANDLERS[d.key]?.due?.(g, d);
   s.due = s.due.filter(d => d.q > g.q);
-  if (s.pending?.key) HANDLERS[s.pending.key].propose(g, s.pending);
+  if (s.pending?.key) HANDLERS[s.pending.key]?.propose?.(g, s.pending);
   s.pending = null;
   return true;
 }
@@ -257,7 +257,7 @@ export function endScenarios(g, ending) {
 
 // ---- Choosing ---------------------------------------------------------------------------------------------------
 export function scenarioOptions(g, o) {
-  if (!o) return [];
+  if (!o || !HANDLERS[o.key]) return [];
   return HANDLERS[o.key].options(g, o).map(x => ({ ...x, enabled: x.enabled !== false && offerLive(g, o) }));
 }
 // Returns true, false, or 'sale' (the caller ends the campaign through the arcade's finish).
@@ -517,44 +517,6 @@ export function saleOutcome(g) {
 // =================================================================================================================
 // Small scenarios
 // =================================================================================================================
-HANDLERS.lantern = {
-  eligible: g => inRounds(g, LANTERN.rounds) && !S(g).lantern,
-  chance: () => LANTERN.chance,
-  propose(g) {
-    const c = g.company, L = LANTERN, focus = focusOf(c);
-    S(g).lantern = { q: g.q, moat: c.level < L.moat.until };
-    if (c.level < L.moat.until) c.mods.tech = { mult: L.moat.mult, until: L.moat.until, event: 'scn-lantern' };
-    g.world.spawns.push({ op: 'ask', gpu: 'B200', mult: L.b200Ask, at: 0, event: 'scn-lantern' });
-    addBuyer(g, 'lantern', { name: 'Lantern deployers', gpu: L.buyer.gpu, qty: L.buyer.qty, open: L.buyer.open, ceiling: L.buyer.ceiling, window: L.buyer.window, at: 4, reason: 'Everyone wants to serve Lantern-70 today' });
-    if (focus === 'AI apps company') c.mods.revenue.push({ mult: L.productBoost.mult, left: L.productBoost.rounds, unless: null, event: 'scn-lantern' });
-    propose(g, 'lantern', { cast: 'lantern', kicker: 'OPEN WEIGHTS · MARKET SHOCK', title: 'Lantern-70', premise: 'An open model just landed near the frontier. Inference demand spikes; training premiums cool.', line: L.line,
-      terms: { endpoint: { recipe: { ...L.endpoint.recipe }, revenue: L.endpoint.revenue }, team: { ...L.team }, moat: S(g).lantern.moat } });
-    news(g, 'lantern', LANTERN.headline, { detail: S(g).lantern.moat ? 'Proprietary models below Frontier lose 20% of their tech value until they reach Frontier.' : '' });
-  },
-  options(g, o) {
-    const t = o.terms, slot = scenarioSlotFree(g);
-    return [
-      { id: 'serve', label: `Serve Lantern-70 · ${recipeText(t.endpoint.recipe)}`, note: `An endpoint card this round: +${shortM(t.endpoint.revenue)}/round base.`, enabled: slot, reason: slot ? '' : 'The opportunity desk is committed this round.', primary: true },
-      { id: 'team', label: `Hire the Lantern team · ${shortM(t.team.capex)}`, note: `${t.moat ? 'Lifts the moat discount. ' : ''}+${Math.round(t.team.breakthrough * 100)}pp on your next training run, +${Math.round(t.team.legendary * 100)}pp legendary on a Moonshot.`,
-        enabled: cashOf(g) >= t.team.capex && !g.company.researchClosed, reason: g.company.researchClosed ? 'Your lab is closed.' : cashOf(g) >= t.team.capex ? '' : `Needs ${shortM(t.team.capex)} cash.` },
-      { id: 'ignore', label: 'Stay proprietary', note: t.moat ? 'The discount lifts when your model reaches Frontier.' : 'Your model is already past it.', decline: true },
-    ];
-  },
-  choose(g, o, id) {
-    const t = o.terms;
-    if (id === 'serve') startChain(g, { key: 'lantern-endpoint', name: 'Lantern-70 endpoint', org: 'Lantern-70', label: 'Open model',
-      stages: [{ name: 'Lantern-70 endpoint', recipe: { ...t.endpoint.recipe }, reward: { revenue: t.endpoint.revenue } }], blurb: 'Their weights, your uptime. Everybody wants it today.' });
-    if (id === 'team') {
-      if (!capex(g, t.team.capex)) return false;
-      if (g.company.mods.tech?.event === 'scn-lantern') g.company.mods.tech = null;
-      arm(g, { breakthrough: t.team.breakthrough, legendary: t.team.legendary, source: 'the Lantern team' });
-      flag(g, 'lantern.team');
-    }
-    return true;
-  },
-};
-HANDLERS['lantern-endpoint'] = { eligible: () => false, chance: () => 0, options: () => [], choose: () => false };
-
 HANDLERS.crisis = {
   eligible: g => { if (!inRounds(g, CRISIS.rounds) || S(g).crisis) return false; const x = concentration(g.company); return x.share >= CRISIS.share && x.revenue >= CRISIS.minRevenue && !S(g).chains.some(ch => ch.customer === x.customer && ['active', 'waiting'].includes(ch.state)); },
   chance: g => Math.min(CRISIS.cap, CRISIS.base + CRISIS.slope * concentration(g.company).share),
@@ -785,7 +747,7 @@ export function validScenarioSave(g) {
   const capexBuilds = g.company.builds.filter(b => b.moonshot === undefined && b.cashCost).reduce((n, b) => n + b.cashCost, 0);
   if (L.capex !== s.cash.capex + capexBuilds) return false;
   if (!int(s.smalls) || s.smalls < 0 || s.smalls > PACE.smalls) return false;
-  if (!s.offers.every(o => typeof o.id === 'string' && HANDLERS[o.key] && OFFER_STATES.includes(o.state) && int(o.q) && o.q >= 1 && o.q <= ECONOMY.rounds)) return false;
+  if (!s.offers.every(o => typeof o.id === 'string' && (HANDLERS[o.key] || ['lantern','lantern-endpoint'].includes(o.key)) && OFFER_STATES.includes(o.state) && int(o.q) && o.q >= 1 && o.q <= ECONOMY.rounds)) return false;
   if (new Set(s.offers.map(o => o.id)).size !== s.offers.length) return false;
   // Offers stay open through the bell's integration phase; the settlement expires them.
   if (!['floor', 'integration'].includes(g.phase) && s.offers.some(o => o.state === 'open')) return false;

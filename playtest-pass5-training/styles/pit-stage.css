@@ -490,3 +490,12 @@ button.pit-bell:active svg { transform:translateY(2px); }
   #pit .pit-focus-footer [data-action="confirm-sale"] { grid-column:1 / -1; }
   #pit .resale-review label[for="review-qty"] { display:block; margin-bottom:6px; }
 }
+
+/* GPU type tiles open matching floor offers without changing task allocations. */
+#pit .gpu-find-tile { min-height:44px; min-width:44px; padding:4px; border:1px solid currentColor; border-radius:3px; background:transparent; color:inherit; cursor:pointer; }
+#pit .gpu-find-tile:focus-visible, #pit .floor-matching-buyers:focus-visible { outline:3px solid currentColor; outline-offset:3px; }
+#pit .floor-matching-buyers { min-height:44px; padding:6px 10px; border:1px solid currentColor; border-radius:3px; background:transparent; color:inherit; font:inherit; cursor:pointer; }
+#pit .floor-filter-heading { flex-wrap:wrap; }
+#pit .action-help .help-notes { display:grid; gap:12px; }
+#pit .action-help .help-notes h2 { margin:0 0 3px; font-size:17px; }
+#pit .action-help .help-notes p { margin:0; line-height:1.4; }

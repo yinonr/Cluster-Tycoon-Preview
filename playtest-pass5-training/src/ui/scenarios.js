@@ -5,7 +5,7 @@ import { V7 } from '../tycoon/arcade.js';
 import { esc } from '../util.js';
 import { liveOffers, scenarioOptions, reviewedOffer, anchorExclusive, markOf } from '../tycoon/scenarios.js';
 import { CAST } from '../tycoon/scenario-content.js';
-import { FOUNDER, GPUS, MODEL_NAMES, concentration, founderPct, cardState, enterpriseValue } from '../tycoon/founder.js';
+import { FOUNDER, GPUS, concentration, founderPct, cardState, enterpriseValue } from '../tycoon/founder.js';
 import { money, short, pctOf } from './pit-ledger.js';
 
 const button = (action, inner, attrs = '') => `<button type="button" data-action="${action}" ${attrs}>${inner}</button>`;
@@ -29,8 +29,6 @@ export function scenarioChips(g, live = true) {
   }
   const x = concentration(g.company);
   if (x.share >= .3) chips.push(`<span class="scn-chip is-risk" title="A customer this large can hurt you">Concentration ${Math.round(x.share * 100)}% · ${esc(x.customer)}</span>`);
-  const t = g.company.mods?.tech;
-  if (t && g.company.level < t.until) chips.push(`<span class="scn-chip is-risk">Lantern-70: model value −${Math.round((1 - t.mult) * 100)}% until ${esc(MODEL_NAMES[t.until])}</span>`);
   if (s.bonus && !s.bonus.used) chips.push(`<span class="scn-chip is-good">Talent: +${pp(s.bonus.breakthrough)} next run${s.bonus.legendary ? ` · +${pp(s.bonus.legendary)} legendary` : ''}</span>`);
   if (g.company.researchClosed) chips.push('<span class="scn-chip">Lab closed · inference company</span>');
   return chips;
@@ -117,7 +115,6 @@ const CHOICE_TEXT = {
   anchor: { exclusive: 'Signed Cirrostrata exclusive', open: 'Signed the Cirrostrata contract', pass: 'Passed on Cirrostrata' },
   firesale: { hall: 'Bought a distressed data hall', team: 'Hired a failed neocloud’s team', pass: 'Passed on the fire sale' },
   buyout: { sell: 'Sold the company', decline: 'Turned down a buyout' },
-  lantern: { serve: 'Chose to serve Lantern-70', team: 'Hired the Lantern team', ignore: 'Stayed proprietary' },
   crisis: { discount: 'Kept a customer at a discount', redeploy: 'Chose to redeploy a lost customer’s capacity', enforce: 'Enforced a customer contract' },
   capacity: { forward: 'Sold next round’s compute forward', sell: 'Sold B200s to Tessellate', keep: 'Kept the capacity' },
   talent: { match: 'Matched a rival’s offer for Mara Vale', equity: 'Paid talent in equity', release: 'Let Mara Vale go', cash: 'Hired the Okafor team', pass: 'Passed on the Okafor team' },

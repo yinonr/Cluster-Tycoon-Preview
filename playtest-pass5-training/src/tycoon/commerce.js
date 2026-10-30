@@ -26,22 +26,20 @@ function card(g,lane,name,recipe,reward,extra) {
 export function businessCard(g) {
  const c=g.company;
  if(g.q===1 && !c.builds.some(b=>b.business)) return card(g,'product','Small-business inference',{...ECONOMY.starter.recipe},{revenue:ECONOMY.starter.revenue},{business:'vertical',stage:0,cashCost:ECONOMY.starter.capital,commercial:{cost:.15,growth:.042,risk:.02},blurb:'Your first customers. Revenue pays at this bell.'});
- if(c.builds.some(b=>b.business&&b.q===g.q)) return null;
  const options=BUSINESSES.map(spec=>{
   const completed=c.builds.filter(b=>b.business===spec[0]); const stage=completed.length;
   return {spec,stage,last:completed.at(-1)};
- }).filter(({spec,stage,last})=>stage<4&&(!last||(last.online===1&&last.q<g.q))&&c.level>=spec[6]+Math.max(0,stage-1)&&
-   g.q>=ECONOMY.business.earliest[stage]);
+ }).filter(({spec,stage,last})=>stage<4&&(!last||(last.online===1))&&c.level>=spec[6]+Math.max(0,stage-1));
  if(!options.length) return null;
  const top=Math.max(...options.map(x=>x.stage)), pool=options.filter(x=>x.stage===top);
  const {spec:s,stage}=stream(g.seed,'v1172-business',g.q).pick(pool), recipe=Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]));
  return card(g,'product',s[1][stage],recipe,{revenue:Math.round(s[3][stage]*ECONOMY.business.revenue[stage])}, {business:s[0],stage,...(stage>=1 && ['security','synthetic','biotech','finance','vertical'].includes(s[0]) ? {customer:s[1][stage]+' customer'} : {}),cashCost:capex[stage],commercial:{cost:s[4],growth:s[5]*.6,risk:s[7]},
-  blurb:stage===0?'Launch a business. Grow it in later rounds.':`Expand ${s[1][stage-1]}. New customers, new recurring revenue.`});
+  blurb:stage===0?'Launch a business. Grow it after delivery.':`Expand ${s[1][stage-1]}. New customers, new recurring revenue.`});
 }
 export function campusCard(g) {
  const c=g.company, built=c.builds.filter(b=>b.campus), stage=built.length, last=built.at(-1);
  const specs=[['Power-backed colocation',{H100:4,H200:2},'H200',4,1800000,1500000],['Regional inference campus',{H100:8,H200:8},'H200',10,6500000,5000000],['Hyperscaler capacity campus',{H200:16,B200:12},'B200',18,18000000,15000000],['Sovereign compute campus',{H100:16,H200:24,B200:24},'B200',32,40000000,35000000]];
- if(stage>=specs.length||last&&(last.q>=g.q||last.online<1)||g.q<2+stage)return null;
+ if(stage>=specs.length||last&&last.online<1)return null;
  const [name,recipe,gpu,qty,lease,cashCost]=specs[stage];
 
  return card(g,'infra',name,recipe,{rack:{gpu,qty,fleet:true},lease},{campus:true,stage,cashCost,commercial:{cost:.30,growth:.04,risk:.02},blurb:'Owned power and capacity. Lease income plus GPUs each round.'});
@@ -116,8 +114,8 @@ export function validCommerce(g) {
  }
  for(const b of c.builds) {
   if(b.business) {
-   const spec=businessSpec(b.business), prior=c.builds.filter(x=>x.business===b.business&&x.q<b.q);
-   if(!spec||!int(b.stage)||b.stage!==prior.length||prior.some(x=>x.online!==1)||c.builds.filter(x=>x.business&&x.q===b.q).length!==1)return false;
+   const spec=businessSpec(b.business), prior=c.builds.slice(0,c.builds.indexOf(b)).filter(x=>x.business===b.business);
+   if(!spec||!int(b.stage)||b.stage!==prior.length||prior.some(x=>x.online!==1))return false;
    if(JSON.stringify(b.commercial)!==JSON.stringify({cost:spec[4],growth:spec[5]*.6,risk:spec[7]}))return false;
    const current = b.cashCost === capex[b.stage] && b.reward.revenue === Math.round(spec[3][b.stage]*ECONOMY.business.revenue[b.stage]);
    const starter = b.q===1 && b.business==='vertical' && b.stage===0 && b.cashCost===ECONOMY.starter.capital && b.reward.revenue===ECONOMY.starter.revenue && JSON.stringify(b.recipe)===JSON.stringify(ECONOMY.starter.recipe);
@@ -145,5 +143,5 @@ export function validCommerce(g) {
 export function businessNext(card) {
  const s=businessSpec(card.business), stage=card.stage+1;
  if(!s||stage>=4)return null;
- return {name:s[1][stage],round:1+stage*2,scale:Math.min(3,stage+1),level:s[6]+Math.max(0,stage-1),capital:capex[stage],revenue:Math.round(s[3][stage]*ECONOMY.business.revenue[stage]),recipe:Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]))};
+ return {name:s[1][stage],level:s[6]+Math.max(0,stage-1),capital:capex[stage],revenue:Math.round(s[3][stage]*ECONOMY.business.revenue[stage]),recipe:Object.fromEntries(Object.entries(s[2]).map(([k,n])=>[k,n*stepScale[stage]]))};
 }

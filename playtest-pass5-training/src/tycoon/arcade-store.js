@@ -1,6 +1,6 @@
 import { HIRES, BUSINESSES, validCommerce } from './commerce.js';
 import { createArcade, V7 } from './arcade.js';
-import { FOUNDER, EXECUTION, OUTCOME, OUTCOME_NAMES } from './founder.js';
+import { FOUNDER, EXECUTION, OUTCOME, OUTCOME_NAMES, normalizeOrdinaryProgress } from './founder.js';
 import { cleanName, nameError } from './startup-name.js';
 import { validStrategicSave } from './strategic.js';
 import { validInstitutionalSave } from './institutional.js';
@@ -10,6 +10,7 @@ import { validIntegrationSave, validWorkshopSave, normalizeMinigameSave } from '
 import { validReplayAccess, normalizeReplayAccess } from './replay-access.js';
 import { validPendingMemo } from './world.js';
 import { validResaleSave } from './resale.js';
+import { normalizeLanternSave } from './lantern-retirement.js';
 
 const int = n => Number.isSafeInteger(n);
 const GPU = ['H100', 'H200', 'B200'];
@@ -28,7 +29,6 @@ export function validSave(g,{legacyMinigames=false}={}) {
   if (new Set(c.builds.map(b => b.id)).size !== c.builds.length || new Set(a.objectives.map(o => o.id)).size !== a.objectives.length) return false;
   if (['product', 'research', 'infra', 'opportunity'].some(lane => a.objectives.filter(o => o.lane === lane && o.status === 'open').length > 1)) return false;
   if (c.builds.some(b => b.catalog != null && typeof b.catalog !== 'string')) return false;
-  if (Array.from({ length: V7.rounds }, (_, i) => i + 1).some(q => c.builds.filter(b => b.q === q && (b.reward.level || b.kind === 'agi' || b.moonshot !== undefined)).length > 1)) return false;
   if (!a.inventory.every(x => typeof x.id === 'string' && GPU.includes(x.gpu) && int(x.left) && int(x.qty) && x.left >= 0 && x.left <= x.qty && int(x.unitCost) && x.unitCost >= 0)) return false;
   // No unit in two places: reservations never exceed what a lot still holds, nor a card's recipe.
   if (!a.reservations.every(r => int(r.qty) && r.qty > 0 && a.inventory.some(x => x.id === r.inv && x.gpu === r.gpu) && a.objectives.some(o => o.id === r.card && o.status === 'open'))) return false;
@@ -95,7 +95,7 @@ export function validSave(g,{legacyMinigames=false}={}) {
 // All mutations, including elapsed floor time, are committed synchronously. Another
 // tab's revision blocks this tab before it can spend, deliver, or resolve an attempt.
 export function arcadeStore(storage) {
-  let state = null, raw = null, error = '';
+  let state = null, raw = null, error = '', retiredFinal = null;
   try {
     raw = storage.getItem(V7.key);
     if (raw) {
@@ -114,15 +114,15 @@ export function arcadeStore(storage) {
     } catch { error = 'Saving is unavailable. Trading is paused to protect your progress. Free browser storage and reload.'; return false; }
   }
   if (state && !error) {
-    const next=structuredClone(state);
-    const accessChanged=normalizeReplayAccess(next),gameChanged=normalizeMinigameSave(next);
-    if (accessChanged || gameChanged) {
+    const next=structuredClone(state),oldFinal=state.phase==='over' && state.arcade.ending!=='acquired'?state.arcade.exit?.payout:null;
+    const retiredChanged=normalizeLanternSave(next),accessChanged=normalizeReplayAccess(next),gameChanged=normalizeMinigameSave(next),progressChanged=normalizeOrdinaryProgress(next);
+    if (retiredChanged || accessChanged || gameChanged || progressChanged) {
       if (!validSave(next)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';
-      else commit(next);
+      else if(commit(next) && retiredChanged && Number.isSafeInteger(oldFinal) && oldFinal!==next.arcade.exit?.payout)retiredFinal=Object.freeze({seed:next.seed,oldPayout:oldFinal,newPayout:next.arcade.exit.payout});
     } else if (!validSave(state)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';
   }
   return {
-    get state() { return state; }, get error() { return error; },
+    get state() { return state; }, get error() { return error; }, get retiredFinal() {return retiredFinal;},
     start(seed, name, options) { return !state && !nameError(name) && commit(createArcade(seed, cleanName(name), options)); },
     restart(seed, name, options) { return !nameError(name) && commit(createArcade(seed, cleanName(name), options)); },
     act(fn) {

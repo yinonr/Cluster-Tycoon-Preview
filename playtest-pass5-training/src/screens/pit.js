@@ -38,6 +38,8 @@ import office from './office.js';
 import { createArcade } from '../tycoon/arcade.js';
 import { nameError, renameStartup } from '../tycoon/startup-name.js';
 import { guidePreferences, foundingView, hintView, TIPS } from '../ui/founding.js';
+import { helpView } from '../ui/help.js';
+import { reconcileMigratedBest } from '../ui/best-migration.js';
 import { FIGURE_DEFS } from '../ui/character.js';
 
 const root = document.querySelector('#pit');
@@ -71,6 +73,7 @@ ui.sound = !!sound;
 
 // The local best lives under its own versioned key; storage may be blocked, so every access is guarded.
 const BEST = `${V7.key}-best`;
+reconcileMigratedBest(storage, BEST, campaign.retiredFinal);
 function bestScore(g) {
   const f = g?.phase === 'over' && g.arcade.finalScore;
   if (!f) return null;
@@ -199,7 +202,7 @@ function render() {
   } else meterKey = null;
   if (ui.guidanceOpen) {
     for (const el of root.children) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
-    root.insertAdjacentHTML('beforeend', foundingView(ui, prefs, g));
+    root.insertAdjacentHTML('beforeend', ui.guide === 'help' ? helpView(!!training.state) : foundingView(ui, prefs, g));
     root.querySelector('.founding-dialog [data-autofocus]')?.focus({ preventScroll: true });
   }
 }
@@ -257,7 +260,17 @@ function shareAction(g, action, element) {
   }
 }
 function settleAtBell() { if (training.state) return; const g = store.state; if (g?.phase === 'floor' && g.arcade.time >= V7.seconds && !g.arcade.active && !g.arcade.confirm && !g.arcade.signing) act(closeQuarter); }
-function postReceipt() { ui.panel = 'floor'; clearInputs(); if (training.state) { training.act(t => trainingAction(t, 'receiptadvance')); render(); } else { act(transactions.postReceipt); settleAtBell(); } }
+function postReceipt() {
+  ui.panel = 'floor'; clearInputs();
+  if (training.state) { training.act(t => trainingAction(t, 'receiptadvance')); render(); return; }
+  const built = store.state.arcade.confirm?.built;
+  const next = built && store.state.company.builds.find(b => b.id === built)?.nextCard;
+  if (act(transactions.postReceipt) && next && openCards(store.state).some(c => c.id === next)) {
+    selectTaskContext(store.state, taskView, ui, next);
+    returnFocus = '[data-task-area]'; render();
+  }
+  settleAtBell();
+}
 function openPanel(panel) { const a = store.state.arcade; if (a.active || a.confirm || a.signing) return; ui.panel = panel; ui.page = 0; clearInputs(); render(); }
 function fresh(s) { if (training.state) return; ui.panel = 'floor'; ui.pendingSeed = s; ui.entry = 'found'; ui.guide = null; ui.nameDraft = 'My AI Startup'; ui.showInstructions = false; render(); }
 const taskNavigationReady = () => !training.state && !store.error && !ui.guidanceOpen && !ui.focusOpen && ui.panel==='floor' && store.state?.phase==='floor';
@@ -278,8 +291,7 @@ function focusTaskSupply(g,d) {
   // live supply. Ordinary arrivals never reshuffle the occupied broker seats.
   ui.floorPage=stableOfferSeats(g,ui,innerWidth<=600?2:4).firstLivePage ?? 0;
   clearInputs();const clock=last;render();last=clock;
-  const offer=[...root.querySelectorAll('[data-floor-offer],[data-action="focus-supplier"]')].find(el=>!el.disabled && el.getClientRects().length);
-  const target=offer || root.querySelector('[data-floor-filter]') || root.querySelector('[data-task-area]');
+  const target=root.querySelector('[data-floor-filter]') || root.querySelector('[data-task-area]');
   target?.focus({preventScroll:true});
   if (innerWidth<=768) target?.scrollIntoView({block:'center',behavior:'auto'});
   return true;
