@@ -1,3 +1,4 @@
+import { campaignLimit } from '../tycoon/extension.js';
 import { V7 } from '../tycoon/arcade.js';
 // V10.14 The World Gets Bigger: the Deal Room and the scenario surfaces. Everything here reads
 // engine state (scenarios.js) and existing ledgers; the only controls are the Deal Room's options,
@@ -48,7 +49,7 @@ export function tapeOffer(g, live = true) {
 function anchorTerms(g, o) {
   const t = o.terms, rows = t.schedule.map(x => `<tr><th scope="row">R${x.round}</th><td>${esc(recipe(x.recipe))}</td><td>${short(x.open)} / ${short(x.exclusive)}</td></tr>`).join('');
   return `<table class="dr-schedule"><caption>Deliveries · base revenue/round</caption><thead><tr><th>Due</th><th>GPUs</th><th>Open / excl.</th></tr></thead><tbody>${rows}</tbody></table>` +
-    `<details class="compute-terms"><summary>Contract details</summary><p>Revenue starts on delivery, before model quality. Contract exit multiple: ${Math.round(FOUNDER.contractMultiple * 100)}% of Product. One paid extension; final delivery cannot pass R${V7.rounds}. Supply is finite.</p></details>`;
+    `<details class="compute-terms"><summary>Contract details</summary><p>Revenue starts on delivery, before model quality. Contract exit multiple: ${Math.round(FOUNDER.contractMultiple * 100)}% of Product. One paid extension; final delivery cannot pass R${campaignLimit(g)}. Supply is finite.</p></details>`;
 }
 function buyoutTerms(g, o) {
   const t = o.terms, pct = founderPct(g.company), mark = markOf(g);
@@ -90,7 +91,7 @@ export function scenarioCardTerms(g, card) {
   const miss = sc.penalty ? `Miss this bell: ${sc.terminates ? 'the contract ends, its revenue stops, and ' : ''}${short(sc.penalty)} in damages after payroll.` : 'Miss it and the opportunity lapses; nothing else is owed.';
   const st = cardState(g, card), cash = Math.round(g.cash * 100);
   const lastDue = g.q + (ch.stages.length - ch.stage);
-  const cure = sc.cure && !ch.cureUsed && card.status === 'open' && st.live ? (lastDue <= V7.rounds ? button('cure-stage', `Request a one-round extension · ${short(sc.cure)}`, `class="mat-exit scn-cure" data-card="${esc(card.id)}" ${cash >= sc.cure ? '' : 'disabled'} aria-label="Pay ${money(sc.cure)} to move this stage to next round"`) : `<p class="dr-fine">No extension: the last stage would fall after round ${V7.rounds}.</p>`) : '';
+  const cure = sc.cure && !ch.cureUsed && card.status === 'open' && st.live ? (lastDue <= campaignLimit(g) ? button('cure-stage', `Request a one-round extension · ${short(sc.cure)}`, `class="mat-exit scn-cure" data-card="${esc(card.id)}" ${cash >= sc.cure ? '' : 'disabled'} aria-label="Pay ${money(sc.cure)} to move this stage to next round"`) : `<p class="dr-fine">No extension: the last stage would fall after round ${campaignLimit(g)}.</p>`) : '';
   return `<section class="scn-terms">${ch.stages.length > 1 ? `<ol class="scn-stages">${rows}</ol>` : ''}<p class="scn-miss ${sc.penalty ? 'is-penalty' : ''}">${esc(miss)}</p>${sc.contract ? `<p class="dr-fine">Dedicated contract revenue: valued at ${Math.round(FOUNDER.contractMultiple * 100)}% of the product multiple at the exit.</p>` : ''}${cure}</section>`;
 }
 export const scenarioWhat = (card, g) => {

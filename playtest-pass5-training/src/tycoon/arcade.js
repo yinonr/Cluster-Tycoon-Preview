@@ -1,3 +1,4 @@
+import { CORE_ROUNDS, campaignLimit, qualification } from './extension.js';
 // V10.6 The Living World: the round engine (V10.5 The Founder plus the integration phase).
 // You are one AI startup with company cash and a cap table. Buy GPU capacity on the floor,
 // allocate it to objectives, build, raise, resell, and exit after five rounds. Integer cents
@@ -47,7 +48,7 @@ export function createArcade(seed, name = '', { scenarios = true } = {}) {
   const g = { v: V7.version, seed, q: 1, phase: 'ready', cash: V7.cash / 100, profit: 0, clout: 0, firms: {}, company: createCompany(seed, name), world: createWorld() };
   g.arcade = { version: V7.version, rev: 0, seconds: V7.seconds, time: 0, active: null, confirm: null, signing: null, history: [], receipts: [], lots: [], inventory: [], purchases: [],
     buyers: [], sales: [], objectives: [], reservations: [], built: [], terms: [], event: null, message: null, sourcingFor: null,
-    workshops: {seq:0,awards:[]}, ledger: { workshops: 0, raised: 0, inKind: 0, revenue: 0, contracts: 0, resale: 0, purchases: 0, burn: 0, research: 0, capex: 0, penalties: 0, expired: 0 }, exit: null, ending: null };
+    extension: {version:1,choice:null,bankedFive:null}, workshops: {seq:0,awards:[]}, ledger: { workshops: 0, raised: 0, inKind: 0, revenue: 0, contracts: 0, resale: 0, purchases: 0, burn: 0, research: 0, capex: 0, penalties: 0, expired: 0 }, exit: null, ending: null };
   g.world.scen = createScenarios(scenarios);
   g.arcade.replays=campaignReplayAccess();
   openQuarter(g);
@@ -55,7 +56,7 @@ export function createArcade(seed, name = '', { scenarios = true } = {}) {
 }
 
 export function openQuarter(g) {
-  if (!g?.arcade || g.q > V7.rounds || !['ready', 'report'].includes(g.phase) || g.world?.memo) return false; // the board's memo is answered first
+  if (!g?.arcade || g.q > campaignLimit(g) || !['ready', 'report'].includes(g.phase) || g.world?.memo) return false; // the board's memo is answered first
   const a = g.arcade, c = g.company;
   Object.assign(a, { time: 0, active: null, confirm: null, signing: null, lots: [], inventory: [], purchases: [], buyers: [], sales: [], reservations: [], built: [], message: null, sourcingFor: null, sourced: 0, exec: 0 });
   g.phase = 'floor';
@@ -161,7 +162,7 @@ export function buy(g) {
   g.arcade.inventory.push(item); g.arcade.purchases.push({ ...item });
   const f = rel(g, l.firm); f.deals++;
   // V10.17.3: a Charmed block earns a repeat allocation next round at the negotiated rate.
-  const repeat = l.block && !l.sourced && n.attempts?.some(e => e.tier === 'hit') && g.q < V7.rounds;
+  const repeat = l.block && !l.sourced && n.attempts?.some(e => e.tier === 'hit') && g.q < campaignLimit(g);
   if (repeat) f.lock = { gpu: l.gpu, qty: l.qty, rate: n.price, q: g.q };
   // One trust step per firm per round, so splitting lots cannot buy a relationship.
   const first = g.arcade.purchases.filter(p => p.firm === l.firm).length <= 1;
@@ -272,9 +273,27 @@ function settle(g, out) {
   worldBell(g, report);
   // 5. Out of money: payroll cannot be met, the company shuts down now.
   if (shortfall) { c.shutdown = true; return finish(g, 'shutdown'); }
-  if (q >= V7.rounds) return finish(g, 'exit');
+  if (q === CORE_ROUNDS && !a.extension?.bankedFive) {
+    const result=qualification(g), canonical=structuredClone(g);
+    finish(canonical,'exit');
+    a.extension={version:1,choice:null,eligible:result.qualified,paths:result.paths,
+      bankedFive:{exit:structuredClone(canonical.arcade.exit),finalScore:structuredClone(canonical.arcade.finalScore)}};
+    if(result.qualified) {g.phase='extension';notice(g,'Five-round result banked. Finish here or continue for two more rounds.','good');return true;}
+  }
+  if (q >= campaignLimit(g)) return finish(g, 'exit');
   g.q = q + 1; g.phase = 'report';
   notice(g, `Round ${q} closed. Revenue ${money(revenue)}, burn ${money(burn)}.`);
+  return true;
+}
+
+// The bank is a score snapshot, never a cash transfer or liquidation of the live company.
+export function chooseExtension(g, choice) {
+  const e=g?.arcade?.extension;
+  if(g?.phase!=='extension' || g.q!==CORE_ROUNDS || !e?.eligible || e.choice!==null || !e.bankedFive || !['finish','extend'].includes(choice))return false;
+  e.choice=choice;
+  if(choice==='finish')return finish(g,'exit');
+  g.q=CORE_ROUNDS+1;g.phase='report';
+  notice(g,'Your five-round result is banked. Prepare for two final scaling rounds.','good');
   return true;
 }
 
@@ -295,7 +314,7 @@ function finish(g, ending) {
   if (ending === 'exit') a.exitIntegrated = pendingIntegration(g).filter(b => !b.reward.cash).map(b => { integrate(g, b.id, 1); return b.id; });
   a.exit = ending === 'acquired' ? saleOutcome(g) : exitOutcome(g, m => exitMarket(g, m));
   a.exit.epilogue = epilogue(g, a.exit);
-  a.finalScore = { payout: a.exit.payout, founderPct: a.exit.founderPct, equity: a.exit.equity, kind: a.exit.kind, rounds: a.history.length };
+  a.finalScore = { payout: a.exit.payout, founderPct: a.exit.founderPct, equity: a.exit.equity, kind: a.exit.kind, rounds: a.history.length, campaignRounds: campaignLimit(g) };
   notice(g, ending === 'shutdown' ? 'Payroll missed. The company shuts down.' : `${a.exit.title}. Founder payout ${money(a.exit.payout)}.`, ending === 'shutdown' ? 'bad' : 'good');
   return true;
 }

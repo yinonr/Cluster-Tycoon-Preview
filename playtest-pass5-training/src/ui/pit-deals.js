@@ -1,3 +1,6 @@
+import { resultLabel } from './results.js';
+import { campaignLimit, qualification } from '../tycoon/extension.js';
+import { taskDeck } from '../tycoon/task-navigation.js';
 import { brokerOffer } from './broker-offer.js';
 import { scorecardDataUrl, shareCopy } from './scorecard.js';
 import { pilotResultLine } from './pit-ledger.js';
@@ -46,7 +49,7 @@ const paper = html => `<div class="desk-center"><div class="paper-sheet mat-pape
 const stampLine = (action, label, attrs = '') => `<div class="sign-line">${button(action, label, `class="mat-stamp is-lit" data-primary ${attrs}`)}<span class="sig-rule" aria-hidden="true">x</span></div>`;
 const paperHead = (left, right) => `<header class="contract-head"><span>${left}</span><span>${right}</span></header>`;
 // GPUs every open card still misses of one type (cards' recipes − reservations).
-const missingOf = (g, gpu) => openCards(g).reduce((n, o) => n + Math.max(0, (o.recipe[gpu] || 0) - heldFor(g, o.id, gpu)), 0);
+
 
 // ---- Live previews (the controller paints them on every keystroke or key step) -------------
 export function supplierCounterPreview(g, offer) {
@@ -145,8 +148,9 @@ function supplierView(g, ui) {
     ? vault('buy', `Need ${money(cost - cash(g))} more`, '', `disabled aria-label="Bank locked: need ${money(cost - cash(g))} more cash"`)
     : g.arcade.practice ? vault('buy', 'Review contract', money(cost), `aria-label="Review contract for ${money(cost)}"`) : vault('buy', saved > 0 ? 'BANK DEAL' : 'BUY NOW', saved > 0 ? `Save ${money(saved)}` : money(cost), `aria-label="Buy for ${money(cost)}; save ${money(saved)}"`);
   const exit = { action: 'close-focus', label: 'PASS', aria: 'Pass: return to the market; quote kept, desk cools 5 seconds' };
-  const missing = missingOf(g, l.gpu), free = freeOf(g, l.gpu);
-  const needLine = `<p class="gap-need gpu-${l.gpu.toLowerCase()}">${missing ? `You're missing <b>${missing}</b> ${esc(l.gpu)}${free ? ` · ${free} free` : ''}` : `No open card misses ${esc(l.gpu)}`}</p>`;
+  const selected = taskDeck(g, ui).card, row = selected?.status === 'open' && cardState(g, selected).rows.find(r => r.gpu === l.gpu);
+  const missing = row ? Math.max(0, row.need - row.held - row.free) : 0;
+  const needLine = `<p class="gap-need gpu-${l.gpu.toLowerCase()}">${row ? `For <b>${esc(selected.name)}</b>: ${missing ? `find <b>${missing}</b> more ${esc(l.gpu)}` : `${esc(l.gpu)} stock is covered`}. ${row.held} allocated · ${row.free} free.` : selected ? `${esc(selected.name)} does not need more ${esc(l.gpu)}.` : `No current task needs ${esc(l.gpu)}.`}</p>`;
   if (n.attempts.length) {
     return { ...base, title: 'Charm verdict', desk: 'verdict', exit,
       body: `<div class="face-off verdict-face desk-verdict" data-autofocus tabindex="-1" role="group" aria-label="${esc(verdictLabel(l))}">${theirPlate(g, l, news, { delta: false })}<div class="verdict-col">${charmVerdict(l)}</div><div class="leverage"><div class="deal-charm">${charmView(g, l)}</div></div></div>`,
@@ -314,18 +318,18 @@ function execLine(g) {
     : `<p class="bell-exec is-idle"><span>No projects this round: an early bell improves nothing.</span></p>`;
 }
 function bellView(g) {
-  const a = g.arcade, c = g.company, last = g.q >= V7.rounds, qty = a.inventory.reduce((n, x) => n + x.left, 0), lost = inventoryCost(g);
+  const a = g.arcade, c = g.company, last = g.q >= campaignLimit(g), qty = a.inventory.reduce((n, x) => n + x.left, 0), lost = inventoryCost(g);
   const lapsing = openCards(g).filter(o => heldFor(g, o.id)).map(o => `<li class="lane-${laneOf(o)}"><b>${esc(o.name)}</b><span>${heldFor(g, o.id)}/${cardState(g, o).total} reserved · lapses</span></li>`).join('');
   const pending = pendingIntegration(g).map(b => `<li class="lane-${laneOf(b)}"><b>${esc(b.name)}</b><span>comes online at the bell</span></li>`).join('');
   const owed = scenarioBellLines(g), late = g.arcade.objectives.some(o => o.kind === 'scenario' && o.status === 'open' && o.scenario?.penalty && !cardState(g, o).ready);
   const revenue = cashRevenueNow(c), prepaid = revenueNow(c) - revenue, burn = burnOf(c), payroll = !pending && cash(g) + revenue < burn;
-  return { title: last ? 'Ring the final bell?' : 'Ring the bell?', role: 'report', desk: 'paper', exit: null,
+  return { title: last && !(g.q===5 && qualification(g).qualified) ? 'Ring the final bell?' : 'Ring the bell?', role: 'report', desk: 'paper', exit: null,
     body: paper(hero(qty ? 'Unbuilt GPUs expire' : 'Nothing expires', qty ? `${plural(qty, 'GPU')} · ${money(lost)}` : '$0', qty ? 'Their cost is already paid. Reservations lapse with them.' : 'Every GPU you bought this round is built or sold.') +
       (owed ? `<ul class="bell-list scn-owed">${owed}</ul>` : '') + (late ? note('A signed commitment is not built. Ringing the bell now counts as a missed delivery.', 'negative') : '') +
       (lapsing || pending ? `<ul class="bell-list">${lapsing}${pending}</ul>` : '') +
       `<p class="bell-flow"><span>Revenue in <b>${money(revenue)}</b></span><span>Burn out <b>${money(burn)}</b></span>${prepaid ? `<small>${money(prepaid)} of revenue was already prepaid.</small>` : ''}${pending ? '<small>Integrations at the bell can change these.</small>' : ''}</p>` +
       (payroll ? note(`Cash ${money(cash(g))} + revenue ${money(revenue)} cannot cover ${money(burn)} payroll: the company shuts down at this bell.`, 'negative') : '') +
-      (last ? note(`Round ${V7.rounds}: the exit follows this bell.`) : '') + execLine(g)), footer: close('Keep trading') + button('finish', last ? 'RING THE FINAL BELL' : 'SETTLE THIS ROUND', 'class="mat-move rail-commit"') };
+      (last ? note(g.q===5 && qualification(g).qualified ? 'Your five-round result will be banked. Then choose to finish or play rounds six and seven.' : `Round ${campaignLimit(g)}: the exit follows this bell.`) : '') + execLine(g)), footer: close('Keep trading') + button('finish', last && !(g.q===5 && qualification(g).qualified) ? 'RING THE FINAL BELL' : 'SETTLE THIS ROUND', 'class="mat-move rail-commit"') };
 }
 
 // ---- The bell report: one punchy board update ------------------------------------------------
@@ -363,6 +367,25 @@ function betweenRoundGames(g) {
   if (!games.length) return '';
   return `<section class="between-round-games" data-between-round-games aria-labelledby="between-round-games-title"><h3 id="between-round-games-title">Between-round games</h3><p>Play with loaner hardware, or open the next round.</p><div>${games.map(([kind,name]) => button('workshop',name,`data-kind="${kind}" data-replay-kind="${kind}"`)).join('')}</div></section>`;
 }
+function qualificationNote(g) {
+  const q = qualification(g);
+  if (g.q > 5) return '';
+  return `<details class="extension-progress"><summary>${q.qualified ? 'Two-round extension earned' : 'Earn two more rounds'}</summary><p>Complete any one by the end of round five:</p><ul>${q.paths.map(p=>`<li>${esc(p.label)} · ${Math.min(p.current,p.target)}/${p.target}${p.complete?' · earned':''}</li>`).join('')}</ul></details>`;
+}
+function bankedNote(g) {
+  const bank=g.arcade.extension?.bankedFive;
+  return bank && g.arcade.extension.choice==='extend' ? `<p class="banked-result"><b>Banked five-round founder wealth: ${short(bank.exit.payout)}</b><br>Your extended result is separate. This record adds no cash to your company.</p>` : '';
+}
+function extensionView(g) {
+  const e=g.arcade.extension,b=e.bankedFive,q=qualification(g),c=g.company;
+  const earned=q.paths.filter(p=>p.complete).map(p=>p.label).join('; ');
+  return {title:'Five rounds complete',role:'report',desk:'paper',exit:null,
+    body:paper(hero('Banked five-round founder wealth',short(b.exit.payout),esc(c.name))+
+      `<p>${esc(earned)}. You earned one optional extension: rounds six and seven.</p>`+
+      `<p>Your company continues with ${money(cash(g))} cash and a ${esc(MODEL_NAMES[c.level])} model. Larger orders and new financing will be available; your next decisions still determine the outcome.</p>`+
+      `<p>Finish successfully now, or continue for two 45-second rounds. Your five-round record stays banked; the seven-round result is scored separately. Banking records founder wealth and does not pay it into company cash.</p>`),
+    footer:button('extension-finish','Finish with five-round result','class="mat-exit"')+button('extension-continue','Continue for two more rounds','class="mat-move rail-commit"')};
+}
 function reportView(g) {
   const a = g.arcade, r = a.history.at(-1), c = g.company, next = marketEvent(g);
   const builds = r.builds.map(id => c.builds.find(b => b.id === id)).filter(Boolean).sort((a,b) => Number(!!b.scenario || !!b.result) - Number(!!a.scenario || !!a.result));
@@ -396,7 +419,7 @@ function reportView(g) {
     ? `<details class="bu-exact"><summary>Exact figures</summary><dl>${figures.map(([label, amount]) => `<div><dt>${label}</dt><dd>${esc(amount.exact)}</dd></div>`).join('')}</dl></details>` : '';
   return { title: `Round ${r.q} · board update`, role: 'report', desk: 'news', exit: null,
     body: `<div class="desk-center"><article class="board-sheet mat-paper ${r.breakthrough ? 'is-boom' : ''}"><header class="news-mast"><span>${esc(c.name.toUpperCase())}</span><b>BOARD UPDATE · R${r.q}</b></header>` +
-      `<div class="bu-flow">${flow}</div>${exactFlow}` +
+      `<div class="bu-flow">${flow}</div>${exactFlow}` + qualificationNote(g) + bankedNote(g) +
       scenarioReportLines(r) +
       (r.capex ? `<p class="bu-expired"><span>Expansion &amp; hiring capital</span><b>${money(r.capex)}</b></p>` : '') +
       (r.research ? `<p class="bu-expired"><span>Frontier capital spent</span><b>${money(r.research)}</b></p>` : '') +
@@ -410,7 +433,7 @@ function reportView(g) {
       `<p class="bu-value"><span>Valuation</span><b>${short(r.valueBefore)}</b><i aria-hidden="true">→</i><b class="${r.value >= r.valueBefore ? 'pos' : 'neg'}">${short(r.value)}</b><span class="bu-own">You own <b>${pctOf(r.founderPct)}</b></span></p>` +
       betweenRoundGames(g) +
       `<p class="news-next"><span>Next</span><b>R${g.q} · ${esc(phaseName(g.q))}</b><em class="bu-event kind-${esc(next.kind)}">${esc(next.text)}</em></p></article></div>`,
-    footer: button('restart-review', 'New run', 'class="mat-exit rail-quiet"') + (g.world?.memo ? '<span class="rail-fact">Answer the board first</span>' : moveOn('next', `Open round ${g.q}<span class="wide"> / ${V7.rounds}</span>`)) };
+    footer: button('restart-review', 'New run', 'class="mat-exit rail-quiet"') + (g.world?.memo ? '<span class="rail-fact">Answer the board first</span>' : moveOn('next', `Open round ${g.q}<span class="wide"> / ${campaignLimit(g)}</span>`)) };
 }
 // The world on the board update: this round's news, and at most one decision for the founder.
 function worldNews(g, r) {
@@ -466,11 +489,11 @@ function finalView(g, ui = {}) {
     : `<p class="exit-math"><span>Cash <b>${short(x.cash)}</b></span><span>+ EV <b>${short(x.ev)}</b> × market <b>${x.market.toFixed(2)}</b></span><span>= equity <b>${short(x.equity)}</b></span>${mods.length ? `<small>market ${x.baseMarket.toFixed(2)} · ${esc(mods.join(' · '))}</small>` : ''}</p>`;
   const title = shut ? 'Shut down' : x.epilogue?.title || x.title;
   const epi = x.epilogue ? `<p class="exit-epilogue">${esc(x.epilogue.line)}</p>` : '';
-  return { title: shut ? 'The company shut down' : 'The exit', role: 'report', desk: 'final', exit: null,
-    body: `<div class="desk-center"><article class="final-sheet exit-sheet mat-paper ${shut ? 'is-shutdown' : 'is-up'} kind-${esc(x.kind)}">${paperHead(`<span class="wide">HSC · </span>FINAL BOARD · SEED ${g.seed}`, `${a.history.length}/${V7.rounds}<span class="wide"> rounds</span>`)}` +
+  return { title: shut ? 'The company shut down' : resultLabel(g), role: 'report', desk: 'final', exit: null,
+    body: `<div class="desk-center"><article class="final-sheet exit-sheet mat-paper ${shut ? 'is-shutdown' : 'is-up'} kind-${esc(x.kind)}">${paperHead(`<span class="wide">HSC · </span>FINAL BOARD · SEED ${g.seed}`, `${a.history.length}/${campaignLimit(g)}<span class="wide"> rounds</span>`)}` +
       `<img class="final-lockup" src="brand/logo/hsc-lockup-ink.svg" width="148" height="52" alt="Haight Street Compute"><p class="company-identity">${esc(g.company.name)}</p><strong class="exit-title">${esc(title)}</strong>${title !== x.title && !shut ? `<p class="exit-mark">${esc(x.title)}</p>` : ''}${x.mark ? '<p class="exit-mark">Retained shares are paper value at the final mark</p>' : ''}${epi}` +
-      `<p class="final-label">Founder wealth</p><strong class="final-cash money-hero" style="--chars:${short(x.payout).length}" data-fx-payoff>${shut ? money(x.payout) : short(x.payout)}</strong>` +
-      `<p class="final-vs"><span>${pctOf(x.founderPct)} of</span><b>${short(shut ? Math.max(0, x.cash) : x.equity)}</b><span>${shut ? 'remaining cash' : sold ? 'the sale price' : 'equity value'}</span></p>${button('view-scorecard', 'VIEW SCORECARD ↓', 'class="final-jump"')}` + personalBest(g, ui.best) + math + story +
+      `<p class="final-label">${esc(resultLabel(g))} · founder wealth</p><strong class="final-cash money-hero" style="--chars:${short(x.payout).length}" data-fx-payoff>${shut ? money(x.payout) : short(x.payout)}</strong>` +
+      `<p class="final-vs"><span>${pctOf(x.founderPct)} of</span><b>${short(shut ? Math.max(0, x.cash) : x.equity)}</b><span>${shut ? 'remaining cash' : sold ? 'the sale price' : 'equity value'}</span></p>${button('view-scorecard', 'VIEW SCORECARD ↓', 'class="final-jump"')}` + personalBest(g, ui.best) + bankedNote(g) + (a.history.length===5 && !g.arcade.extension?.eligible && !sold && !shut ? note('A complete five-round finish. On a future run, earn two more rounds through any one achievement below.') + qualificationNote(g) : '') + math + story +
       `<div class="exit-cols">${capTable(g)}${choices.length ? `<ol class="exit-choices" aria-label="Key choices">${choices.slice(0, 7).map(k => `<li><i>R${k.q}</i>${esc(k.text)}</li>`).join('')}${choices.length > 7 ? `<li class="more">+${choices.length - 7} more key choices</li>` : ''}${summary ? `<li class="more">${esc(summary)}</li>` : ''}</ol>` : '<p class="exit-choices is-none">No builds and no raises.</p>'}</div>` +
       `<section class="final-share-group" aria-label="Share your fortune"><p class="game-maker">Made by <a href="https://hscompute.com" target="_blank" rel="noopener noreferrer">Haight Street Compute · About the event ↗</a></p><h3>SHARE YOUR FORTUNE</h3>${preview}<div class="final-share-row">${button('share-x', 'Share on X', 'class="mat-exit final-share"')}${button('share-linkedin', 'Share on LinkedIn', 'class="mat-exit final-share"')}${button('download-scorecard', 'Download Scorecard', 'class="mat-exit final-share"')}${button('copy-challenge', 'Copy Challenge Link', 'class="mat-exit final-share"')}${typeof navigator !== 'undefined' && navigator.share ? button('native-share', 'Share…', 'class="mat-exit final-share"') : ''}</div>${shared}</section></article></div>`,
     footer: button('replay-seed', `Replay seed ${esc(String(g.seed))}`, `class="mat-exit rail-quiet" data-seed="${esc(String(g.seed))}" aria-label="Replay this exact market, seed ${esc(String(g.seed))}"`) + button('new-market', `New market <span aria-hidden="true">→</span>`, 'class="mat-move rail-commit" data-primary aria-label="Play again on a fresh market"') };
@@ -487,16 +510,18 @@ function partsTable(x, sold, mods) {
     row(`Ownership ${pctOf(x.founderPct)}`, short(x.payout), 'is-pay') + (x.realized !== undefined ? row('Realized proceeds', short(x.realized)) + row(`Retained equity ${pctOf(x.remainingOwnership)}`, short(x.retained)) : '') + '</tbody></table>';
 }
 // Local best only (this browser, this version): never a leaderboard.
+const aRoundLabel = g => `${g.arcade.history.length}-round`;
 function personalBest(g, best) {
   if (!best) return '';
   const f = g.arcade.finalScore, mine = best.payout === f.payout && best.seed === g.seed;
-  return mine ? `<p class="final-pb is-new"><b>NEW PERSONAL BEST</b>${best.prev != null ? `<span>beat ${short(best.prev)}</span>` : '<span>first exit on this device</span>'}</p>`
-    : `<p class="final-pb"><span>Your best</span><b>${short(best.payout)}</b>${Number.isSafeInteger(best.seed) ? `<span>seed ${esc(String(best.seed))}</span>` : ''}</p>`;
+  return mine ? `<p class="final-pb is-new"><b>${aRoundLabel(g)} PERSONAL BEST</b>${best.prev != null ? `<span>beat ${short(best.prev)}</span>` : '<span>first exit on this device</span>'}</p>`
+    : `<p class="final-pb"><span>Your ${aRoundLabel(g)} best</span><b>${short(best.payout)}</b>${Number.isSafeInteger(best.seed) ? `<span>seed ${esc(String(best.seed))}</span>` : ''}</p>`;
 }
 
 export function dealView(g, ui = {}) {
   const a = g.arcade, c = a.confirm;
   if (c?.restart) return { title: 'Start a fresh company?', role: 'report', desk: 'paper', exit: null, body: paper(note('This replaces your current V20 run: its company, cash and cap table reset.') + stampLine('restart', 'START FRESH')), footer: close('Keep this run') };
+  if (g.phase === 'extension') return extensionView(g);
   if (g.phase === 'over') return finalView(g, ui);
   if (g.phase === 'integration') return integrationView(g, ui);
   if (g.phase !== 'floor') return reportView(g);

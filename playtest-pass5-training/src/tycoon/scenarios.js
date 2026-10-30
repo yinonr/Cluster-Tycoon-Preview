@@ -1,3 +1,4 @@
+import { campaignLimit, EXTENDED_ROUNDS } from './extension.js';
 // V10.14 The World Gets Bigger: late-game scenarios. Design: docs/V10_13_SCENARIOS.md; content and
 // numbers: scenario-content.js. A small engine of four primitives over the existing economy:
 //   proposals  a Deal Room document with two or three options, offered at a round's open;
@@ -128,7 +129,7 @@ function spawnStage(g, ch) {
   if (gone.size) { a.reservations = a.reservations.filter(r => !gone.has(r.card)); a.objectives = a.objectives.filter(o => !gone.has(o.id)); }
   const c = g.company; c.cardSeq++;
   const recipe = { ...st.recipe }, until = ch.window ? Math.min(a.seconds, now + ch.window) : a.seconds;
-  const cure = ch.cure && !ch.cureUsed && g.q < ECONOMY.rounds ? ch.cure : 0;
+  const cure = ch.cure && !ch.cureUsed && g.q < campaignLimit(g) ? ch.cure : 0;
   const card = { id: `q${g.q}-scn-${ch.key}-${ch.stage}-${c.cardSeq}`, lane: 'opportunity', kind: 'scenario', tier: 0,
     name: total > 1 ? `${ch.org} · ${st.name}` : st.name, blurb: st.blurb || ch.blurb, recipe, mixed: isMixed(recipe), reward: structuredClone(st.reward), q: g.q,
     at: now, until, status: 'open', ...(st.cashCost ? { cashCost: st.cashCost } : {}), ...(ch.customer ? { customer: ch.customer } : {}),
@@ -139,9 +140,9 @@ function spawnStage(g, ch) {
 // A paid extension: this stage (and every later one) moves a round. Once a contract, never past R5.
 export function cureStage(g, cardId) {
   const a = g.arcade, card = a.objectives.find(o => o.id === cardId), ch = S(g).chains.find(x => x.id === card?.scenario?.chain);
-  if (g.phase !== 'floor' || a.active || a.signing || a.confirm || !card || card.status !== 'open' || !ch || ch.card !== card.id || ch.cureUsed || !ch.cure || g.q >= ECONOMY.rounds) return false;
+  if (g.phase !== 'floor' || a.active || a.signing || a.confirm || !card || card.status !== 'open' || !ch || ch.card !== card.id || ch.cureUsed || !ch.cure || g.q >= campaignLimit(g)) return false;
   const lastDue = g.q + (ch.stages.length - ch.stage);
-  if (lastDue > ECONOMY.rounds || ch.cure > cashOf(g)) return false;
+  if (lastDue > campaignLimit(g) || ch.cure > cashOf(g)) return false;
   g.cash = (cashOf(g) - ch.cure) / 100; a.ledger.penalties += ch.cure; S(g).cash.penalties += ch.cure;
   ch.cureUsed = true; ch.cureQ = g.q; ch.due = g.q + 1; ch.card = null;
   a.reservations = a.reservations.filter(r => r.card !== card.id);
@@ -174,8 +175,8 @@ const ORDER = ['buyout-return', 'crisis', 'buyout-forced', 'anchor', 'firesale',
 
 export function scenarioPlan(g) {
   const s = S(g); s.quietQ = 0; s.pending = null;
-  if (!s.enabled || !SCENARIOS_ENABLED || g.q<5) return;
-  // One predictable late shock each round; the final call responds to customer concentration.
+  if (!s.enabled || !SCENARIOS_ENABLED || g.q!==5) return;
+  // Preserve the one core R5 shock; extension rounds follow existing commitments without repeating it.
   const key=HANDLERS.crisis.eligible(g) ? 'crisis' : 'checkpoint';
   s.pending={key}; s.quietQ=g.q;
 
@@ -230,7 +231,7 @@ function deliver(g, ch, b, out) {
   ch.history.push({ stage: ch.stage, build: b.id, q: roundOf(g) });
   ch.stage++; ch.card = null; out.delivered.push(ch.id);
   if (ch.stage >= ch.stages.length) { ch.state = 'completed'; ch.ended = roundOf(g); HANDLERS[ch.key]?.done?.(g, ch, b); }
-  else { ch.state = 'active'; ch.due = roundOf(g) + 1; if (ch.due > ECONOMY.rounds) { ch.state = 'ended'; ch.reason = 'the campaign ended before the next stage'; } else HANDLERS[ch.key]?.stage?.(g, ch, b); }
+  else { ch.state = 'active'; ch.due = roundOf(g) + 1; if (ch.due > campaignLimit(g)) { ch.state = 'ended'; ch.reason = 'the campaign ended before the next stage'; } else HANDLERS[ch.key]?.stage?.(g, ch, b); }
 }
 function miss(g, ch, out) {
   ch.state = ch.penalty || ch.terminates ? 'defaulted' : 'lapsed'; ch.ended = roundOf(g); ch.card = null; out.missed.push(ch.id);
@@ -338,7 +339,7 @@ HANDLERS.anchor = {
 function anchorElsewhere(g, q) {
   news(g, 'anchor-elsewhere', 'Cirrostrata signs another provider for its three regions.', { size: 'minor' });
   const call = q + ANCHOR.secondCall.after;
-  if (call > ECONOMY.rounds) return;
+  if (call > campaignLimit(g)) return;
   if (stream(g.seed, 'v113-scn', 'second-call', q).next() < ANCHOR.secondCall.chance) S(g).due.push({ key: 'second-call', q: call });
 }
 HANDLERS['second-call'] = {
@@ -389,7 +390,7 @@ HANDLERS.firesale = {
     }
     if (id === 'team') {
       if (!capex(g, t.team.capex)) return false;
-      burnFor(g, t.team.burn, ECONOMY.rounds + 1 - g.q, 'estate-team');
+      burnFor(g, t.team.burn, campaignLimit(g) + 1 - g.q, 'estate-team');
       arm(g, { breakthrough: t.team.breakthrough, legendary: t.team.legendary, source: 'the neocloud team' });
       f.team = true; flag(g, 'firesale.team');
       news(g, 'firesale-team', 'The failed neocloud’s engineers join your lab. They bring their own cable ties.', { size: 'minor', tone: 'good' });
@@ -405,7 +406,7 @@ HANDLERS.hall = {
     const f = S(g).firesale; f.hall = true; flag(g, 'firesale.hall');
     news(g, 'hall-bought', 'The hall is yours. Its tenant, Hearth AI, expects its H200s next round.', { tone: 'good' });
     const q = roundOf(g) + 1, T = f.tenant || FIRESALE.tenant;
-    if (q <= ECONOMY.rounds) startChain(g, { key: 'tenant', name: 'Hearth AI tenancy', org: 'Hearth AI', label: 'Inherited contract', due: q,
+    if (q <= campaignLimit(g)) startChain(g, { key: 'tenant', name: 'Hearth AI tenancy', org: 'Hearth AI', label: 'Inherited contract', due: q,
       stages: [{ name: 'Hearth AI tenancy (inherited)', recipe: { ...T.recipe }, reward: { cash: prizeOf(g, T.recipe, 1) } }], penalty: T.penalty, blurb: 'You bought the liabilities too. Paid at cost; miss it and pay damages.' });
   },
 };
@@ -615,7 +616,7 @@ HANDLERS.talent = {
     news(g, 'talent', mara ? 'A rival lab makes Mara Vale an offer that is mostly zeros.' : 'Dr. Ines Okafor’s team leaves Tessellate Labs.', { size: 'minor' });
   },
   options(g, o) {
-    const t = o.terms, left = ECONOMY.rounds + 1 - g.q;
+    const t = o.terms, left = campaignLimit(g) + 1 - g.q;
     if (t.mara) return [
       { id: 'match', label: `Match it · ${shortM(t.burn)}/round`, note: `Salary through R5 (${plural(left, 'bell')}). Her bonus re-arms: +${Math.round(t.breakthrough * 100)}pp breakthrough on your next run, +${Math.round(t.legendary * 100)}pp legendary on a Moonshot.`, primary: true },
       { id: 'equity', label: `Give her ${t.equityBps / 100}% equity`, note: `No cash. Next run: +${Math.round(t.breakthrough * 100)}pp breakthrough, +${Math.round(t.setback * 100)}pp setback. Moonshot: +${Math.round(t.legendary * 100)}pp legendary.` },
@@ -631,7 +632,7 @@ HANDLERS.talent = {
     const t = o.terms, s = S(g); s.talent.choice = id;
     if (t.mara) {
       if (id === 'release') { flag(g, 'talent.mara-left'); news(g, 'mara-left', 'Mara Vale takes the offer. She takes her coffee mug.', { size: 'minor' }); return true; }
-      if (id === 'match') burnFor(g, t.burn, ECONOMY.rounds + 1 - g.q, 'mara');
+      if (id === 'match') burnFor(g, t.burn, campaignLimit(g) + 1 - g.q, 'mara');
       if (id === 'equity') grant(g, 'Mara Vale', t.equityBps);
       arm(g, { breakthrough: t.breakthrough, setback: t.setback, legendary: t.legendary, source: 'Mara Vale' });
       flag(g, 'talent.mara-stays'); return true;
@@ -716,7 +717,7 @@ HANDLERS.checkpoint = {
   },
 };
 HANDLERS['checkpoint-rescue'] = { eligible: () => false, chance: () => 0, options: () => [], choose: () => false,
-  done(g) { const q = roundOf(g) + CHECKPOINT.rescue.alumni.after; if (q <= ECONOMY.rounds) S(g).due.push({ key: 'alumni', q }); } };
+  done(g) { const q = roundOf(g) + CHECKPOINT.rescue.alumni.after; if (q <= campaignLimit(g)) S(g).due.push({ key: 'alumni', q }); } };
 HANDLERS.alumni = { eligible: () => false, chance: () => 0, options: () => [], choose: () => false,
   due(g) {
     if (!scenarioSlotFree(g)) return;
@@ -747,7 +748,7 @@ export function validScenarioSave(g) {
   const capexBuilds = g.company.builds.filter(b => b.moonshot === undefined && b.cashCost).reduce((n, b) => n + b.cashCost, 0);
   if (L.capex !== s.cash.capex + capexBuilds) return false;
   if (!int(s.smalls) || s.smalls < 0 || s.smalls > PACE.smalls) return false;
-  if (!s.offers.every(o => typeof o.id === 'string' && (HANDLERS[o.key] || ['lantern','lantern-endpoint'].includes(o.key)) && OFFER_STATES.includes(o.state) && int(o.q) && o.q >= 1 && o.q <= ECONOMY.rounds)) return false;
+  if (!s.offers.every(o => typeof o.id === 'string' && (HANDLERS[o.key] || ['lantern','lantern-endpoint'].includes(o.key)) && OFFER_STATES.includes(o.state) && int(o.q) && o.q >= 1 && o.q <= campaignLimit(g))) return false;
   if (new Set(s.offers.map(o => o.id)).size !== s.offers.length) return false;
   // Offers stay open through the bell's integration phase; the settlement expires them.
   if (!['floor', 'integration'].includes(g.phase) && s.offers.some(o => o.state === 'open')) return false;

@@ -12,6 +12,7 @@ import { finishIntegration } from '../tycoon/arcade.js';
 import { paintTetris, noteLock, resetFx, say } from '../ui/tetris.js';
 
 const KEYS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'rotate', x: 'rotate', X: 'rotate', ArrowDown: 'soft', ' ': 'drop', Spacebar: 'drop' };
+let trainingKeyHeld = false;
 const GUARD = 900;   // ms after the end in which Space/Enter/taps cannot hit Continue
 let ctx = null, pending = 0, lastNow = 0, endedAt = 0, startedAt = 0, hold = null, swipe = null, endSeen = '', pressed = null;
 
@@ -48,7 +49,7 @@ export function handleTetrisAction(action) {
     return ok;
   }
   if (action === 'tetris-skip') { const ok = act(skipPuzzle); if (ok) ended(); return ok; }
-  if (action === 'tetris-continue') { if (now() - endedAt < GUARD) return false; resetFx(); hold = swipe = null; return act(finishIntegration); }
+  if (action === 'tetris-continue') { if (!puzzle()?.training && now() - endedAt < GUARD) return false; resetFx(); hold = swipe = null; return act(finishIntegration); }
   return false;
 }
 // Kept for callers of the stub: one engine tick.
@@ -57,6 +58,9 @@ export const tetrisTick = (g, dt) => puzzleTick(g, dt);
 // ---- Commits ------------------------------------------------------------------------------------------
 // Elapsed time is flushed with the input, in the same saved step, so gravity never runs ahead.
 function commit(fn) {
+  // A retry can start the same saved practice board without a separate START action.
+  if (puzzle()?.started && !puzzle()?.done) endSeen = '';
+
   const dt = pending; pending = 0;
   const ok = ctx.store.act(g => { let changed = dt > 0 ? puzzleTick(g, dt) : false; changed = fn(g) || changed; return changed; });
   after();
@@ -91,7 +95,8 @@ function ended() {
   endSeen = `${g?.seed}:${t?.id}`; endedAt = now(); hold = swipe = null;
   ctx.render();
   const c = ctx.root.querySelector('[data-tt-continue]');
-  if (c) { c.disabled = true; setTimeout(() => { const b = ctx.root.querySelector('[data-tt-continue]'); if (b) { b.disabled = false; b.focus({ preventScroll: true }); } }, GUARD); }
+  if (c && t.training) { c.disabled = false; ctx.root.querySelector('.pit-focus')?.focus({preventScroll:true}); }
+  else if (c) { c.disabled = true; setTimeout(() => { const b = ctx.root.querySelector('[data-tt-continue]'); if (b) { b.disabled = false; b.focus({ preventScroll: true }); } }, GUARD); }
   if (!out) return;
   if (out.perfect) { play('bell', { strikes: 3, gap: .18, f: 990 }); setTimeout(() => play('clatter', 18, .7), 250); }
   else if (out.skipped) play('stamp');
@@ -117,7 +122,8 @@ function onKey(e) {
   if (g?.phase !== 'integration' || !g.arcade.tetris || g.arcade.confirm || e.target.closest?.('input,textarea,select')) return;
   const t = g.arcade.tetris, k = e.key, input = KEYS[k];
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  if (t.done) { if ((k === ' ' || k === 'Enter') && (e.repeat || now() - endedAt < GUARD)) { e.preventDefault(); e.stopPropagation(); } return; }
+  if (t.training && !t.done && (k === ' ' || k === 'Enter')) trainingKeyHeld = true;
+  if (t.done) { if ((k === ' ' || k === 'Enter') && (e.repeat || (!t.training && now() - endedAt < GUARD))) { e.preventDefault(); e.stopPropagation(); } return; }
   if (!t.started) { if (input && k !== ' ') e.preventDefault(); if (e.repeat && (k === ' ' || k === 'Enter')) e.preventDefault(); return; }
   if (input) {
     e.preventDefault(); e.stopPropagation();
@@ -129,11 +135,12 @@ function onKey(e) {
   if (k === 'Enter' && !e.target.closest?.('[data-tt-pad]')) { e.preventDefault(); e.stopPropagation(); }
 }
 function onKeyUp(e) {
+  if (trainingKeyHeld && (e.key === ' ' || e.key === 'Enter')) { trainingKeyHeld=false; e.preventDefault(); e.stopPropagation(); return; }
   if (ctx.ui.guidanceOpen) return;
   const g = ctx.store.state;
   if (g?.phase !== 'integration' || !g.arcade.tetris || g.arcade.confirm) return;
   const t = g.arcade.tetris;
-  if (e.key === ' ' && ((t.started && !t.done) || (t.done && now() - endedAt < GUARD))) { e.preventDefault(); e.stopPropagation(); }
+  if (e.key === ' ' && ((t.started && !t.done) || (t.done && !t.training && now() - endedAt < GUARD))) { e.preventDefault(); e.stopPropagation(); }
 }
 
 // ---- Pointer: the pad and the rack ------------------------------------------------------------------

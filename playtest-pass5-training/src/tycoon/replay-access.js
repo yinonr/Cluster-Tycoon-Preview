@@ -1,3 +1,4 @@
+import { campaignLimit } from './extension.js';
 // Learned play access is independent of the company's operational deployment.
 // It never changes tier selection, production, equity or either reward record.
 export const campaignReplayAccess = () => ({version:2,node:false,cable:false,kernel:false});
@@ -18,7 +19,7 @@ export const completedRound = g => g?.arcade?.history?.at(-1)?.q || null;
 export const minigameRound = g => g?.arcade?.workshop?.q || g.q;
 export function minigameEligibility(g,kind) {
   const unlocked=replayAvailable(g,kind),betweenRounds=g?.phase==='report',round=betweenRounds?completedRound(g):null;
-  const a=g?.arcade,available=!!(unlocked && betweenRounds && Number.isSafeInteger(round) && round===g.q-1 && round>=1 && round<5 &&
+  const a=g?.arcade,available=!!(unlocked && betweenRounds && Number.isSafeInteger(round) && round===g.q-1 && round>=1 && round<campaignLimit(g) &&
     !a.active && !a.confirm && !a.signing && !a.workshop);
   return {unlocked,betweenRounds,available,round,reason:!unlocked?'locked':!betweenRounds?'between-rounds-only':available?'ready':'busy'};
 }
@@ -28,7 +29,7 @@ export function gameLaunchAllowed(g,kind,training=false) {
   if (training) return a.practice===true && a.integration?.training===true && a.integration.kind===kind;
   if (!replayAvailable(g,kind)) return false;
   if (a.workshop) return a.workshop.kind===kind && a.workshop.returnPhase==='report' && a.workshop.q===completedRound(g) && g.q===a.workshop.q+1 &&
-    a.workshop.q<5 && a.integration?.kind===kind && a.integration.workshop===true;
+    a.workshop.q<campaignLimit(g) && a.integration?.kind===kind && a.integration.workshop===true;
   return a.bellIntegration?.q===g.q && a.bellIntegration.kind===kind &&
     !!g.company?.builds?.some(b=>b.status==='integrating');
 }

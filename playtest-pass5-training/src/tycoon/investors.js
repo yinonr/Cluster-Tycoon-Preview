@@ -1,3 +1,4 @@
+import { campaignLimit } from './extension.js';
 // V10.6 investors: primary capital for newly issued shares. A term sheet offers a fixed
 // amount for a percentage of the company after the round (post-money). Countering asks for a
 // smaller percentage for the same money. Signing issues shares, so the founder's percentage
@@ -86,6 +87,15 @@ function makeTerm(g, p, r, { at, mods = {}, returning = false, rivalOf = null, i
 // One term sheet a round at most, plus (rarely) a rival trying to steal it. Who comes depends on
 // the company's state and the founder's history with them; nobody is a guaranteed rescue.
 export function planInvestor(g) {
+  if(g.q>=6 && campaignLimit(g)===7) {
+    const value=equityValue(g), amount=g.q===6?125000000:175000000;
+    const pre=Math.max(100000000,Math.round(value*.8));
+    const pct=Math.min(3000,Math.max(500,Math.ceil(10000*amount/(pre+amount)/50)*50));
+    return [{id:`q${g.q}-vc`,kind:'growth',investor:`extension-${g.q}`,name:g.q===6?'Pacific Scaling Partners':'Frontier Deployment Fund',label:'Scaling investment',
+      pitch:'Finance a major deployment. Cash goes to the company; newly issued shares reduce your ownership.',
+      amount,pct,openingPct:pct,floorPct:pct,patience:0,at:0,until:g.arcade.seconds,status:'open',valuation:value,
+      tape:[{speaker:'Scaling investor',text:`${money(amount)} for ${pct/100}% of the company.`}]}];
+  }
   const spec=ECONOMY.funding[g.q];
   if (!spec) return [];
   const {amount,pct,name}=spec, value=equityValue(g), kind=g.q===2?'angel':'seed', I=INVESTORS[kind];

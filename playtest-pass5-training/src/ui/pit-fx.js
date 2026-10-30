@@ -133,7 +133,7 @@ export function play(root, list, sound) {
       pulse(root.querySelector('[data-fx-payoff]'), 'fx-payoff-build');
       if (sound) { sound.stamp(); setTimeout(() => sound.bell({ strikes: 2, f: 880, ring: 1.4 }), 200); }
     } else if (fx.type === 'cash') {
-      for (const el of root.querySelectorAll('[data-fx-cash]')) { tween(el, fx.from, fx.to, 700); pulse(el, fx.to > fx.from ? 'fx-cash-in' : 'fx-cash-out'); }
+      for (const el of root.querySelectorAll('[data-fx-cash]')) { pulse(el, fx.to > fx.from ? 'fx-cash-in' : 'fx-cash-out'); }
     } else if (fx.type === 'valuation') {
       for (const el of root.querySelectorAll('[data-fx-valuation]')) { tween(el, fx.from, fx.to, 800); pulse(el, fx.to > fx.from ? 'fx-cash-in' : 'fx-cash-out'); }
     } else if (fx.type === 'arrival' || fx.type === 'moved') {

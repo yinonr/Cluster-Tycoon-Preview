@@ -15,6 +15,7 @@ import { paintCable, tileSVG } from '../ui/cable.js';
 import { paintKernel } from '../ui/kernel.js';
 import { say } from '../ui/integration.js';
 
+let trainingKeyHeld = false;
 const GUARD = 900;     // ms after the end in which Space/Enter/taps cannot hit Continue
 const STEER = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
 let ctx = null, pending = 0, lastNow = 0, endedAt = 0, startedAt = 0, endSeen = '', swipe = null, seen = { last: null, online: 0, drops: 0, ran: 0 };
@@ -79,13 +80,16 @@ export function handleArcadeAction(action) {
     return ok;
   }
   if (action === 'int-skip') { const ok = ctx.act(skipIntegration); if (ok) ended(); return ok; }
-  if (action === 'int-continue') { if (now() - endedAt < GUARD) return false; swipe = null; return ctx.act(finishIntegration); }
+  if (action === 'int-continue') { if (!game()?.training && now() - endedAt < GUARD) return false; swipe = null; return ctx.act(finishIntegration); }
   return false;
 }
 const resetSeen = () => { const t = game(); seen = { last: t?.last?.n ?? t?.last?.i ?? null, online: 0, drops: 0, ran: t?.ran || 0 }; };
 
 // ---- Commits ---------------------------------------------------------------------------------------------------
 function commit(fn) {
+  // A retry can start the same saved practice board without a separate START action.
+  if (game()?.started && !game()?.done) endSeen = '';
+
   const dt = pending; pending = 0;
   const ok = ctx.store.act(g => { let changed = dt > 0 ? integrationTick(g, dt) : false; changed = fn(g) || changed; return changed; });
   after();
@@ -121,11 +125,12 @@ function ended() {
   endSeen = `${g?.seed}:${t?.id}`; endedAt = now(); swipe = null;
   ctx.render();
   const c = ctx.root.querySelector('[data-arc-continue]');
-  if (c) { c.disabled = true; setTimeout(() => { const b = ctx.root.querySelector('[data-arc-continue]'); if (b) { b.disabled = false; b.focus({ preventScroll: true }); } }, GUARD); }
+  if (c && t.training) { c.disabled = false; ctx.root.querySelector('.pit-focus')?.focus({preventScroll:true}); }
+  else if (c) { c.disabled = true; setTimeout(() => { const b = ctx.root.querySelector('[data-arc-continue]'); if (b) { b.disabled = false; b.focus({ preventScroll: true }); } }, GUARD); }
   if (!out) return;
   if (out.perfect) { play('bell', { strikes: 3, gap: .18, f: 990 }); setTimeout(() => play('clatter', 18, .7), 250); }
   else { play('stamp'); if (out.reason === 'stall' || out.reason === 'dark') play('alert'); }
-  say(ctx.root, t.training ? (kind() === 'kernel' ? (out.perfect ? 'Two jobs run. Your practice fleet is productive.' : 'Try the fleet again for free. Steer the workload onto both jobs.') : (out.perfect ? 'Both GPU nodes are connected. Bring your practice rack online.' : 'The network needs another try. Retry freely and check the cable ends.')) : g.arcade.workshop?.kind === 'kernel' ? 'Free play complete. Return to your company; this game has no cash prize.' : g.arcade.workshop ? 'Practice complete. Continue collects only improvement to your best prize this round.' : out.perfect ? 'Perfect. 100% online now, the build is tuned.' : out.skipped ? `Crew baseline: ${Math.round(out.efficiency * 100)}% online now.` : `${Math.round(out.efficiency * 100)}% online now, the rest next bell.`);
+  say(ctx.root, t.training ? (kind() === 'kernel' ? (out.perfect ? `${t.ran} jobs run. Your practice fleet is productive.` : `Try the fleet again for free. Steer the workload onto all ${t.target} jobs.`) : (out.perfect ? 'Both GPU nodes are connected. Bring your practice rack online.' : 'The network needs another try. Retry freely and check the cable ends.')) : g.arcade.workshop?.kind === 'kernel' ? 'Free play complete. Return to your company; this game has no cash prize.' : g.arcade.workshop ? 'Practice complete. Continue collects only improvement to your best prize this round.' : out.perfect ? 'Perfect. 100% online now, the build is tuned.' : out.skipped ? `Crew baseline: ${Math.round(out.efficiency * 100)}% online now.` : `${Math.round(out.efficiency * 100)}% online now, the rest next bell.`);
 }
 
 // ---- The ticker: the signal or the stream advance on the engine's clock -------------------------------------------
@@ -148,7 +153,8 @@ function onKey(e) {
   const t = game();
   if (!t || e.target.closest?.('input,textarea,select') || e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key;
-  if (t.done) { if ((k === ' ' || k === 'Enter') && (e.repeat || now() - endedAt < GUARD)) { e.preventDefault(); e.stopPropagation(); } return; }
+  if (t.training && !t.done && (k === ' ' || k === 'Enter')) trainingKeyHeld = true;
+  if (t.done) { if ((k === ' ' || k === 'Enter') && (e.repeat || (!t.training && now() - endedAt < GUARD))) { e.preventDefault(); e.stopPropagation(); } return; }
   if (!t.started) { if (STEER[k] && !k.match(/^[wasdWASD]$/)) e.preventDefault(); return; }
   if (startedAt && now() - startedAt < 250 && (k === ' ' || k === 'Enter')) { e.preventDefault(); e.stopPropagation(); return; } // the key that pressed START
   // A named control keeps its native meaning while the board's shortcuts remain available.
@@ -172,8 +178,9 @@ function onKey(e) {
   if (k === 'Enter' && !e.target.closest?.('[data-arc-key]')) { e.preventDefault(); e.stopPropagation(); }
 }
 function onKeyUp(e) {
+  if (trainingKeyHeld && (e.key === ' ' || e.key === 'Enter')) { trainingKeyHeld=false; e.preventDefault(); e.stopPropagation(); return; }
   const t = game();
-  if (t && e.key === ' ' && ((t.started && !t.done) || (t.done && now() - endedAt < GUARD))) { e.preventDefault(); e.stopPropagation(); }
+  if (t && e.key === ' ' && ((t.started && !t.done) || (t.done && !t.training && now() - endedAt < GUARD))) { e.preventDefault(); e.stopPropagation(); }
 }
 
 // ---- Pointer: tiles, pad keys, swipes ---------------------------------------------------------------------------

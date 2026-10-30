@@ -1,3 +1,4 @@
+import { campaignLimit, validExtension } from './extension.js';
 import { HIRES, BUSINESSES, validCommerce } from './commerce.js';
 import { createArcade, V7 } from './arcade.js';
 import { FOUNDER, EXECUTION, OUTCOME, OUTCOME_NAMES, normalizeOrdinaryProgress } from './founder.js';
@@ -17,8 +18,9 @@ const GPU = ['H100', 'H200', 'B200'];
 // V10.15 save validation: a damaged or foreign save is preserved and never half-loaded.
 export function validSave(g,{legacyMinigames=false}={}) {
   const a = g?.arcade, c = g?.company, L = a?.ledger;
+  if(!validExtension(g))return false;
   if (typeof c?.name !== 'string' || (c.name && nameError(c.name))) return false;
-  if (!(a?.version === V7.version && int(a.rev) && a.rev >= 0 && ['floor', 'integration', 'report', 'over'].includes(g.phase) && int(g.q) && g.q > 0 && g.q <= V7.rounds)) return false;
+  if (!(a?.version === V7.version && int(a.rev) && a.rev >= 0 && ['floor', 'integration', 'report', 'extension', 'over'].includes(g.phase) && int(g.q) && g.q > 0 && g.q <= campaignLimit(g))) return false;
   if (![g.cash, g.profit, g.clout, a.time].every(Number.isFinite) || g.cash < 0 || !g.firms || typeof g.firms !== 'object') return false;
   if (!['lots', 'inventory', 'purchases', 'buyers', 'sales', 'receipts', 'history', 'objectives', 'reservations', 'built', 'terms'].every(k => Array.isArray(a[k]))) return false;
   if (!L || !['workshops', 'raised', 'revenue', 'contracts', 'resale', 'purchases', 'burn', 'research', 'capex', 'penalties', 'expired'].every(k => int(L[k]) && L[k] >= 0)) return false;
@@ -59,7 +61,7 @@ export function validSave(g,{legacyMinigames=false}={}) {
   if (c.mods.tech !== null && !(typeof c.mods.tech === 'object' && Number.isFinite(c.mods.tech.mult) && c.mods.tech.mult > 0 && c.mods.tech.mult <= 1 && int(c.mods.tech.until))) return false;
   // V10.15: scale, integration bonuses (capped), grades, the AGI outcome, sourcing orders this round.
   if (![1, 2, 3].includes(c.scale) || !c.ops || !['serving', 'research', 'readiness'].every(k => Number.isFinite(c.ops[k]) && c.ops[k] >= 0 && c.ops[k] <= FOUNDER.ops.cap[k] + 1e-9)) return false;
-  if (!Array.isArray(c.grades) || c.grades.length > V7.rounds || !c.grades.every(x => int(x.q) && ['S', 'A', 'B', 'C', 'CREW'].includes(x.grade) && x.gains && typeof x.gains === 'object')) return false;
+  if (!Array.isArray(c.grades) || c.grades.length > campaignLimit(g) || !c.grades.every(x => int(x.q) && ['S', 'A', 'B', 'C', 'CREW'].includes(x.grade) && x.gains && typeof x.gains === 'object')) return false;
   if (c.agi !== null && !(typeof c.agi === 'object' && ['agi', 'partial', 'failure'].includes(c.agi.outcome) && int(c.agi.tech) && c.agi.tech >= 0 && c.builds.some(b => b.id === c.agi.build && b.kind === 'agi'))) return false;
   if (c.builds.filter(b => b.kind === 'agi').length > 1 || a.sourced !== undefined && !(int(a.sourced) && a.sourced >= 0 && a.sourced <= 2)) return false;
   // V10.17.3: research IP (benchmarks, exceeded and breakthrough runs) is a non-negative cent amount.
@@ -71,7 +73,7 @@ export function validSave(g,{legacyMinigames=false}={}) {
   if (!c.builds.every(b => (b.outcome === undefined || b.outcome && OUTCOME_NAMES[b.outcome.tier] && Number.isFinite(b.outcome.mult) && b.outcome.mult >= OUTCOME.under.mult - 1e-9 && b.outcome.mult <= top && inQ(b.outcome.q)) &&
     (b.exec === undefined || Number.isFinite(b.exec) && b.exec >= 0 && b.exec <= EXECUTION.cap + 1e-9) && (b.quality === undefined || inQ(b.quality)))) return false;
   // V10.17.3: a repeat allocation a block house holds for you: one GPU type, its size, the negotiated rate, the round earned.
-  if (!Object.values(g.firms || {}).every(f => f?.lock === undefined || f.lock && GPU.includes(f.lock.gpu) && int(f.lock.qty) && f.lock.qty > 0 && int(f.lock.rate) && f.lock.rate > 0 && int(f.lock.q) && f.lock.q >= 1 && f.lock.q <= V7.rounds)) return false;
+  if (!Object.values(g.firms || {}).every(f => f?.lock === undefined || f.lock && GPU.includes(f.lock.gpu) && int(f.lock.qty) && f.lock.qty > 0 && int(f.lock.rate) && f.lock.rate > 0 && int(f.lock.q) && f.lock.q >= 1 && f.lock.q <= campaignLimit(g))) return false;
   // V10.17.3 commercial terms, grants and specialties must survive round trips intact.
   if (!Array.isArray(c.team) || c.team.length > 3 || new Set(c.team.map(h=>h.id)).size !== c.team.length || !c.team.every(h=>HIRES.some(x=>x.id===h.id) && Number.isFinite(h.effect) && h.effect>=.5 && h.effect<=1.3 && c.builds.some(b=>b.id===h.build && b.reward.hire===h.id && b.commerceApplied))) return false;
   if (!Array.isArray(c.specialties) || new Set(c.specialties).size !== c.specialties.length || !c.specialties.every(x=>['efficiency','margin','research','quality','ip'].includes(x) && c.builds.some(b=>b.reward.specialty===x && b.commerceApplied))) return false;

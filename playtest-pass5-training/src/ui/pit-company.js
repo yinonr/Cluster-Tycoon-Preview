@@ -1,3 +1,4 @@
+import { campaignLimit } from '../tycoon/extension.js';
 // YOUR COMPANY: the founder's board. An inventory tray (free / reserved / rack-made GPUs in one
 // colour system), the objective cards as GPU recipes with real slots, and the company's assets.
 // Every figure is engine state (cardState, freeOf, companyStats, the build records). Slot taps
@@ -220,12 +221,14 @@ export function taskTile(g, card, live = true) {
   const st=cardState(g,card), built=card.status==='built', expired=card.status==='expired'||!st.live&&!built;
   const build=built?g.company.builds.find(b=>b.card===card.id):null, change=build?buildChange(g,build):null;
   const needsReview=!!(card.agiStakes||card.kind==='agi'||card.kind==='hire'||card.reward?.hire||card.moonshot!==undefined||card.scenario||card.strategic||researchRunway(g,card));
+  const shortage=st.rows.find(r=>r.need>r.held+r.free);
   const action=built?button('build','✓ Built','class="fc-build" disabled')
     :expired?button('build','Window closed','class="fc-build" disabled')
     :st.ready&&needsReview?button('open-card','Review build →',`class="fc-build is-lit" data-card="${esc(card.id)}" ${live?'':'disabled'}`)
     :st.ready?button('build','BUILD',`class="fc-build is-lit" data-card="${esc(card.id)}" aria-label="Build ${esc(card.name)}" ${live?'':'disabled'}`)
     :canFill(st)?button('fill','Allocate from stock',`class="fc-fill" data-card="${esc(card.id)}" ${live?'':'disabled'}`)
-    :button('build','BUILD',`class="fc-build" disabled aria-label="${st.cashNeeded?'Missing capital or GPUs':'Allocate the required GPUs before building'}"`);
+    :shortage?button('task-source',`Find ${shortage.gpu} →`,`class="fc-build task-find is-lit" data-gpu="${shortage.gpu}" data-card="${esc(card.id)}" data-need="${shortage.need-shortage.held-shortage.free}" ${live?'':'disabled'}`)
+    :button('build','Capital needed',`class="fc-build" disabled aria-label="${st.cashNeeded?'Missing capital':'Allocate the required GPUs before building'}"`);
   return `<article class="fc task-card current-task lane-${laneOf(card)} ${built?'is-built':''} ${expired?'is-expired':''}" data-card-id="${esc(card.id)}"><div class="current-task-content"><h3 class="fc-name">${esc(card.name)}</h3><p class="fc-reward">${esc(rewardLine(g,card))}</p>${card.cashCost?`<p class="task-capital">${built?'Capital paid':'Capital'} <b>${money(card.cashCost)}</b>${!built&&!expired&&st.cashNeeded?` · short ${money(st.cashNeeded)}`:''}</p>`:''}${card.reward.lease&&card.commercial?`<p class="task-capital">Operating cost: ${Math.round(card.commercial.cost*100)}% of base lease income</p>`:''}${slotsHTML(g,card,{live,floor:true})}<p class="task-progress">${built?'✓ Completed':expired?'Window closed':`${st.held}/${st.total} GPUs allocated`}${card.until&&!built&&!expired?fuse(card.until,card.at,g.arcade.time):''}</p>${change?`<p class="task-result"><b>${esc(change.head)}</b> ${esc(change.text)}</p>`:''}</div><footer class="fc-foot">${live&&!(st.ready&&needsReview)?button('open-card','Task details',`class="task-detail" data-card="${esc(card.id)}"`):'<span></span>'}${action}</footer></article>`;
 }
 export function companyBoard(g,ui={},live=true) {
@@ -383,6 +386,7 @@ export function builtView(g, ui = {}) {
   // Cards the build dealt: open now, not open before it (the controller remembers the ids it saw).
   const before = ui.openBefore ? new Set(ui.openBefore.ids) : null;
   const dealt = before ? a.objectives.filter(o => o.status === 'open' && !before.has(o.id)) : [];
+  const next=a.objectives.find(o=>o.id===b.nextCard&&o.status==='open')||dealt.find(o=>o.lane===b.lane)||dealt[0]||openCards(g)[0];
   let n = 0;
   const chips = GPUS.filter(k => b.recipe[k]).map(k => Array.from({ length: b.recipe[k] }, () => gchip(k, 'is-locking', n++)).join('')).join('');
   const s = companyStats(g);
@@ -390,14 +394,14 @@ export function builtView(g, ui = {}) {
     body: `<div class="desk-center"><article class="build-moment mat-paper lane-${laneOf(card)} tone-${ch.tone}" data-fx-payoff>` +
       `<header class="contract-head"><span>${esc(laneLabel(card).toUpperCase())}</span><span>ROUND ${g.q}</span></header>` +
       `<strong class="bm-stamp" data-fx-stamp>${b.reward.pilotRevenue ? pilotStamp(b) : b.lane === 'opportunity' ? 'WON' : 'BUILT'}</strong><h3 class="bm-name">${esc(b.name)}</h3>` +
-      `<div class="bm-chips" aria-hidden="true">${chips}</div>` +
       `<p class="bm-change"><b>${esc(ch.head)}</b><span>${esc(ch.text)}</span></p>` +
       (b.mixed && b.status === 'integrating' ? '<p class="bm-note">MIXED · the integration crew brings it online at the bell</p>' : '') +
-      `<p class="bm-company"><span>Valuation <b data-fx-valuation data-fx-format="short">${short(s.valuation)}</b></span><span>Revenue <b>${money(s.revenue)}</b>/rd</span><span>Model <b>${esc(s.model)}</b></span></p>` +
+      (next ? `<p class="bm-next">Next: <b>${esc(next.name)}</b></p>` : '<p class="bm-next">Your build is recorded. Return to the floor to review your company.</p>') +
+      `<details class="build-receipt-details"><summary>Financial and progression details</summary><div class="bm-chips" aria-hidden="true">${chips}</div><p class="bm-company"><span>Valuation <b data-fx-valuation data-fx-format="short">${short(s.valuation)}</b></span><span>Revenue <b>${money(s.revenue)}</b>/rd</span><span>Model <b>${esc(s.model)}</b></span></p>` +
       (dealt.length ? `<p class="bm-dealt"><span>New</span> ${dealt.map(o => `<b class="lane-${laneOf(o)}">${esc(o.name)}</b>`).join(' · ')}</p>` : '') +
       replayUnlockNote(g, [b]) +
-      `<p class="payoff-fine">Cost of the GPUs consumed: ${money(b.cost)}${b.cashCost ? `; capital spent: ${money(b.cashCost)}` : ''}</p></article></div>`,
+      `<p class="payoff-fine">Cost of the GPUs consumed: ${money(b.cost)}${b.cashCost ? `; capital spent: ${money(b.cashCost)}` : ''}</p></details></article></div>`,
     footer: button('post-receipt', 'Back to the floor <span aria-hidden="true">→</span>', 'class="mat-move rail-commit rail-solo" data-primary') };
 }
 
-export const roundsLeft = g => V7.rounds - g.q;
+export const roundsLeft = g => campaignLimit(g) - g.q;

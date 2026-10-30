@@ -1,10 +1,11 @@
+import { campaignLimit } from '../tycoon/extension.js';
 // Between-round activities share the real game boards and completed-round prize budget.
 import { INTEGRATION, workshopQuote } from '../tycoon/integration.js';
 import { V7 } from '../tycoon/arcade.js';
 import { completedRound } from '../tycoon/replay-access.js';
 import { money } from './pit-ledger.js';
 export const workshopFraction = (efficiency, skipped = false) => skipped ? 0 : Math.max(0, Math.min(1, (efficiency - INTEGRATION.floor) / (1 - INTEGRATION.floor)));
-const nextPrize = g => (g.arcade.workshop?.q || completedRound(g) || g.q) < V7.rounds - 1 ? 'Each game gets a new prize budget after the next round.' : 'This is the last between-round practice window.';
+const nextPrize = g => (g.arcade.workshop?.q || completedRound(g) || g.q) < campaignLimit(g) - 1 ? 'Each game gets a new prize budget after the next round.' : 'This is the last between-round practice window.';
 export function workshopIntro(g, kind) {
   if (kind === 'kernel') return '<p class="workshop-note">Cluster Snake unlocked · free loaner fleet · between rounds. This game has no cash prize and does not change your company.</p>';
   const q = workshopQuote(g, kind);

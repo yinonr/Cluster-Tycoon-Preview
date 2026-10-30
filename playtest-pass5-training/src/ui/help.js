@@ -1,9 +1,9 @@
 // Short action-oriented Help, shared by practice and the campaign.
 export function helpView(training = false) {
   const items = [
-    ['Find a deal', 'Click a GPU tile to see matching sellers and buyers.'],
+    ['Find a deal', 'Select Find GPU or a GPU tile on your current task to see matching supply. Matching buyers are available beside the filter.'],
     ['Buy GPUs', 'Select a broker’s offer. Use Charm when available, review the quote, then select “Sign contract.”'],
-    ['Build', 'Open a task, select its GPU slots to allocate your stock, then select BUILD when its requirements are met.'],
+    ['Build', 'Select the GPU slots or Allocate from stock on your current task, then BUILD when its requirements are met.'],
     ['Sell your stock', 'Open Inventory to see what’s available to sell. Select “View matching buyers,” choose an offer, and review the sale before confirming.'],
     ['Switch tasks', 'Use the arrows beside the task card. On mobile, swipe between tasks.'],
   ];

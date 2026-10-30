@@ -1,3 +1,5 @@
+import { puzzleInput } from './tetris.js';
+import { cableInput } from './cable.js';
 // Babur's training company is a separate, disposable company. Purchases, signing,
 // reservations, building and both puzzles use the production engine. No practice
 // balance, hardware, grade or reward is ever copied into the five-round company.
@@ -118,7 +120,7 @@ function normalizeHandoffCopy(g) {
   if (!g) return g;
   normalizeLanternSave(g);
   normalizeOrdinaryProgress(g);
-  if (g.arcade) { delete g.arcade.replays; g.arcade.rev=0; }
+  if (g.arcade) { delete g.arcade.replays; g.arcade.rev=0; g.arcade.extension ||= {version:1,choice:null,bankedFive:null}; }
   return g;
 }
 
@@ -189,6 +191,8 @@ function puzzle(t, kind) {
     const nodes=rackNodes(actualRecipe,2);
     g.arcade.cable.nodes.forEach((node,i)=>{Object.assign(node,nodes[i]);Object.assign(g.arcade.cable.cells[node.i],nodes[i]);});
   }
+  if(started && !t.legacySequence && kind==='node')puzzleInput(g,'start');
+  if(started && !t.legacySequence && kind==='cable')cableInput(g,'start');
   return started;
 }
 
@@ -257,7 +261,7 @@ export function trainingAction(t, action, arg) {
   if(action==='model-build') {
     if(t.legacySequence || t.step!=='model' || t.modelBuildId || g.phase!=='floor' || a.active || a.confirm || a.signing)return false;
     fill(g,TRAINING_MODEL_CARD);const b=build(g,TRAINING_MODEL_CARD);
-    if(!b)return false;t.modelBuildId=b.id;t.step='node';return true;
+    if(!b)return false;t.modelBuildId=b.id;t.step='node';return puzzle(t,'node');
   }
   if (action==='node-open') {
     if (t.step!=='node' || t.nodeDone || g.phase!=='floor' || a.active || a.confirm || a.signing) return false;

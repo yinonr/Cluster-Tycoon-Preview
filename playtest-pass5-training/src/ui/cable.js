@@ -91,7 +91,7 @@ export function cableView(g, ui = {}) {
   const state = out ? 'is-done' : t.started ? 'is-play' : 'is-intro';
   const intro = !t.started && !out ? introCard(g, { kind: 'cable', rule: RULE, keys: KEYS, manifest: manifest(t) }) : '';
   const result = out ? `<div class="tt-overlay tt-finish">${resultHTML(g, t, out)}</div>` : '';
-  const body = `<div class="tt arc arc-cable ${t.training ? 'is-training' : ''} ${state}${out?.perfect ? ' is-perfect' : ''}" data-arc="cable">${stripHTML(t, !!g.arcade.workshop)}` +
+  const body = `<div class="tt arc arc-cable ${t.training ? 'is-training' : ''} ${state}${out?.perfect ? ' is-perfect' : ''}" data-arc="cable">${stripHTML(t, !!g.arcade.workshop)}${t.training && !out ? '<p class="training-placement-help">Select a cable, then tap a grid cell. ⟳ rotates. Connect both GPUs to the switch, then TEST NETWORK.</p>' : ''}` +
     `<div class="tt-field arc-field"><div class="arc-stage"><div class="ch-frame"><span class="tt-baylabel" aria-hidden="true"><img class="arc-seal" src="brand/logo/hsc-mark-white.svg" width="37" height="47" alt="">DATA HALL · ${t.nodes.length} NODES</span>` +
     `<div class="ch-board" data-ch-board style="--cols:${t.w};--rows:${t.h}" role="group" aria-label="Data hall floor, ${t.w} by ${t.h}">${boardHTML(t)}</div>${result}</div>` +
     `<aside class="arc-side"><div class="ch-queue" data-ch-queue aria-label="Cable in hand and next">${queueHTML(t)}</div>${manifest(t)}</aside></div>${intro}</div>` +

@@ -1,3 +1,4 @@
+import { campaignLimit, EXTENDED_ROUNDS } from './extension.js';
 // V10.6 The Living World: a small data-driven layer over the founder game. Characters remember
 // what you did, the market reacts, customers turn up, and every twist is gated on the company's
 // real state. Content is data (world-content.js; docs/v106/SCHEMA.md is its contract), every
@@ -128,7 +129,7 @@ export function fire(g, e) {
   if (e.memo) { w.memo = { event: e.id, q, prompt: fill(g, e.memo.prompt, F), options: e.memo.options.map(o => ({ label: o.label, note: o.note || '' })) }; w.memos++; }
   for (const f of e.follow || []) {
     const due=q+(f.after || 1);
-    if (due<=ECONOMY.rounds) w.due.push({event:f.event,q:due,chance:f.chance ?? 1});
+    if (due<=campaignLimit(g)) w.due.push({event:f.event,q:due,chance:f.chance ?? 1});
   }
   return true;
 }
@@ -192,7 +193,7 @@ export function apply(g, fx, e) {
     // From a memo (between rounds) "after 1" means the round that opens next.
     case 'follow': {
       const due=(g.phase === 'report' ? g.q-1 : g.q)+(fx.after || 1);
-      if (due<=ECONOMY.rounds) w.due.push({event:fx.event,q:due,chance:fx.chance ?? 1});
+      if (due<=campaignLimit(g)) w.due.push({event:fx.event,q:due,chance:fx.chance ?? 1});
       return;
     }
     case 'exit': if (!w.exitMods.some(m => m.mod === fx.mod)) w.exitMods.push({ mod: fx.mod, mult: clamp(fx.mult, .85, 1.2), event: e.id }); return;
@@ -252,7 +253,7 @@ export function worldBell(g, report) {
   for (const k of ['revenue', 'burn', 'prepaid']) c.mods[k] = c.mods[k].map(m => ({ ...m, left: m.left - 1 })).filter(m => m.left > 0);
   if (w.flags.engineerHired && !c.mods.burn.some(m => m.event === 'ten-x-engineer')) w.flags.engineerSalaryEnded = true;
   w.sentiment = w.sentiment.map(m => ({ ...m, left: m.left - 1 })).filter(m => m.left > 0);
-  if (report.shortfall || c.shutdown || q >= ECONOMY.rounds) { report.world = { news: w.news.filter(n => n.q === q), memo: null }; return; }
+  if (report.shortfall || c.shutdown || q >= campaignLimit(g)) { report.world = { news: w.news.filter(n => n.q === q), memo: null }; return; }
   const r = stream(g.seed, 'v106-world', 'bell', q);
   for (const d of w.due.filter(d => d.q === q)) {
     const e = EVENTS.find(e => e.id === d.event);
@@ -280,7 +281,7 @@ export function chooseMemo(g, index) {
 // game. Validate the actual event and option text before saving/restoring one.
 export function validPendingMemo(m) {
   const event=EVENTS.find(e=>e.id===m?.event),options=event?.memo?.options;
-  return !!(m && options?.length===2 && Number.isSafeInteger(m.q) && m.q>=1 && m.q<=ECONOMY.rounds &&
+  return !!(m && options?.length===2 && Number.isSafeInteger(m.q) && m.q>=1 && m.q<=EXTENDED_ROUNDS &&
     typeof m.prompt==='string' && m.chosen===undefined && Array.isArray(m.options) && m.options.length===2 &&
     m.options.every((o,i)=>o && o.label===options[i].label && o.note===(options[i].note || '')));
 }

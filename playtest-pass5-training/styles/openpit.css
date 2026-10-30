@@ -83,3 +83,55 @@
 #pit .open-pit .floor-retired { pointer-events:none; opacity:.45; }
 #pit .open-pit .retired-offer-status { margin-top:4px; padding:4px 6px; background:var(--hsc-paper); font:13px/1.3 var(--hsc-sans); }
 @media (max-width:600px) { #pit .open-pit .floor-pagination > span { min-width:78px; font-size:11px; } }
+
+/* Pass 12: task first, with stable, non-overlapping offer and funding positions. */
+#pit .open-pit .floor-main { grid-template-columns:minmax(0,1.25fr) minmax(340px,1fr); }
+#pit .open-pit .current-task { border-top:3px solid var(--hsc-ink); }
+#pit .open-pit .floor-scene { min-height:660px; }
+#pit .open-pit .floor-funding-person { top:225px; bottom:auto; left:50%; transform:translateX(-50%); max-width:calc(100% - 24px); }
+#pit .open-pit .floor-offer { height:auto; min-height:190px; }
+#pit .open-pit .pit-seat-0 { top:0; left:1%; }
+#pit .open-pit .pit-seat-1 { top:0; right:1%; }
+#pit .open-pit .pit-seat-2 { top:460px; bottom:auto; left:1%; }
+#pit .open-pit .pit-seat-3 { top:460px; bottom:auto; right:1%; }
+#pit .open-pit .floor-quote { overflow-wrap:anywhere; }
+#pit .open-pit .floor-offer .broker-price { font-size:clamp(15px,1.8vw,23px); }
+#pit .current-task .fc-foot .task-find { white-space:normal; }
+#pit .build-receipt-details { margin-top:18px; border-top:1px solid var(--hsc-grey-light); padding-top:12px; }
+#pit .build-receipt-details summary { cursor:pointer; font:14px var(--hsc-sans); }
+#pit .bm-next { margin:14px 0; font:17px/1.4 var(--hsc-sans); }
+#pit .extension-progress { margin:22px 0; border-block:1px solid var(--hsc-grey-light); padding:14px 0; }
+#pit .extension-progress li { margin:8px 0; }
+#pit .training-placement-help { font:14px/1.4 var(--hsc-sans); padding:8px 12px; margin:0; background:var(--hsc-note); }
+@media (min-width:769px) and (max-width:1100px) {
+ #pit .open-pit .floor-main { grid-template-columns:minmax(0,1fr) minmax(300px,1fr); gap:16px; }
+ #pit .open-pit .floor-offer { width:145px; }
+ #pit .open-pit .floor-quote { min-width:130px; }
+}
+@media (max-width:768px) {
+ #pit .open-pit .current-task-panel { order:-1; }
+ #pit .open-pit .floor-scene { height:620px; min-height:620px; }
+ #pit .open-pit .floor-funding-person { top:210px; bottom:auto; left:50%; transform:translateX(-50%); }
+ #pit .open-pit .pit-seat-2, #pit .open-pit .pit-seat-3 { top:430px; }
+ #pit .open-pit .task-navigation { margin-bottom:6px; }
+ #pit .open-pit .current-task-content { padding:10px 12px; }
+ #pit .open-pit .current-task .fc-name { font-size:24px; margin-bottom:5px; }
+ #pit .open-pit .current-task :is(.fc-reward,.task-capital) { margin-bottom:5px; }
+ #pit .open-pit .current-task .fc-slots { margin:6px 0; }
+ #pit .open-pit .task-end-round { align-self:flex-end; }
+ #pit .open-pit .floor-offer .broker-price { font-size:20px; }
+}
+@media (max-width:600px) {
+ #pit .open-pit .floor-scene { height:410px; min-height:410px; }
+ #pit .open-pit .floor-offer { min-height:170px; width:calc(50% - 6px); max-width:180px; }
+ #pit .open-pit .floor-quote { width:100%; min-width:0; }
+ #pit .open-pit .floor-funding-person { top:205px; width:210px; }
+ #pit .open-pit .floor-offer .broker-price { font-size:18px; }
+ #pit .open-pit .current-task .fc-name { font-size:22px; }
+}
+#pit .open-pit .single-task-company { align-content:start; grid-template-rows:auto auto auto auto; }
+#pit .open-pit .single-task-company .current-task { flex:none; grid-template-rows:auto auto; }
+#pit .open-pit .current-task-content { overflow:visible; }
+/* Training instructions are an auto-height row above the playable board. */
+#pit .tt.is-training:not(.arc-kernel) { grid-template-rows:auto auto minmax(0,1fr) auto; }
+#pit .tt.is-training:not(.arc-kernel).is-done { grid-template-rows:auto minmax(0,1fr) auto; }

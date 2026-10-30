@@ -1,3 +1,4 @@
+import { campaignLimit, EXTENDED_ROUNDS } from './extension.js';
 import { ECONOMY } from './economy-balance.js';
 import { stream } from '../util.js';
 import { FOUNDER, isMixed, burnOf, freeOf, openCards, recipeCost } from './founder.js';
@@ -68,7 +69,7 @@ export function makeComputeTerm(g, spec) {
     return { id: `${g.q}-${spec.id}-${i}`, gpu: d.gpu, qty: d.qty, q, scheduledQ: g.q + d.after,
       unitCost: Math.round(FOUNDER.unit[d.gpu] * (1 + DRIFT * (g.q - 1)) * spec.factor * .92 ** (q - g.q)), status: 'pending' };
   });
-  if (tranches.some(d => d.q > ECONOMY.rounds)) return null;
+  if (tranches.some(d => d.q > campaignLimit(g))) return null;
   const amount = tranches.reduce((n, d) => n + d.qty * d.unitCost, 0);
   // A fairly priced in-kind round, with a small strategic discount to today's pre-money.
   return { amount, tranches };
@@ -144,7 +145,7 @@ export const deliveryText = tranches => tranches.map(d => `R${d.q}: ${d.qty} ${d
 export function validStrategicSave(g) {
   const c = g.company, a = g.arcade, int = Number.isSafeInteger;
   const tranche = d => d && typeof d.id === 'string' && ['H100', 'H200', 'B200'].includes(d.gpu) &&
-    int(d.qty) && d.qty > 0 && int(d.q) && d.q >= 1 && d.q <= ECONOMY.rounds && int(d.scheduledQ) && d.scheduledQ >= 1 && d.scheduledQ <= d.q &&
+    int(d.qty) && d.qty > 0 && int(d.q) && d.q >= 1 && d.q <= campaignLimit(g) && int(d.scheduledQ) && d.scheduledQ >= 1 && d.scheduledQ <= d.q &&
     int(d.unitCost) && d.unitCost > 0 && ['pending', 'delivered', 'cancelled', 'sold'].includes(d.status) && (d.status !== 'sold' || int(d.soldQ) && d.soldQ < d.q);
   if (!Array.isArray(c.compute) || !int(a.ledger.inKind) || a.ledger.inKind < 0) return false;
   const inv = c.shares.investors;
@@ -167,7 +168,7 @@ export function validStrategicSave(g) {
   if (s) {
     const p = PARTNERSHIPS.find(p => p.id === s.id);
     if (!p || !int(s.stage) || s.stage < 0 || s.stage > p.stages.length || !Array.isArray(s.history) || s.history.length !== s.stage ||
-      !['next', 'offered', 'waiting', 'failed', 'declined', 'completed'].includes(s.state) || !int(s.due) || s.due < 1 || s.due > ECONOMY.rounds) return false;
+      !['next', 'offered', 'waiting', 'failed', 'declined', 'completed'].includes(s.state) || !int(s.due) || s.due < 1 || s.due > campaignLimit(g)) return false;
     if (s.state === 'completed' && s.stage !== p.stages.length) return false;
     if (s.history.some((h, i) => h.stage !== i || !c.builds.some(b => b.id === h.built && b.online === 1 && b.strategic?.id === s.id && b.strategic.stage === i))) return false;
   }

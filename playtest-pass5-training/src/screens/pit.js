@@ -14,7 +14,7 @@ import { stableOfferSeats } from '../tycoon/pit-layout-state.js';
 import { minigameEligibility } from '../tycoon/replay-access.js';
 import { trainingStage, trainingGuidance } from '../ui/training.js';
 import { selectBaburExpression, attachBaburArtFallback } from '../ui/babur.js';
-import { V7, advance, available, activeLot, cents, claim, leave, haggle, closeQuarter, openQuarter } from '../tycoon/arcade.js';
+import { V7, advance, available, activeLot, cents, claim, leave, haggle, closeQuarter, openQuarter, chooseExtension } from '../tycoon/arcade.js';
 import { buyerLive, reviewBuyer, counterBuyer } from '../tycoon/arcade-buyers.js';
 import { saleReview, reviewSale, updateSaleReview, refreshSaleReview, confirmSale } from '../tycoon/resale.js';
 import { prepareSigning, signTrade } from '../tycoon/arcade-signing.js';
@@ -40,6 +40,7 @@ import { nameError, renameStartup } from '../tycoon/startup-name.js';
 import { guidePreferences, foundingView, hintView, TIPS } from '../ui/founding.js';
 import { helpView } from '../ui/help.js';
 import { reconcileMigratedBest } from '../ui/best-migration.js';
+import { recordCampaignResults } from '../ui/results.js';
 import { FIGURE_DEFS } from '../ui/character.js';
 
 const root = document.querySelector('#pit');
@@ -74,19 +75,8 @@ ui.sound = !!sound;
 // The local best lives under its own versioned key; storage may be blocked, so every access is guarded.
 const BEST = `${V7.key}-best`;
 reconcileMigratedBest(storage, BEST, campaign.retiredFinal);
-function bestScore(g) {
-  const f = g?.phase === 'over' && g.arcade.finalScore;
-  if (!f) return null;
-  // A shutdown is never a personal best; it only shows the best exit so far.
-  if (f.kind === 'shutdown') { try { return JSON.parse(storage.getItem(BEST) || 'null'); } catch { return null; } }
-  let best = null; try { best = JSON.parse(storage.getItem(BEST) || 'null'); } catch { return null; }
-  if (!best || !Number.isSafeInteger(best.payout) || f.payout > best.payout) {
-    const next = { payout: f.payout, seed: g.seed, prev: Number.isSafeInteger(best?.payout) ? best.payout : null };
-    try { storage.setItem(BEST, JSON.stringify(next)); } catch { return null; }
-    return next;
-  }
-  return best;
-}
+function bestScore(g) { return recordCampaignResults(storage, V7.key, g); }
+
 const urlSeed = () => { const s = new URLSearchParams(location.search).get('seed'); const n = Number(s); return s && /^\d+$/.test(s) && Number.isSafeInteger(n) && n <= 0xffffffff ? n : null; };
 const seed = () => urlSeed() ?? newSeed();
 // Every player action re-renders from authoritative state, then the room answers what changed.
@@ -168,7 +158,7 @@ function render() {
   }
   ui.focusOpen = !!view; if (view) ui.memo = null;
   const challenge = !training.state && new URLSearchParams(location.search).get('challenge') === '1' && urlSeed() !== null && !ui.challengeDismissed && ui.entry !== 'found';
-  root.innerHTML = `<div class="pit-background">${training.state ? trainingStage(training.state, ui) : stage(g, ui)}</div>${view && !ui.guidanceOpen ? focusFrame(g, view) : ''}${challenge ? `<aside class="challenge-invite" role="note">Challenge seed ${urlSeed()} is ready. <button type="button" data-action="start-challenge">Start a fresh challenge</button><button type="button" data-action="dismiss-challenge" aria-label="Dismiss challenge notice">×</button></aside>` : ''}<span class="pit-announcement" role="status" aria-live="polite">${!training.state && g.arcade.message?.text ? esc(`${g.company.name}: ${g.arcade.message.text}`) : ''}</span>`;
+  root.innerHTML = `<div class="pit-background">${training.state ? trainingStage(training.state, ui) : stage(g, ui)}</div>${view && !ui.guidanceOpen ? focusFrame(g, view) : ''}${challenge ? `<aside class="challenge-invite" role="note">${new URLSearchParams(location.search).get('rounds') === '7' ? 'Seven-round challenge: earn the extension to compare seven-round results.' : new URLSearchParams(location.search).get('rounds') === '5' ? 'Five-round challenge.' : 'Same-market challenge: compare results of the same length.'} Seed ${urlSeed()} is ready. <button type="button" data-action="start-challenge">Start a fresh challenge</button><button type="button" data-action="dismiss-challenge" aria-label="Dismiss challenge notice">×</button></aside>` : ''}<span class="pit-announcement" role="status" aria-live="polite">${!training.state && g.arcade.message?.text ? esc(`${g.company.name}: ${g.arcade.message.text}`) : ''}</span>`;
   // The HUD stays live and uncovered during a desk; only the room and the board go inert.
   if (view) for (const el of root.querySelectorAll('.pit-background .pit-main')) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
   const focus = root.querySelector('.pit-focus');
@@ -345,6 +335,12 @@ root.addEventListener('input', e => {
 });
 
 // Charm stops on the press itself; the click that press later synthesizes is swallowed once.
+let pressedTrainingResult=null;
+// A final puzzle input may replace its DOM before release. Require the result
+// button itself to receive a new press, without imposing a timed wait.
+root.addEventListener('pointerdown',e=>{
+  pressedTrainingResult=e.target.closest?.('[data-action="training-continue"],[data-action="training-retry"]') || null;
+},true);
 let swallowClick = false,taskSwipe=null,taskSwipeClickUntil=0,pressedMarketTarget=null;
 // A quote that refreshes between press and release must never select a different
 // broker or funding offer. Keyboard activation uses the currently focused offer.
@@ -375,6 +371,10 @@ root.addEventListener('click', e => {
   if (swallowClick) { swallowClick = false; e.preventDefault(); return; }
   const b = e.target.closest('button[data-action]'); if (!b || b.disabled) return;
   const a = b.dataset.action, g = store.state, d = b.dataset;
+  if (['training-continue','training-retry'].includes(a) && (e.pointerType || e.detail>0)) {
+    const intended=pressedTrainingResult===b; pressedTrainingResult=null;
+    if(!intended) {e.preventDefault();return;}
+  }
   const pressed=pressedMarketTarget;pressedMarketTarget=null;
   if (e.detail>0 && pressed && ['focus-supplier','review-term'].includes(a) && pressed!==`${a}:${d.id}`) {e.preventDefault();return;}
   if (a === 'enter-floor') { prefs.welcome = true; prefs.save(); ui.entry = null; render(); return; }
@@ -509,6 +509,10 @@ root.addEventListener('click', e => {
   else if (a === 'decline-term') { ui.panel = 'floor'; clearInputs(); act(declineTerm); settleAtBell(); }
   else if (a === 'finish-review') act(g => { if (g.arcade.active || g.arcade.confirm || g.arcade.signing) return false; g.arcade.confirm = { finish: true }; return true; });
   else if (a === 'finish') { ui.panel = 'floor'; act(g => { g.arcade.confirm = null; return closeQuarter(g); }); }
+  else if (a === 'extension-finish' || a === 'extension-continue') {
+    ui.panel = 'floor'; ui.cardId = null; clearInputs();
+    act(g => chooseExtension(g, a === 'extension-continue' ? 'extend' : 'finish'));
+  }
   else if (a === 'next') {
     ui.panel = 'floor'; ui.cardId = null; clearInputs();
     // An extraordinary offer opens the Deal Room once, as the round opens (the floor is paused while it is read).

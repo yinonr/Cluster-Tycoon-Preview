@@ -1,3 +1,4 @@
+import { campaignLimit, EXTENDED_ROUNDS } from './extension.js';
 // V20 The Scale-Up: one integration challenge per bell, chosen by operational scale
 // (contract: docs/V10_19_INTEGRATION_CONTRACT.md).
 //
@@ -154,7 +155,7 @@ const WORKSHOP_KINDS = ['node','cable'];
 export const snakeAvailable = g => replayAvailable(g,'kernel');
 const playableWorkshop = (g, kind) => ['node','cable','kernel'].includes(kind) && replayAvailable(g,kind);
 export function workshopQuote(g, kind) {
-  if (!playableWorkshop(g,kind) || !g?.arcade || g.q<1 || g.q>ECONOMY.rounds) return null;
+  if (!playableWorkshop(g,kind) || !g?.arcade || g.q<1 || g.q>campaignLimit(g)) return null;
   const a=g.arcade, round=a.workshop?.q || (g.phase==='report'?completedRound(g):g.q),award=a.workshops?.awards.find(x=>x.q===round && x.kind===kind);
   const max=kind==='kernel' ? 0 : ECONOMY.workshop.prizes[round], paid=award?.paid || 0;
   const out=a.workshop?.kind===kind ? integrationOutcome(g) : null;
@@ -208,7 +209,7 @@ function settleWorkshop(g,returnPhase,legacyRecorded=false) {
 }
 export function validWorkshopSave(g,{legacy=false}={}) {
   const a=g.arcade, w=a.workshops, int=Number.isSafeInteger;
-  if (!w || !int(w.seq) || w.seq<0 || !Array.isArray(w.awards) || w.awards.length>ECONOMY.rounds*2) return false;
+  if (!w || !int(w.seq) || w.seq<0 || !Array.isArray(w.awards) || w.awards.length>campaignLimit(g)*2) return false;
   const keys=new Set();
   for (const x of w.awards) {
     const key=`${x.q}-${x.kind}`;
@@ -218,7 +219,7 @@ export function validWorkshopSave(g,{legacy=false}={}) {
   if (w.awards.reduce((sum,x)=>sum+x.paid,0)!==a.ledger.workshops) return false;
   if (a.workshop) {
     const p=a.workshop,old=legacy && p.returnPhase===undefined;
-    if (g.phase!=='integration' || !int(p.seq) || p.seq!==w.seq || !int(p.q) || (old?p.q!==g.q:p.returnPhase!=='report' || p.q!==completedRound(g) || g.q!==p.q+1 || p.q>=5) ||
+    if (g.phase!=='integration' || !int(p.seq) || p.seq!==w.seq || !int(p.q) || (old?p.q!==g.q:p.returnPhase!=='report' || p.q!==completedRound(g) || g.q!==p.q+1 || p.q>=campaignLimit(g)) ||
       (!old&&!playableWorkshop(g,p.kind)) || !['node','cable','kernel'].includes(p.kind) || p.kind!==integrationKind(g) || p.id!==a.integration?.id || a.integration?.workshop!==true) return false;
     if (p.returnMemo!==undefined && (!validPendingMemo(p.returnMemo) || p.returnMemo.q!==p.q)) return false;
   }

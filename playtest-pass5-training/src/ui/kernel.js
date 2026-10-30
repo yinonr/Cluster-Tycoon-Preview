@@ -40,7 +40,7 @@ function controls(training = false) {
   return `<div class="arc-pad ks-pad" role="group" aria-label="Steering">${key('left', '◀')}${key('up', '▲')}${key('down', '▼')}${key('right', '▶')}</div>`;
 }
 function resultHTML(g, t, out) {
-  if(t.training) return `<div class="tt-result training-result" role="status"><strong class="tt-stamp">${out.perfect?'WORKLOAD COMPLETE':'TRY A DIFFERENT TURN'}</strong><p>${out.perfect?'The workload reached its jobs. You’ve operated your new cluster.':'Turn before the edge or your own queue. Retry this short workload for free.'}</p></div>`;
+  if(t.training) return `<div class="tt-result training-result" role="status"><strong class="tt-stamp">${out.perfect?'WORKLOAD COMPLETE':'TRY A DIFFERENT TURN'}</strong><p>${out.perfect?`${t.ran} jobs run. You’ve operated your new cluster.`:'Turn before the edge or your own queue. Retry this short workload for free.'}</p></div>`;
   const d = out.detail || {}, why = d.crash === 'hot' ? 'Stalled on a throttled GPU' : d.crash === 'self' ? 'Stalled on its own queue' : d.crash === 'edge' ? 'Ran off the fleet' : out.reason === 'time' ? 'Time' : '';
   return resultBlock(g, t.builds, out, { perfectLine: 'Every kernel ran, no stalls · the build is tuned', line: `${why ? `${why} · ` : ''}${d.kernels}/${d.target} kernels run` });
 }

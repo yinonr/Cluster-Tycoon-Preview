@@ -4,6 +4,7 @@
 import { CHARM_RULES } from '../tycoon/rizz.js';
 import { cents, V7 } from '../tycoon/arcade.js';
 import { FOUNDER, MODEL_NAMES, LANE, openCards, revenueOf, revenueNow, totalShares, opsOf, agiOdds, BOOSTS, boostMet, ordinaryTask } from '../tycoon/founder.js';
+import { campaignLimit } from '../tycoon/extension.js';
 import { PHASES } from '../tycoon/founder-market.js';
 
 export const money = n => `${n < 0 ? '−' : ''}$${(Math.abs(n) / 100).toLocaleString('en-US', { minimumFractionDigits: n % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
@@ -21,7 +22,7 @@ export function short(c) {
 // Ownership: a share of the cap table, one decimal (two when it is small).
 export const pctOf = p => p >= .99995 ? '100%' : `${(p * 100).toFixed(p < .1 ? 2 : 1)}%`;
 export const bpsText = b => `${(b / 100).toFixed(b % 100 ? (b % 10 ? 2 : 1) : 0)}%`;
-export const phaseName = q => PHASES[Math.max(1, Math.min(V7.rounds, q))]?.name || '';
+export const phaseName = q => PHASES[Math.max(1, Math.min(7, q))]?.name || '';
 export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 // ---- Objective cards ------------------------------------------------------------------------
@@ -37,13 +38,13 @@ export function pilotResultLine(b) {
 }
 export function rackDeliveryLine(g, card) {
   const first = g && !g.company.starterRackDelivered, immediate = !!g && !g.arcade.practice && ordinaryTask(card);
-  const later = g?.q === V7.rounds
+  const later = g?.q === campaignLimit(g)
     ? 'no later GPU delivery this run; owned capacity counts at exit.'
     : 'then at later round opens.';
   if (first) return (card.mixed || card.cluster) && !immediate
     ? `First rack: commissioning GPUs at full integration; ${later}`
     : `First rack: ${card.reward.rack.qty} ${card.reward.rack.gpu} added to stock on BUILD; ${later}`;
-  return g?.q === V7.rounds
+  return g?.q === campaignLimit(g)
     ? 'Final round: no later GPU delivery this run; owned capacity still counts at exit.'
     : immediate ? 'GPUs arrive at the next round open.' : 'GPUs arrive at the next round open; output scales with integration.';
 }
@@ -112,8 +113,8 @@ export function buildChange(g, b) {
     const income = revenueNow(c) - revenueNow({ ...c, products: c.products.filter(p => !(p.build === b.id && p.lease)) });
     const commissioned = c.starterRackDelivered === b.id;
     const delivery = commissioned
-      ? `${g.arcade.inventory.find(x => x.id === `${b.id}-commission`)?.qty ?? R.rack.qty} ${R.rack.gpu} delivered to stock on commissioning${g.q < V7.rounds ? '; more at later round opens' : '; no later delivery this run'}`
-      : g.q === V7.rounds ? 'Owned capacity counts at exit; no later GPU delivery this run' : 'GPUs arrive at next round open';
+      ? `${g.arcade.inventory.find(x => x.id === `${b.id}-commission`)?.qty ?? R.rack.qty} ${R.rack.gpu} delivered to stock on commissioning${g.q < campaignLimit(g) ? '; more at later round opens' : '; no later delivery this run'}`
+      : g.q === campaignLimit(g) ? 'Owned capacity counts at exit; no later GPU delivery this run' : 'GPUs arrive at next round open';
     return { tone: 'infra', head: `+${output} ${R.rack.gpu}/round online`, text: `${delivery}${R.lease ? ` · lease income ${money(income)}/round before operating costs` : ''}` };
   }
   if (R.ip) return { tone: 'research', head: `+${short(b.ipPaid || R.ip)} IP`, text: 'Research IP, kept in your valuation' };

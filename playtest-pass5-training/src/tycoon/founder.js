@@ -1,3 +1,4 @@
+import { extensionCard } from './extension.js';
 // V10.15 The Scaling Game: company scale, flagship projects, levels beyond State of the art, the AGI
 // attempt and integration grades that leave capped company bonuses (docs/V10_15_DESIGN.md).
 // V10.5 The Founder: one player-owned AI startup, three lanes of competing objectives, GPU
@@ -285,6 +286,7 @@ export function flagshipFor(g, lane, salt = 0) {
     reward: lane === 'product' ? { revenue: Math.round(f.revenue * k) } : { rack: { gpu: f.rack.gpu, qty: Math.max(1, Math.floor(f.rack.qty * k)), fleet: true }, lease: Math.round(f.lease * k) }, q: g.q, status: 'open', ...(f.boost ? { boost: f.boost } : {}) };
 }
 export function drawCard(g, lane, salt = 0) {
+  const scaling=extensionCard(g,lane);if(scaling)return scaling;
   const c = g.company, tier = lane === 'research' && c.level === MAX_LEVEL - 1 && g.q >= FOUNDER.agi.earlyFrom ? MAX_LEVEL + 1 : laneTier(c, lane);
   if (lane === 'research' && (c.researchClosed || c.agi || c.builds.some(b=>b.kind === 'agi' || ((b.reward.level || b.moonshot !== undefined) && b.online < 1)) || !CATALOG.research[tier])) return researchWork(g, salt);
   if (lane === 'infra' && !c.racks.length && !c.builds.some(b=>b.reward.rack)) {
@@ -468,7 +470,7 @@ export function build(g, cardId) {
   const b = { id: `b${c.seq}`, q: g.q, card: card.id, lane: card.lane, kind: card.kind || null, tier: card.tier, name: card.name, recipe: { ...card.recipe }, mixed: card.mixed,
     cost, catalog: card.catalog || null, event: card.event || null, reward: structuredClone(card.reward), strategic: card.strategic || null, status: card.mixed || card.cluster ? 'integrating' : 'online', online: 0, at: a.time };
   if (cashCost) b.cashCost = cashCost;
-  for (const k of ['business','stage','campus','commercial','specialty','cluster']) if (card[k] !== undefined) b[k] = structuredClone(card[k]);
+  for (const k of ['business','stage','campus','commercial','specialty','cluster','extensionLane','extensionStage']) if (card[k] !== undefined) b[k] = structuredClone(card[k]);
   if (card.flagship) b.flagship = true;
   if (card.boost) b.boost = card.boost;
   if (card.contract) b.contract = true;
