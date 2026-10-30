@@ -27,8 +27,9 @@ export function gameLaunchAllowed(g,kind,training=false) {
   const a=g?.arcade;
   if (g?.phase!=='integration' || !a) return false;
   if (training) return a.practice===true && a.integration?.training===true && a.integration.kind===kind;
-  if (!replayAvailable(g,kind)) return false;
-  if (a.workshop) return a.workshop.kind===kind && a.workshop.returnPhase==='report' && a.workshop.q===completedRound(g) && g.q===a.workshop.q+1 &&
+  // Free-play workshops still require an earned unlock. A real deployment does
+  // not: the player earns its minigame by committing GPUs to the build.
+  if (a.workshop) return replayAvailable(g,kind) && a.workshop.kind===kind && a.workshop.returnPhase==='report' && a.workshop.q===completedRound(g) && g.q===a.workshop.q+1 &&
     a.workshop.q<campaignLimit(g) && a.integration?.kind===kind && a.integration.workshop===true;
   return a.bellIntegration?.q===g.q && a.bellIntegration.kind===kind &&
     !!g.company?.builds?.some(b=>b.status==='integrating');
