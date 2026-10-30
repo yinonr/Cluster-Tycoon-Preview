@@ -458,3 +458,35 @@ button.pit-bell:active svg { transform:translateY(2px); }
 @media (max-width:768px) { #pit .pit-market-filters .pit-tab-gpu { flex:0 0 auto; padding:8px 10px; } }
 
 .fc-capital{font-size:10px;margin:2px 0;letter-spacing:.03em}
+
+/* Inventory and resale flow */
+#pit .resale-inventory { max-width: 900px; margin:auto; }
+#pit .inventory-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#pit .inventory-card, #pit .resale-buyer { background:#f7f4ec; border:1px solid #b8b0a3; border-radius:5px; padding:18px; color:#242321; }
+#pit .inventory-card h3, #pit .resale-buyer h3 { margin:0 0 10px; font-size:20px; }
+#pit .inventory-card dl { display:flex; flex-wrap:wrap; gap:16px; margin:0; }
+#pit .inventory-card dt { font-size:12px; } #pit .inventory-card dd { margin:3px 0; font-weight:700; font-size:20px; }
+#pit .inventory-card p, #pit .resale-buyer p { margin:8px 0; line-height:1.4; }
+#pit .resale-action, #pit .resale-secondary { min-height:44px; padding:10px 15px; border:1px solid #252420; border-radius:4px; font:inherit; cursor:pointer; }
+#pit .resale-action { background:#292824; color:#fffdf7; font-weight:700; }
+#pit .resale-secondary { background:transparent; color:#292824; }
+#pit .resale-buyer { display:flex; justify-content:space-between; gap:20px; margin-bottom:10px; }
+#pit .resale-buyer.is-match { border-left:4px solid #292824; }
+#pit .resale-buyer small { font-size:11px; letter-spacing:.05em; }
+#pit .resale-buyer-quote { display:flex; flex-direction:column; align-items:flex-end; gap:8px; text-align:right; }
+#pit .resale-buyer-quote strong { white-space:nowrap; }
+#pit .resale-buyer-quote strong small { display:block; font-weight:400; letter-spacing:0; }
+#pit .resale-review { max-width:620px; margin:auto; padding:24px; background:#f7f4ec; color:#242321; }
+#pit .resale-review dl { display:grid; gap:0; margin:20px 0; }
+#pit .resale-review dl div { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #d1cbbf; }
+#pit .resale-review dd { margin:0; text-align:right; font-weight:700; }
+#pit .resale-review input { width:120px; max-width:100%; min-height:44px; font:inherit; padding:8px; }
+#pit .resale-review [role=alert] { color:#8b2727; }
+#pit .resale-action:focus-visible, #pit .resale-secondary:focus-visible, #pit .resale-review input:focus-visible { outline:3px solid #49443a; outline-offset:3px; }
+@media(max-width:600px) { #pit .inventory-cards { grid-template-columns:1fr; } #pit .resale-buyer { flex-direction:column; gap:8px; } #pit .resale-buyer-quote { align-items:flex-start; text-align:left; } #pit .resale-review { padding:14px; } }
+@media (max-width:600px) {
+  #pit .pit-focus-footer:has([data-action="confirm-sale"]) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+  #pit .pit-focus-footer:has([data-action="confirm-sale"]) > button { width:100%; min-width:0; white-space:normal; }
+  #pit .pit-focus-footer [data-action="confirm-sale"] { grid-column:1 / -1; }
+  #pit .resale-review label[for="review-qty"] { display:block; margin-bottom:6px; }
+}

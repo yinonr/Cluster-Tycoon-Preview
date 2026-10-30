@@ -9,6 +9,7 @@ import { validScenarioSave } from './scenarios.js';
 import { validIntegrationSave, validWorkshopSave, normalizeMinigameSave } from './integration.js';
 import { validReplayAccess, normalizeReplayAccess } from './replay-access.js';
 import { validPendingMemo } from './world.js';
+import { validResaleSave } from './resale.js';
 
 const int = n => Number.isSafeInteger(n);
 const GPU = ['H100', 'H200', 'B200'];
@@ -85,6 +86,7 @@ export function validSave(g,{legacyMinigames=false}={}) {
     if (b.kind !== 'agi' || !s || !['capital','tech','partialTech','failBurn'].every(k => int(s[k]) && s[k] >= 0) || s.capital !== b.cashCost || s.capital < A.capital || s.tech !== Math.max(A.tech, s.capital * 8) || s.partialTech !== Math.max(A.partialTech, s.capital * 3) || s.failBurn !== Math.max(A.failBurn, Math.round(s.capital * .15))) return false;
   }
   if (!validIntegrationSave(g,{legacy:legacyMinigames}) || !validWorkshopSave(g,{legacy:legacyMinigames}) || !validReplayAccess(g,{legacy:legacyMinigames})) return false;
+  if (!validResaleSave(g)) return false;
   if (!['floor', 'integration'].includes(g.phase) && a.history.length === 0) return false;
   if (g.phase === 'over' && !a.exit) return false;
   return validCommerce(g) && validStrategicSave(g) && validInstitutionalSave(g) && validMoonshotSave(g) && validScenarioSave(g);

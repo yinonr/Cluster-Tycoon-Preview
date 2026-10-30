@@ -16,6 +16,7 @@ import { trainingStage, trainingGuidance } from '../ui/training.js';
 import { selectBaburExpression, attachBaburArtFallback } from '../ui/babur.js';
 import { V7, advance, available, activeLot, cents, claim, leave, haggle, closeQuarter, openQuarter } from '../tycoon/arcade.js';
 import { buyerLive, reviewBuyer, counterBuyer } from '../tycoon/arcade-buyers.js';
+import { saleReview, reviewSale, updateSaleReview, refreshSaleReview, confirmSale } from '../tycoon/resale.js';
 import { prepareSigning, signTrade } from '../tycoon/arcade-signing.js';
 import { liveTerm, reviewTerm, counterTerm, declineTerm, playRivalTerm, maybeVulture } from '../tycoon/investors.js';
 import { chooseMemo } from '../tycoon/world.js';
@@ -156,7 +157,8 @@ function render() {
   ui.guidanceOpen = !!(ui.entry || ui.guide);
   ui.best = training.state ? null : bestScore(g);
   if (ui.panel === 'card' && !g.arcade.objectives.some(o => o.id === ui.cardId)) ui.panel = 'floor';
-  const view = deals.dealView(g, ui) || (ui.panel === 'market' ? directoryView(g, ui) : utilityView(g, ui));
+  if (g.arcade.confirm?.saleReview) { const r = saleReview(g, g.arcade.confirm.buyerId, g.arcade.confirm.saleReview.qty); ui.panel = 'sale-review'; ui.saleBuyer = g.arcade.confirm.buyerId; ui.saleQty = g.arcade.confirm.saleReview.qty; ui.saleMax = r.maxQty; ui.saleQuote = g.arcade.confirm.saleReview.expected?.quote || null; ui.saleStock = g.arcade.confirm.saleReview.expected ? { owned: g.arcade.confirm.saleReview.expected.inventory.reduce((n,x)=>n+x.left,0), committed: g.arcade.confirm.saleReview.expected.reservations.reduce((n,x)=>n+x.qty,0) } : null; }
+  const view = g.arcade.confirm?.saleReview ? utilityView(g, ui) : deals.dealView(g, ui) || (ui.panel === 'market' ? directoryView(g, ui) : utilityView(g, ui));
   if (view && training.state) {
     view.guidance = trainingGuidance(training.state);
     view.baburExpression = selectBaburExpression(training.state, { context: 'focus', game: g, view });
@@ -405,7 +407,7 @@ root.addEventListener('click', e => {
   }
   if (a.startsWith('tetris-')) { handleTetrisAction(a, d); return; } // Node Tetris owns its controls
   if (a.startsWith('int-') || a.startsWith('cable-') || a.startsWith('kernel-')) { handleArcadeAction(a, d); return; } // V20: Cable Mania and Kernel Snake
-  if (['focus-supplier', 'focus-buyer', 'review-term', 'open-card', 'open-market', 'finish-review', 'review-scenario'].includes(a) && !ui.focusOpen) returnFocus = remember(b);
+  if (['focus-supplier', 'focus-buyer', 'review-sale', 'review-term', 'open-card', 'open-market', 'finish-review', 'review-scenario'].includes(a) && !ui.focusOpen) returnFocus = remember(b);
   if (a === 'open-market') {
     if (d.context==='1') {focusTaskSupply(g,d);return;}
     if (g.arcade.active || g.arcade.signing || g.arcade.confirm?.receipt || g.arcade.confirm?.built) return;
@@ -426,6 +428,9 @@ root.addEventListener('click', e => {
     if (!offered) { selectTaskContext(store.state,taskView,ui,d.card); ui.cardId = d.card; openPanel('card'); }
   }
   else if (a === 'focus-supplier') { ui.panel = 'floor'; clearInputs(); act(g => claim(g, d.id)); }
+  else if (a === 'review-sale') { ui.saleError = ''; ui.panel = 'sale-review'; clearInputs(); if (!act(g => reviewSale(g, d.id))) { ui.panel = 'market'; render(); } }
+  else if (a === 'sale-buyers' || a === 'cancel-sale' || a === 'sale-inventory') { ui.saleError = ''; returnFocus = a === 'sale-inventory' ? '[data-action=close-focus]' : g.arcade.confirm?.buyerId ? `[data-action=review-sale][data-id="${CSS.escape(g.arcade.confirm.buyerId)}"]` : '[data-action=open-market][data-filter=buyers]'; ui.panel = a === 'sale-inventory' ? 'inventory' : 'market'; ui.marketContext = false; ui.marketFilter = 'buyers'; ui.page = 0; if (g.arcade.confirm) act(g => { g.arcade.confirm = null; return true; }); else render(); }
+  else if (a === 'confirm-sale') { const c = g.arcade.confirm; if (!c?.saleReview) return; const input = root.querySelector('[data-review-qty]'); const qty = Number(input?.value); if (!Number.isSafeInteger(qty) || qty < 1 || qty !== c.saleReview.qty) return; const expected = c.saleReview.expected; if (!act(g => confirmSale(g, { buyerId: c.buyerId, qty, expected }))) { ui.saleError = 'The offer or your inventory changed. Review the updated details before confirming.'; act(refreshSaleReview); render(); } else ui.saleError = ''; }
   else if (a === 'focus-buyer') { ui.panel = 'floor'; clearInputs(); act(g => reviewBuyer(g, d.id)); }
   else if (a === 'review-term') { ui.panel = 'floor'; clearInputs(); act(g => { if (g.arcade.confirm?.termId && !g.arcade.signing) g.arcade.confirm = null; return reviewTerm(g, d.id); }); } // switching to a rival's sheet
   else if (a === 'play-rival-term') { delete ui.termPct; act(playRivalTerm); if (!store.state.arcade.confirm) { ui.panel = 'floor'; render(); } }
@@ -486,7 +491,7 @@ root.addEventListener('click', e => {
     act(g => transactions.buildManyWithStamp(g, d.card, d.count === 'max' ? 'max' : Number(d.count)));
   }
   else if (a === 'counter-buyer') { const rate = parseRate(root.querySelector('[data-buyer-counter]')?.value), qty = Number(root.querySelector('[data-sale-qty]')?.value); if (!deals.buyerCounterPreview(g, rate, qty).valid) return; ui.qty = qty; act(g => { if (!counterBuyer(g, rate, qty)) return false; ui.buyerCounter = formatRate(g.arcade.buyers.find(b => b.id === g.arcade.confirm.buyerId).rate); return true; }); }
-  else if (a === 'sell-buyer') { const qty = Number(root.querySelector('[data-sale-qty]')?.value); act(g => prepareSigning(g, 'buyer', qty)); }
+  else if (a === 'sell-buyer') { const qty = Number(root.querySelector('[data-sale-qty]')?.value), id = g.arcade.confirm?.buyerId; ui.saleError = ''; ui.panel = 'sale-review'; if (!act(g => reviewSale(g, id, qty))) { ui.panel = 'floor'; render(); } }
   else if (a === 'counter-term') { const bps = deals.parsePct(root.querySelector('[data-term-pct]')?.value); if (!deals.termCounterPreview(g, bps).valid) return; delete ui.termPct; act(g => counterTerm(g, bps)); if (!store.state.arcade.confirm) { ui.panel = 'floor'; render(); } }
   else if (a === 'accept-term') act(g => prepareSigning(g, 'term'));
   else if (a === 'decline-term') { ui.panel = 'floor'; clearInputs(); act(declineTerm); settleAtBell(); }
@@ -513,6 +518,7 @@ function paintInputs(e) {
   for (const [attr, key] of Object.entries(bindings)) if (input.hasAttribute?.(attr)) ui[key] = input.value;
   const update = (selector, value) => { const el = root.querySelector(selector), html = value?.html ?? value ?? ''; if (el && el.dataset.painted !== html) { el.dataset.painted = html; el.innerHTML = html; } };
   const light = (action, valid) => { const b = root.querySelector(`[data-action="${action}"]`); if (b) { b.disabled = !valid; b.classList.toggle('is-lit', valid); } };
+  if (input.matches('[data-review-qty]')) { const qty = Number(input.value), c = g.arcade.confirm, result = c && saleReview(g, c.buyerId, qty); let valid = input.value !== '' && result?.valid, saveFailed = false; if (valid && !store.act(g => updateSaleReview(g, qty))) { valid = false; saveFailed = true; } input.setAttribute('aria-invalid', String(!valid)); const validation = root.querySelector('[data-review-validation]'); if (validation) validation.textContent = valid ? '' : saveFailed ? 'The review could not be saved. Reload to continue.' : `Enter a whole number from 1 to ${result?.maxQty ?? 0}.`; ui.saleError = ''; const button = root.querySelector('[data-action=confirm-sale]'); if (button) button.disabled = !valid; if (valid) { input.max = String(result.maxQty); const range = root.querySelector('[data-review-range]'); if (range) range.textContent = `Choose a whole number from 1 to ${result.maxQty}.`; const buyerName = root.querySelector('[data-review-buyer]'); if (buyerName) buyerName.textContent = result.buyer.name; const gpuLabel = root.querySelector('[data-review-gpu]'); if (gpuLabel) gpuLabel.textContent = `${result.buyer.gpu} · partial sales supported`; const committed = root.querySelector('[data-review-committed]'); if (committed) committed.textContent = `${result.committed} ${result.buyer.gpu}`; const error = root.querySelector('.resale-review [role=alert]'); if (error) error.textContent = ''; } const rateLabel = root.querySelector('[data-review-rate]'); if (rateLabel && valid) rateLabel.textContent = `$${(result.quote.rate / 100).toFixed(2)} per GPU-hour × 2,190 hours`; const proceeds = root.querySelector('[data-review-proceeds]'); if (proceeds) proceeds.textContent = valid ? deals.money(result.quote.revenue) : 'Enter a valid quantity'; const remaining = root.querySelector('[data-review-remaining]'); if (remaining) remaining.textContent = `${valid ? result.remainingFree : result?.free ?? 0} ${result?.buyer?.gpu || ''}`; return; }
   if (input.matches('[data-counter]')) { const p = deals.supplierCounterPreview(g, parseRate(input.value)); update('[data-counter-total]', p); update('[data-counter-gap]', p.gap); update('[data-offer-label]', p.label); light('haggle', p.valid); }
   if (input.matches('[data-sale-qty],[data-buyer-counter]')) {
     const qty = Number(root.querySelector('[data-sale-qty]')?.value), rate = parseRate(root.querySelector('[data-buyer-counter]')?.value);

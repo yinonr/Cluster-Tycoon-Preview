@@ -27,14 +27,16 @@ export function counterBuyer(g, offer, qty) {
 }
 export function saleQuote(g, id, qty) {
   const b = g.arcade.buyers.find(b => b.id === id);
+  if(new Set(g.arcade.inventory.map(x=>x.id)).size!==g.arcade.inventory.length)return null;
   if (!b || b.negotiation.running || (b.negotiation.lockedQty && qty > b.negotiation.lockedQty) || !buyerLive(g, b) || !Number.isSafeInteger(qty) || qty <= 0 || qty > b.qty - b.filled || qty > owned(g, b.gpu)) return null;
   const revenue = cents(qty, b.rate);
-  if (revenue > b.budget) return null;
+  if (!Number.isSafeInteger(revenue) || revenue<=0 || revenue > b.budget) return null;
   let left = qty, cost = 0; const legs = [];
   for (const x of g.arcade.inventory.filter(x => x.gpu === b.gpu && freeIn(g, x) > 0)) {
     const take = Math.min(left, freeIn(g, x)); left -= take; cost += take * x.unitCost; legs.push({ id: x.id, qty: take });
     if (!left) break;
   }
+  if (left!==0 || !Number.isSafeInteger(cost) || cost<0 || new Set(legs.map(l=>l.id)).size!==legs.length) return null;
   return { buyerId: id, gpu: b.gpu, qty, rate: b.rate, cost, revenue, legs };
 }
 export function reviewBuyer(g, id) {
@@ -47,6 +49,9 @@ export function sellBuyer(g, qty) {
   const d = saleQuote(g, g.arcade.confirm.buyerId, qty);
   if (!d) return false;
   const b = g.arcade.buyers.find(b => b.id === d.buyerId);
+  if(d.legs.reduce((n,l)=>n+l.qty,0)!==qty || d.legs.some(l=>{
+    const x=g.arcade.inventory.find(x=>x.id===l.id);return !x || x.gpu!==d.gpu || freeIn(g,x)<l.qty;
+  }))return false;
   for (const leg of d.legs) g.arcade.inventory.find(x => x.id === leg.id).left -= leg.qty;
   b.filled += qty; b.budget -= d.revenue;
   if (b.negotiation.attempts?.length) b.negotiation.charmClosed = true;

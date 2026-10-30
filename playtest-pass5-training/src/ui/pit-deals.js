@@ -277,7 +277,11 @@ function receiptView(g, d) {
     const s = salePayoff(d), cls = s.win ? 'win' : 'loss';
     fine = d.premium > 0 ? `<p class="payoff-fine positive">${money(d.premium)} negotiated above the opening bid</p>` : '';
     payoff = `<div class="payoff payoff-${cls}" data-fx-payoff><span class="payoff-label">Resale ${s.win ? 'profit' : 'loss'}</span><strong class="payoff-hero money-hero ${cls}">${s.profit >= 0 ? signed(s.profit) : money(s.profit)}</strong><p class="payoff-sub">${money(s.revenue)} received − ${money(s.cost)} you paid</p><div class="spread-bar ${cls}" aria-hidden="true"><span class="bar-base" style="width:${s.base}%"></span><span class="bar-tail" style="width:${s.tail}%"></span></div><p class="spread-ends"><span>PAID ${rate(Math.round(s.costRate))}/h</span><span>SOLD ${rate(s.soldRate)}/h</span></p></div>`;
-    footer = moveOn('post-receipt', 'Back to the floor').replace('rail-commit', 'rail-commit rail-solo');
+    if (d.stock) {
+      payoff = `<div class="resale-review" role="status" aria-live="polite"><h3>Sale complete</h3><p>${d.qty} ${esc(d.gpu)} sold to ${esc(d.counterparty)}.</p><p><strong>${money(d.total)}</strong> received in cash.</p><p>${d.stock.freeAfter} ${esc(d.gpu)} available · ${d.stock.committedAfter} committed and unchanged.</p></div>`;
+      fine = '';
+      footer = button('sale-inventory', 'Back to inventory', 'class="resale-secondary"') + button('sale-buyers', 'View buyers', 'class="resale-action"');
+    } else footer = moveOn('post-receipt', 'Back to the floor').replace('rail-commit', 'rail-commit rail-solo');
   }
   if (g.arcade.practice && term) {
     payoff = `<div class="payoff payoff-raise training-investment-receipt" data-fx-payoff><span class="payoff-label">Investment signed</span><strong class="payoff-hero money-hero">+${money(d.total)}</strong><p class="training-equity-exchange">Your ownership <b>${pctOf(d.founderBefore)}</b><span aria-hidden="true">→</span><b>${pctOf(d.founderAfter)}</b></p>${ownBar(d.founderBefore,d.founderAfter)}</div>`;
