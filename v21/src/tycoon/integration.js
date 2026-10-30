@@ -262,11 +262,11 @@ export function normalizeMinigameSave(g) {
     return true;
   }
   if (!w && !a.bellIntegration && g.company.builds.some(b=>b.status==='integrating')) {
-    const kind=integrationKind(g);a.bellIntegration={q:g.q,kind};
-    if (!replayAvailable(g,kind)) {
-      if (integrationState(g)?.done) return finishIntegration(g);
-      a.integration ||= {kind,id:`q${g.q}-${kind}`,tier:'node'};a.integration.crew=crewIntegrationOutcome(g);return finishIntegration(g);
-    }
+    // Older saves may lack the bell marker. Restore authorization to finish
+    // the actual minigame; never auto-settle it with a crew result.
+    const kind=integrationKind(g);
+    if (!GAMES[kind] || !integrationState(g)) return false;
+    a.bellIntegration={q:g.q,kind};
     return true;
   }
   return false;
