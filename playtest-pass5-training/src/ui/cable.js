@@ -96,7 +96,7 @@ export function cableView(g, ui = {}) {
     `<div class="ch-board" data-ch-board style="--cols:${t.w};--rows:${t.h}" role="group" aria-label="Data hall floor, ${t.w} by ${t.h}">${boardHTML(t)}</div>${result}</div>` +
     `<aside class="arc-side"><div class="ch-queue" data-ch-queue aria-label="Cable in hand and next">${queueHTML(t)}</div>${manifest(t)}</aside></div>${intro}</div>` +
     `<span class="tt-say" data-arc-say aria-live="polite"></span></div>`;
-  return { title: 'Cable Mania', role: 'report', desk: 'tetris', exit: null, body, footer: footerFor({ out, started: t.started, name: 'Cable Mania', controls: controls(t), workshop: !!g.arcade.workshop, training: !!t.training, returnTo: ui.workshopReturnPanel==='inventory'?'Inventory':ui.workshopReturnPanel==='details'?'Company':'floor' }) };
+  return { title: 'Cable Mania', role: 'report', desk: 'tetris', exit: null, body, footer: footerFor({ out, started: t.started, name: 'Cable Mania', controls: controls(t), workshop: !!g.arcade.workshop, training: !!t.training, returnTo: 'board update' }) };
 }
 
 // ---- Partial repaint (the controller calls it after each saved step) --------------------------------------------------

@@ -276,6 +276,15 @@ export function chooseMemo(g, index) {
   return true;
 }
 
+// Pending board choices can be temporarily suspended during a between-round
+// game. Validate the actual event and option text before saving/restoring one.
+export function validPendingMemo(m) {
+  const event=EVENTS.find(e=>e.id===m?.event),options=event?.memo?.options;
+  return !!(m && options?.length===2 && Number.isSafeInteger(m.q) && m.q>=1 && m.q<=ECONOMY.rounds &&
+    typeof m.prompt==='string' && m.chosen===undefined && Array.isArray(m.options) && m.options.length===2 &&
+    m.options.every((o,i)=>o && o.label===options[i].label && o.note===(options[i].note || '')));
+}
+
 // ---- Investors' mood and the exit ---------------------------------------------------------------
 export const sentimentOf = g => clamp((g.world?.sentiment || []).reduce((n, m) => n + m.delta, 0), ...WORLD.sentiment);
 export function exitMarket(g, market) {

@@ -184,3 +184,10 @@
 /* Horizontal task swipes stay with the task navigator; vertical page scrolling
    and native pinch zoom remain available. */
 #pit .single-task-company[data-task-area] { touch-action:pan-y; touch-action:pan-y pinch-zoom; }
+
+/* Earned replay access belongs to the between-round report. */
+#pit .between-round-games { margin:16px 0; padding:12px 0; border-block:1px solid var(--hsc-grey-light); }
+#pit .between-round-games h3 { margin:0 0 6px; font-size:18px; }
+#pit .between-round-games p { margin:0 0 8px; font:14px/1.4 var(--hsc-sans); }
+#pit .between-round-games > div { display:flex; flex-wrap:wrap; gap:8px; }
+#pit .between-round-games button { min-height:44px; padding:8px 12px; border:1px solid currentColor; background:transparent; color:var(--hsc-ink); font:14px/1.3 var(--hsc-sans); cursor:pointer; }

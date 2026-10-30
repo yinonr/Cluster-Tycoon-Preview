@@ -14,7 +14,6 @@ import { V7, cash } from '../tycoon/arcade.js';
 import { GPUS, MODEL_NAMES, FOUNDER, researchOdds, cardState, freeOf, freeIn, reservedOn, openCards, companyStats, rackOutput, opsOf, BOOSTS, boostMet, burnOf, cashRevenueNow, batchableCard, batchAvailability } from '../tycoon/founder.js';
 import { NODE_GPUS, nodeGroups } from '../tycoon/integration.js';
 import { taskDeck } from '../tycoon/task-navigation.js';
-import { replayAvailable } from '../tycoon/replay-access.js';
 import { sourcingQuote, sourcingLeft } from '../tycoon/founder-market.js';
 import { money, short, rewardLine, laneOf, laneLabel, competesWith, reservedOf, rackStock, buildChange, plural, PILOT_TIMING, infrastructureTerms, rackDeliveryLine, pilotStamp } from './pit-ledger.js';
 
@@ -225,8 +224,7 @@ export function taskTile(g, card, live = true) {
     :st.ready?button('build','BUILD',`class="fc-build is-lit" data-card="${esc(card.id)}" aria-label="Build ${esc(card.name)}" ${live?'':'disabled'}`)
     :canFill(st)?button('fill','Allocate from stock',`class="fc-fill" data-card="${esc(card.id)}" ${live?'':'disabled'}`)
     :button('build','BUILD',`class="fc-build" disabled aria-label="${st.cashNeeded?'Missing capital or GPUs':'Allocate the required GPUs before building'}"`);
-  const replay=card.lane==='infra'?'cable':'node', replayName=replay==='cable'?'Cable Mania':'Node Tetris';
-  return `<article class="fc task-card current-task lane-${laneOf(card)} ${built?'is-built':''} ${expired?'is-expired':''}" data-card-id="${esc(card.id)}"><div class="current-task-content"><h3 class="fc-name">${esc(card.name)}</h3><p class="fc-reward">${esc(rewardLine(g,card))}</p>${card.cashCost?`<p class="task-capital">${built?'Capital paid':'Capital'} <b>${money(card.cashCost)}</b>${!built&&!expired&&st.cashNeeded?` · short ${money(st.cashNeeded)}`:''}</p>`:''}${card.reward.lease&&card.commercial?`<p class="task-capital">Operating cost: ${Math.round(card.commercial.cost*100)}% of base lease income</p>`:''}${slotsHTML(g,card,{live,floor:true})}<p class="task-progress">${built?'✓ Completed':expired?'Window closed':`${st.held}/${st.total} GPUs allocated`}${card.until&&!built&&!expired?fuse(card.until,card.at,g.arcade.time):''}</p>${change?`<p class="task-result"><b>${esc(change.head)}</b> ${esc(change.text)}</p>`:''}</div><footer class="fc-foot">${live&&!(st.ready&&needsReview)?button('open-card','Task details',`class="task-detail" data-card="${esc(card.id)}"`):'<span></span>'}${action}</footer>${live&&replayAvailable(g,replay)?`<div class="task-activity"><span>${replay==='node'?'Placement':'Infrastructure'}</span>${button('workshop',`Replay ${replayName}`,`data-kind="${replay}" data-replay-kind="${replay}"`)}</div>`:''}</article>`;
+  return `<article class="fc task-card current-task lane-${laneOf(card)} ${built?'is-built':''} ${expired?'is-expired':''}" data-card-id="${esc(card.id)}"><div class="current-task-content"><h3 class="fc-name">${esc(card.name)}</h3><p class="fc-reward">${esc(rewardLine(g,card))}</p>${card.cashCost?`<p class="task-capital">${built?'Capital paid':'Capital'} <b>${money(card.cashCost)}</b>${!built&&!expired&&st.cashNeeded?` · short ${money(st.cashNeeded)}`:''}</p>`:''}${card.reward.lease&&card.commercial?`<p class="task-capital">Operating cost: ${Math.round(card.commercial.cost*100)}% of base lease income</p>`:''}${slotsHTML(g,card,{live,floor:true})}<p class="task-progress">${built?'✓ Completed':expired?'Window closed':`${st.held}/${st.total} GPUs allocated`}${card.until&&!built&&!expired?fuse(card.until,card.at,g.arcade.time):''}</p>${change?`<p class="task-result"><b>${esc(change.head)}</b> ${esc(change.text)}</p>`:''}</div><footer class="fc-foot">${live&&!(st.ready&&needsReview)?button('open-card','Task details',`class="task-detail" data-card="${esc(card.id)}"`):'<span></span>'}${action}</footer></article>`;
 }
 export function companyBoard(g,ui={},live=true) {
   const deck=taskDeck(g,ui);
@@ -332,6 +330,12 @@ function sourceLine(g, card) {
 }
 
 // ---- The build moment ---------------------------------------------------------------------
+const REPLAY_NAMES = {node:'Node Tetris',cable:'Cable Mania',kernel:'Cluster Snake'};
+function replayUnlockNote(g, builds) {
+  if (g.arcade.practice) return '';
+  const kinds = [...new Set(builds.flatMap(b => b.replayUnlocks || []))].filter(k => REPLAY_NAMES[k]);
+  return kinds.length ? `<p class="bm-note replay-unlock" data-replay-unlock>${kinds.map(k => REPLAY_NAMES[k]).join(' · ')} unlocked · playable between rounds.</p>` : '';
+}
 function batchBuiltView(g) {
   const receipt = g.arcade.confirm.batch, ids = new Set(receipt.ids);
   const builds = g.company.builds.filter(b => ids.has(b.id));
@@ -363,6 +367,7 @@ function batchBuiltView(g) {
       `<p>GPU acquisition cost of deployed lots: ${money(gpuCost)} (paid at purchase)</p>` +
       (capital ? `<p>Additional capital spent: ${money(capital)}</p>` : '') +
       `<p class="batch-next">${esc(nextLine)}</p></div>` +
+      replayUnlockNote(g, builds) +
       `<p class="bm-company"><span>Valuation <b>${short(s.valuation)}</b></span><span>Revenue <b>${money(s.revenue)}</b>/rd</span></p>` +
       `</article></div>`,
     footer: button('post-receipt', 'Back to the floor <span aria-hidden="true">→</span>', 'class="mat-move rail-commit rail-solo" data-primary') };
@@ -388,6 +393,7 @@ export function builtView(g, ui = {}) {
       (b.mixed && b.status === 'integrating' ? '<p class="bm-note">MIXED · the integration crew brings it online at the bell</p>' : '') +
       `<p class="bm-company"><span>Valuation <b data-fx-valuation data-fx-format="short">${short(s.valuation)}</b></span><span>Revenue <b>${money(s.revenue)}</b>/rd</span><span>Model <b>${esc(s.model)}</b></span></p>` +
       (dealt.length ? `<p class="bm-dealt"><span>New</span> ${dealt.map(o => `<b class="lane-${laneOf(o)}">${esc(o.name)}</b>`).join(' · ')}</p>` : '') +
+      replayUnlockNote(g, [b]) +
       `<p class="payoff-fine">Cost of the GPUs consumed: ${money(b.cost)}${b.cashCost ? `; capital spent: ${money(b.cashCost)}` : ''}</p></article></div>`,
     footer: button('post-receipt', 'Back to the floor <span aria-hidden="true">→</span>', 'class="mat-move rail-commit rail-solo" data-primary') };
 }

@@ -12,6 +12,7 @@
 // Online now = 40% + 60% × (module cells in powered rows ÷ all module cells).
 import { pendingIntegration, GPUS } from './founder.js';
 import { stream } from '../util.js';
+import { gameLaunchAllowed, gameSessionAllowed, minigameRound } from './replay-access.js';
 
 export const TETRIS = Object.freeze({
   skip: .75,                 // the integration crew's fixed baseline (skip, before START)
@@ -177,23 +178,23 @@ function buildOrder(r, grid, n, H) {
 
 // ---- Lifecycle ---------------------------------------------------------------------------------------
 export function startPuzzle(g, spec = null) {
-  if (g.phase !== 'integration') return false;
+  if (!gameLaunchAllowed(g,'node',spec?.training===true)) return false;
   const builds = spec ? spec.builds.map(id => ({id})) : puzzleBuilds(g), recipe = spec ? {...spec.recipe} : puzzleRecipe(g);
   if (!builds.length) return false;
   // The training company uses the same placement engine with exactly its two GPUs.
   // A fixed, single-row rack keeps the first placement task small and repeatable.
   const P = spec?.training ? { w: W, h: 1, bay: BAY, sw: 1, swAt: 5, counts: {H100:1,H200:1},
     pieces: [{gpu:'H100',cells:[[0,0],[1,0]]},{gpu:'H200',cells:[[0,0],[0,1],[0,2]]}] }
-    : generatePuzzle(spec?.seed ?? g.seed, g.q, recipe), rows = P.bay + P.h, cells = new Array(rows * W).fill(-1);
+    : generatePuzzle(spec?.seed ?? g.seed, minigameRound(g), recipe), rows = P.bay + P.h, cells = new Array(rows * W).fill(-1);
   for (let i = 0; i < P.sw; i++) cells[(rows - 1) * W + P.swAt + i] = -2;
   const seconds = puzzleSeconds(P.pieces.length);
-  g.arcade.tetris = { id: spec?.id ?? `q${g.q}-tetris`, builds: builds.map(b => b.id), recipe, time: 0, seconds, done: false, result: null,
+  g.arcade.tetris = { id: spec?.id ?? `q${minigameRound(g)}-tetris`, builds: builds.map(b => b.id), recipe, time: 0, seconds, done: false, result: null,
     w: W, h: P.h, bay: P.bay, rows, sw: P.sw, swAt: P.swAt, counts: P.counts, pieces: P.pieces, cells,
     started: false, at: 0, cur: null, ms: 0, fall: 0, placed: 0, powered: 0, locks: 0, moves: 0, drops: 0, out: [], last: null, jam: null, reason: null };
   if (spec?.training) g.arcade.tetris.training = true;
   return true;
 }
-const live = g => g?.phase === 'integration' && g.arcade?.tetris && !g.arcade.tetris.done;
+const live = g => gameSessionAllowed(g,'node') && !g.arcade.tetris.done;
 export const puzzleOutcome = g => g.arcade?.tetris?.done ? g.arcade.tetris.result : null;
 export const currentCells = t => t.cur ? rotated(t.pieces[t.at].cells, t.cur.r) : [];
 
@@ -339,7 +340,7 @@ export const botMix = s => ({ pRandom: .6 * (1 - s) ** 2, pPlan: s * s, pFumble:
 export function autoplay(g, skill = 1, mix = null) {
   if (!live(g)) return false;
   const t = g.arcade.tetris, s = Number.isFinite(Number(skill)) ? Math.max(0, Math.min(1, Number(skill))) : 1;
-  const rng = stream(g.seed, 'v106-tetris-bot', g.q, Math.round(s * 1000), t.at, t.locks);
+  const rng = stream(g.seed, 'v106-tetris-bot', minigameRound(g), Math.round(s * 1000), t.at, t.locks);
   const { pRandom, pPlan, pFumble, look, think } = { ...botMix(s), ...mix }; // mix: tests/sims only
   const rots = t.pieces.map(p => distinctRotations(p.cells));
   let plan = null; // the planner's remaining steps, valid while the bot follows them

@@ -7,7 +7,9 @@
 // the valuation or lifetime purchases. Every game returns the same result shape and the engine applies it through
 // the V10.18 code paths (gradeOf, integrate, applyGrade): same 0.55 floor, 0.75 crew skip, same grades and bonuses.
 import { ECONOMY } from './economy-balance.js';
-import { replayAvailable } from './replay-access.js';
+import { replayAvailable, normalizeReplayAccess, minigameEligibility, completedRound, gameSessionAllowed, gameLaunchAllowed } from './replay-access.js';
+import { finishIntegration } from './arcade.js';
+import { validPendingMemo } from './world.js';
 import { stream } from '../util.js';
 import { pendingIntegration, GPUS } from './founder.js';
 import * as tetris from './tetris.js';
@@ -76,7 +78,7 @@ const FIELDS = ['tetris', 'cable', 'kernel'];
 export const integrationKind = g => g?.arcade?.integration?.kind || (g?.arcade?.tetris ? 'node' : null);
 export const integrationGame = g => GAMES[integrationKind(g)] || null;
 export const integrationState = g => { const G = integrationGame(g); return G ? g.arcade[G.field] : null; };
-export const integrationLive = g => g?.phase === 'integration' && !!integrationState(g) && !integrationState(g).done;
+export const integrationLive = g => gameSessionAllowed(g,integrationKind(g)) && !integrationState(g).done;
 
 // Record an actual deployment. Training calls this only after its purchased
 // large build is online; normal campaigns still record at their existing bell.
@@ -88,50 +90,58 @@ export function recordDeployment(g) {
   c.deploy.tier = d.tier;
   if (tierIndex(d.tier) > tierIndex(c.deploy.peak)) c.deploy.peak = d.tier;
   c.deploy.history.push({ q: g.q, tier: d.tier, scale: d.scale, fleet: d.fleet, batch: d.batch });
+  normalizeReplayAccess(g);
   return { ...d, milestone };
 }
 
 // The bell: pick the game for the company's tier, record the deployment, start it. Classic mode (a test seam)
 // always plays Node Tetris and records nothing new: the V10.18 engine exactly.
 export function startIntegration(g) {
-  if (g.phase !== 'integration') return false;
+  if (g.phase !== 'integration' || g.arcade.bellIntegration?.q!==g.q) return false;
   const builds = pendingIntegration(g).filter(b => b.status === 'integrating');
   if (!builds.length) return false;
-  if (g.arcade.integrationMode === 'classic') return NODE.start(g);
+  if (g.arcade.integrationMode === 'classic') {g.arcade.bellIntegration.kind='node';return NODE.start(g);}
   const d = recordDeployment(g), milestone = d.milestone;
   const G = GAMES[d.game].ready ? GAMES[d.game] : NODE;
   g.arcade.integration = { kind: G.kind, id: `q${g.q}-${G.kind}`, tier: d.tier, scale: d.scale, fleet: d.fleet, batch: d.batch, nodes: d.nodes, milestone };
+  g.arcade.bellIntegration.kind=G.kind;
+  if (!gameLaunchAllowed(g,G.kind)) return false;
   const recipe = tetris.puzzleRecipe(g);
   return G.start(g, { builds: builds.map(b => b.id), recipe, groups: nodeGroups(recipe), tier: d.tier, scale: d.scale });
 }
-export const integrationInput = (g, action, arg) => { const G = integrationGame(g); return G && g.phase === 'integration' ? G.input(g, action, arg) : false; };
-export const integrationTick = (g, dt) => { const G = integrationGame(g); return G && g.phase === 'integration' ? G.tick(g, dt) : false; };
-export const skipIntegration = g => { const G = integrationGame(g); return G && g.phase === 'integration' ? G.skip(g) : false; };
+export const integrationInput = (g, action, arg) => { const G = integrationGame(g); return G && gameSessionAllowed(g,G.kind) ? G.input(g, action, arg) : false; };
+export const integrationTick = (g, dt) => { const G = integrationGame(g); return G && gameSessionAllowed(g,G.kind) ? G.tick(g, dt) : false; };
+export const skipIntegration = g => { const G = integrationGame(g); return G && gameSessionAllowed(g,G.kind) ? G.skip(g) : false; };
 export function integrationOutcome(g) {
+  if (g.arcade.integration?.crew) return {...g.arcade.integration.crew};
   const G = integrationGame(g), out = G ? G.outcome(g) : null;
   return out ? { kind: G.kind, ...out } : null;
 }
-export const autoplayIntegration = (g, skill) => { const G = integrationGame(g); return G && g.phase === 'integration' ? G.autoplay(g, skill) : false; };
+export const autoplayIntegration = (g, skill) => { const G = integrationGame(g); return G && gameSessionAllowed(g,G.kind) ? G.autoplay(g, skill) : false; };
+export const crewIntegrationOutcome = g => ({kind:integrationKind(g)||'node',efficiency:INTEGRATION.skip,perfect:false,skipped:true,
+  score:0,rows:0,placed:0,pieces:0,reason:'crew-locked',seconds:0});
 // Settle: every game's state and the bell's record go; a.tetris returns to null as in V10.18.
 export function clearIntegration(g) {
   const a = g.arcade;
   a.tetris = null;
   for (const f of FIELDS.slice(1)) delete a[f];
   delete a.integration;
+  delete a.bellIntegration;
 }
 // Save validation for the integration fields (arcade-store.js).
-export function validIntegrationSave(g) {
+export function validIntegrationSave(g,{legacy=false}={}) {
   const a = g.arcade, c = g.company;
   if (c.deploy !== undefined) {
     const d = c.deploy;
     if (!d || !TIERS.some(t => t.id === d.tier) || !TIERS.some(t => t.id === d.peak) || !Array.isArray(d.history) || !d.milestones || typeof d.milestones !== 'object') return false;
     if (!d.history.every(h => Number.isSafeInteger(h.q) && TIERS.some(t => t.id === h.tier) && [h.scale, h.fleet, h.batch].every(n => Number.isSafeInteger(n) && n >= 0))) return false;
   }
-  if (g.phase !== 'integration') return !a.tetris && FIELDS.slice(1).every(f => a[f] == null) && a.integration == null;
+  if (g.phase !== 'integration') return !a.tetris && FIELDS.slice(1).every(f => a[f] == null) && a.integration == null && a.bellIntegration==null;
   const kind = a.integration?.kind || (a.tetris ? 'node' : null), G = GAMES[kind];
   if (!G) return false;
   if (a.integration && (typeof a.integration.id !== 'string' || !TIERS.some(t => t.id === a.integration.tier))) return false;
   if (!G.valid(a[G.field])) return false;
+  if (!legacy && !gameSessionAllowed(g,kind)) return false;
   return FIELDS.filter(f => f !== G.field).every(f => a[f] == null);
 }
 
@@ -142,55 +152,61 @@ const WORKSHOP_KINDS = ['node','cable'];
 // earning the existing cluster milestone also opens optional Snake free play.
 // It awards no money and cannot touch either game's per-round reward record.
 export const snakeAvailable = g => replayAvailable(g,'kernel');
-const playableWorkshop = (g, kind) => WORKSHOP_KINDS.includes(kind) || kind === 'kernel' && snakeAvailable(g);
+const playableWorkshop = (g, kind) => ['node','cable','kernel'].includes(kind) && replayAvailable(g,kind);
 export function workshopQuote(g, kind) {
   if (!playableWorkshop(g,kind) || !g?.arcade || g.q<1 || g.q>ECONOMY.rounds) return null;
-  const a=g.arcade, award=a.workshops?.awards.find(x=>x.q===g.q && x.kind===kind);
-  const max=kind==='kernel' ? 0 : ECONOMY.workshop.prizes[g.q], paid=award?.paid || 0;
+  const a=g.arcade, round=a.workshop?.q || (g.phase==='report'?completedRound(g):g.q),award=a.workshops?.awards.find(x=>x.q===round && x.kind===kind);
+  const max=kind==='kernel' ? 0 : ECONOMY.workshop.prizes[round], paid=award?.paid || 0;
   const out=a.workshop?.kind===kind ? integrationOutcome(g) : null;
   const performance=!out || out.skipped ? 0 : Math.max(0,Math.min(1,(out.efficiency-INTEGRATION.floor)/(1-INTEGRATION.floor)));
   const reward=out ? Math.max(0,Math.round(max*Math.max(award?.best || 0,performance))-paid) : 0;
-  return {kind,max,reward,paid,remaining:max-paid,best:award?.best || 0,
-    available:g.phase==='floor' && !a.active && !a.confirm && !a.signing && !a.workshop};
+  return {kind,round,max,reward,paid,remaining:max-paid,best:award?.best || 0,
+    available:minigameEligibility(g,kind).available};
 }
 export function startWorkshop(g, kind) {
   if (!workshopQuote(g,kind)?.available) return false;
   const a=g.arcade;
   a.workshops ||= {seq:0,awards:[]};
-  const seq=++a.workshops.seq, id=`workshop-${g.q}-${kind}-${seq}`;
-  const recipe={...ECONOMY.workshop.recipe}, seed=stream(g.seed,'v20-workshop',g.q,kind,seq).int(1,2147483646);
-  a.workshop={id,kind,q:g.q,seq};
+  const round=completedRound(g),seq=++a.workshops.seq,id=`workshop-${round}-${kind}-${seq}`;
+  const recipe={...ECONOMY.workshop.recipe}, seed=stream(g.seed,'v20-workshop',round,kind,seq).int(1,2147483646);
+  a.workshop={id,kind,q:round,seq,returnPhase:'report'};
+  if (g.world.memo) {a.workshop.returnMemo=structuredClone(g.world.memo);g.world.memo=null;}
   a.integration={id,kind,tier:'node',scale:ECONOMY.workshop.scale,fleet:0,batch:0,nodes:6,milestone:null,workshop:true};
   g.phase='integration';
   if (!GAMES[kind].start(g,{id,builds:[id],recipe,seed,scale:ECONOMY.workshop.scale})) {
-    delete a.workshop; clearIntegration(g); g.phase='floor'; return false;
+    const memo=a.workshop.returnMemo;delete a.workshop;clearIntegration(g);g.phase='report';if(memo)g.world.memo=memo;return false;
   }
   return true;
 }
 export function finishWorkshop(g) {
+  if (!g.arcade.workshop || g.arcade.workshop.returnPhase!=='report' || !gameSessionAllowed(g,g.arcade.workshop.kind)) return false;
+  return settleWorkshop(g,'report');
+}
+function settleWorkshop(g,returnPhase,legacyRecorded=false) {
   const a=g.arcade, w=a.workshop, out=integrationOutcome(g);
-  if (g.phase!=='integration' || !w || !out || w.q!==g.q || !playableWorkshop(g,w.kind)) return false;
+  if (g.phase!=='integration' || !w || !out || (!legacyRecorded&&!playableWorkshop(g,w.kind))) return false;
+  const round=w.q,memo=w.returnMemo;
   if (w.kind === 'kernel') {
-    delete a.workshop; clearIntegration(g); g.phase='floor';
+    delete a.workshop;clearIntegration(g);g.phase=returnPhase;if(memo)g.world.memo=memo;
     a.workshopResult={id:w.id,kind:w.kind,paid:0,earned:0,max:0};
     a.message={text:'Cluster Snake complete. Your earned free play has no cash prize; your company is unchanged.',tone:'plain'};
     return true;
   }
   // Skip is always a safe return to the floor; playing poorly never reduces an earlier prize.
   const performance=out.skipped ? 0 : Math.max(0,Math.min(1,(out.efficiency-INTEGRATION.floor)/(1-INTEGRATION.floor)));
-  let award=a.workshops.awards.find(x=>x.q===g.q && x.kind===w.kind);
-  if (!award) {award={q:g.q,kind:w.kind,best:0,paid:0,plays:0};a.workshops.awards.push(award);}
+  let award=a.workshops.awards.find(x=>x.q===round && x.kind===w.kind);
+  if (!award) {award={q:round,kind:w.kind,best:0,paid:0,plays:0};a.workshops.awards.push(award);}
   award.plays++; award.best=Math.max(award.best,performance);
-  const earned=Math.round(ECONOMY.workshop.prizes[g.q]*award.best), paid=Math.max(0,earned-award.paid);
+  const earned=Math.round(ECONOMY.workshop.prizes[round]*award.best), paid=Math.max(0,earned-award.paid);
   award.paid+=paid;
   a.ledger.workshops+=paid;
   g.cash=(Math.round(g.cash*100)+paid)/100;
-  a.workshopResult={id:w.id,kind:w.kind,paid,earned:award.paid,max:ECONOMY.workshop.prizes[g.q]};
-  delete a.workshop; clearIntegration(g); g.phase='floor';
+  a.workshopResult={id:w.id,kind:w.kind,paid,earned:award.paid,max:ECONOMY.workshop.prizes[round]};
+  delete a.workshop;clearIntegration(g);g.phase=returnPhase;if(memo)g.world.memo=memo;
   a.message={text:paid ? `Workshop contract paid $${(paid/100).toLocaleString('en-US')}. Replay either game freely; each round pays only improvements to your best result.` : 'Workshop complete. Replay freely; only improvements to your best result earn more this round.',tone:paid?'good':'plain'};
   return true;
 }
-export function validWorkshopSave(g) {
+export function validWorkshopSave(g,{legacy=false}={}) {
   const a=g.arcade, w=a.workshops, int=Number.isSafeInteger;
   if (!w || !int(w.seq) || w.seq<0 || !Array.isArray(w.awards) || w.awards.length>ECONOMY.rounds*2) return false;
   const keys=new Set();
@@ -200,7 +216,41 @@ export function validWorkshopSave(g) {
     keys.add(key);
   }
   if (w.awards.reduce((sum,x)=>sum+x.paid,0)!==a.ledger.workshops) return false;
-  if (a.workshop && (g.phase!=='integration' || !int(a.workshop.seq) || a.workshop.seq!==w.seq || a.workshop.q!==g.q || !playableWorkshop(g,a.workshop.kind) || a.workshop.kind!==integrationKind(g) || a.workshop.id!==a.integration?.id || a.integration?.workshop!==true)) return false;
+  if (a.workshop) {
+    const p=a.workshop,old=legacy && p.returnPhase===undefined;
+    if (g.phase!=='integration' || !int(p.seq) || p.seq!==w.seq || !int(p.q) || (old?p.q!==g.q:p.returnPhase!=='report' || p.q!==completedRound(g) || g.q!==p.q+1 || p.q>=5) ||
+      (!old&&!playableWorkshop(g,p.kind)) || !['node','cable','kernel'].includes(p.kind) || p.kind!==integrationKind(g) || p.id!==a.integration?.id || a.integration?.workshop!==true) return false;
+    if (p.returnMemo!==undefined && (!validPendingMemo(p.returnMemo) || p.returnMemo.q!==p.q)) return false;
+  }
   if (a.integration?.workshop && !a.workshop) return false;
   return true;
+}
+
+// Earlier previews allowed active-round workshops. Resume no such live board:
+// unfinished practice is cancelled without payment; an already recorded result
+// is settled once against its original round budget. Real bell integrations
+// keep their board and receive the explicit post-bell authorization marker.
+export function normalizeMinigameSave(g) {
+  if (g.phase!=='integration' || g.arcade.practice) return false;
+  const a=g.arcade,w=a.workshop;
+  if (w && w.returnPhase===undefined) {
+    const out=integrationOutcome(g);
+    if (out) {
+      if (!settleWorkshop(g,'floor',true)) return false;
+      a.message={text:'Your saved workshop result was settled once. Minigames are now available only between rounds.',tone:'plain'};
+    } else {
+      delete a.workshop;clearIntegration(g);g.phase='floor';
+      a.message={text:'Your unfinished workshop was closed without a prize. Company resources are unchanged; earned games are playable between rounds.',tone:'plain'};
+    }
+    return true;
+  }
+  if (!w && !a.bellIntegration && g.company.builds.some(b=>b.status==='integrating')) {
+    const kind=integrationKind(g);a.bellIntegration={q:g.q,kind};
+    if (!replayAvailable(g,kind)) {
+      if (integrationState(g)?.done) return finishIntegration(g);
+      a.integration ||= {kind,id:`q${g.q}-${kind}`,tier:'node'};a.integration.crew=crewIntegrationOutcome(g);return finishIntegration(g);
+    }
+    return true;
+  }
+  return false;
 }

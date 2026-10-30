@@ -8,6 +8,7 @@
 // Pure, deterministic (stream(seed, 'v119-cable', …), no Math.random, no clock) and JSON state in g.arcade.cable.
 import { stream } from '../util.js';
 import { GPUS } from './founder.js';
+import { gameLaunchAllowed, gameSessionAllowed, minigameRound } from './replay-access.js';
 
 export const CABLE = Object.freeze({
   w: 7, h: 7,
@@ -124,7 +125,7 @@ function dealQueue(seed, q, solution) {
 
 // ---- Lifecycle --------------------------------------------------------------------------------------------------
 export function startCable(g, spec) {
-  if (g.phase !== 'integration' || !spec?.builds?.length) return false;
+  if (!gameLaunchAllowed(g,'cable',spec?.training===true) || !spec?.builds?.length) return false;
   // The small practice hall has two real GPU nodes and two cable slots. All
   // placement, rotation, reciprocal-port and signal rules below remain shared.
   const practice = () => {
@@ -133,10 +134,10 @@ export function startCable(g, spec) {
     cells[7]={t:'s',m:15}; cells[8]={t:'e'}; cells[9]={t:'n',m:8,gpu:'H200',gpus:1};
     return {cells,spine:7,nodes:[{i:5,m:2,gpu:'H100',gpus:1},{i:9,m:8,gpu:'H200',gpus:1}],solution:[{i:6,m:10},{i:8,m:10}],attempt:0};
   };
-  const B = spec.training ? practice() : generateCable(spec.seed ?? g.seed, g.q, spec.recipe, spec.scale || 48), w = spec.training ? 5 : W, h = spec.training ? 3 : H;
+  const B = spec.training ? practice() : generateCable(spec.seed ?? g.seed, minigameRound(g), spec.recipe, spec.scale || 48), w = spec.training ? 5 : W, h = spec.training ? 3 : H;
   g.arcade.cable = {
-    id: spec.id ?? `q${g.q}-cable`, builds: [...spec.builds], recipe: { ...spec.recipe }, w, h, cells: B.cells, spine: B.spine,
-    nodes: B.nodes.map(n => ({ ...n, online: false, at: null })), solution: B.solution, queue: spec.training ? [{k:'I',r:0},{k:'I',r:0}] : dealQueue(g.seed, g.q, B.solution), qi: 0, selected: 0,
+    id: spec.id ?? `q${minigameRound(g)}-cable`, builds: [...spec.builds], recipe: { ...spec.recipe }, w, h, cells: B.cells, spine: B.spine,
+    nodes: B.nodes.map(n => ({ ...n, online: false, at: null })), solution: B.solution, queue: spec.training ? [{k:'I',r:0},{k:'I',r:0}] : dealQueue(g.seed, minigameRound(g), B.solution), qi: 0, selected: 0,
     cursor: B.spine, prime: 0, seconds: 0, started: false, done: false, result: null, reason: null,
     ms: 0, signal: { on: false, fast: false, acc: 0, front: [], steps: 0, sentAt: null }, live: Array(w * h).fill(0), drops: [],
     placed: 0, replaced: 0, energized: 0, last: null, attempt: B.attempt,
@@ -145,7 +146,7 @@ export function startCable(g, spec) {
   return true;
 }
 const state = g => g?.arcade?.cable;
-const live = g => g?.phase === 'integration' && !!state(g) && !state(g).done;
+const live = g => gameSessionAllowed(g,'cable') && !state(g).done;
 export const cableOutcome = g => state(g)?.done ? state(g).result : null;
 export const handPiece = t => t.selected === undefined ? t.queue[t.qi] || null : t.queue[t.selected] && !t.queue[t.selected].used ? t.queue[t.selected] : null;
 export const handMask = t => { const p = handPiece(t); return p ? pieceMask(p) : 0; };
@@ -304,7 +305,7 @@ export function autoplayCable(g, skill = 1, override = null) {
   const mix = { ...cableBotMix(s), ...override };
   cableInput(g, 'start');
   for (const x of t.solution) {
-    const k = kindOf(x.m), r = stream(g.seed, 'v119-cable-bot', g.q, Math.round(s * 1000), x.i);
+    const k = kindOf(x.m), r = stream(g.seed, 'v119-cable-bot', minigameRound(g), Math.round(s * 1000), x.i);
     cableInput(g, 'select', k);
     const wrong = r.chance(mix.pWrong) && !r.chance(mix.pFix);
     const target = wrong ? rotateMask(x.m, r.int(1, 3)) : x.m;

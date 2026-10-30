@@ -8,6 +8,7 @@
 // Pure, deterministic (stream(seed, 'v119-kernel', …), no Math.random, no clock) and JSON state in g.arcade.kernel.
 import { stream } from '../util.js';
 import { GPUS } from './founder.js';
+import { gameLaunchAllowed, gameSessionAllowed, minigameRound } from './replay-access.js';
 
 export const KERNEL = Object.freeze({
   w: 12, h: 12, length: 3,
@@ -44,7 +45,7 @@ function fleetLayout(recipe) {
 
 // ---- Lifecycle --------------------------------------------------------------------------------------------------
 export function startKernel(g, spec) {
-  if (g.phase !== 'integration' || !spec?.builds?.length) return false;
+  if (!gameLaunchAllowed(g,'kernel',spec?.training===true) || !spec?.builds?.length) return false;
   if (spec.training) {
     const w=6,h=5;
     g.arcade.kernel={id:spec.id || 'practice-kernel',builds:[...spec.builds],recipe:{...spec.recipe},w,h,
@@ -55,16 +56,16 @@ export function startKernel(g, spec) {
   }
   const target = targetFor(spec.scale || 256), x0 = Math.floor(W / 2);
   const t = {
-    id: `q${g.q}-kernel`, builds: [...spec.builds], recipe: { ...spec.recipe }, w: W, h: H, gpus: fleetLayout(spec.recipe), rk: recipeKey(spec.recipe),
+    id: `q${minigameRound(g)}-kernel`, builds: [...spec.builds], recipe: { ...spec.recipe }, w: W, h: H, gpus: fleetLayout(spec.recipe), rk: recipeKey(spec.recipe),
     snake: [at(x0, H - 3), at(x0, H - 2), at(x0, H - 1)], dir: 'up', turns: [], jobs: [], hot: [], busy: Array(W * H).fill(0),
     target, ran: 0, spawns: 0, ms: 0, acc: 0, seconds: timeFor(target), started: false, done: false, result: null, reason: null, crash: null, last: null,
   };
-  for (let k = 0; k < KERNEL.jobs; k++) spawnJob(g.seed, g.q, t);
+  for (let k = 0; k < KERNEL.jobs; k++) spawnJob(g.seed, minigameRound(g), t);
   g.arcade.kernel = t;
   return true;
 }
 const state = g => g?.arcade?.kernel;
-const live = g => g?.phase === 'integration' && !!state(g) && !state(g).done;
+const live = g => gameSessionAllowed(g,'kernel') && !state(g).done;
 export const kernelOutcome = g => state(g)?.done ? state(g).result : null;
 const occupied = (t, i) => t.snake.includes(i) || t.hot.includes(i) || t.jobs.some(j => j.i === i);
 // A tile the stream can enter and leave again: at least two neighbours that are neither the edge nor throttled.
@@ -132,7 +133,7 @@ export function kernelInput(g, action, arg) {
     // current direction advances one cell; reversing into the body still fails.
     if (arg===BACK[t.dir]) return false;
     if (arg!==t.dir) t.turns.push(arg);
-    return move(g.seed,g.q,t);
+    return move(g.seed,minigameRound(g),t);
   }
   const last = t.turns.at(-1) || t.dir;
   if (arg === last || arg === BACK[last] || t.turns.length >= 2) return false;
@@ -149,7 +150,7 @@ export function kernelTick(g, dt) {
     const per = moveMs(t), step = Math.min(ms, per - t.acc, limit - t.ms);
     t.ms += step; t.acc += step; ms -= step;
     if (t.ms >= limit) { finish(t, 'time'); break; }
-    if (t.acc >= per) { t.acc = 0; move(g.seed, g.q, t); }
+    if (t.acc >= per) { t.acc = 0; move(g.seed, minigameRound(g), t); }
   }
   return true;
 }
@@ -177,7 +178,7 @@ export function autoplayKernel(g, skill = 1, override = null) {
   const t = state(g), s = Math.max(0, Math.min(1, Number.isFinite(Number(skill)) ? Number(skill) : 1)), mix = { ...kernelBotMix(s), ...override }; // override: calibration only
   kernelInput(g, 'start');
   for (let guard = 0; guard < 4000 && !t.done; guard++) {
-    const rng = stream(g.seed, 'v119-kernel-bot', g.q, Math.round(s * 1000), t.ran, guard), head = t.snake[0];
+    const rng = stream(g.seed, 'v119-kernel-bot', minigameRound(g), Math.round(s * 1000), t.ran, guard), head = t.snake[0];
     const blocked = new Set([...t.snake.slice(0, -1), ...t.hot]);
     const options = Object.keys(DIR).filter(d => d !== BACK[t.dir]).map(d => ({ d, n: stepFrom(head, d, t.w, t.h) })).filter(o => o.n >= 0 && !blocked.has(o.n));
     let pick = null;

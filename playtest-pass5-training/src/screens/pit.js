@@ -10,7 +10,8 @@ import { arcadeStore } from '../tycoon/arcade-store.js';
 import { trainingStore, TRAINING_KEY } from '../tycoon/training-store.js';
 import { trainingMutate, trainingAction, trainingHandoffStatus } from '../tycoon/training.js';
 import { taskViewStore, selectTaskContext } from '../tycoon/task-navigation.js';
-import { grantTrainingReplays, migrateLearnedAccess } from '../tycoon/replay-access.js';
+import { stableOfferSeats } from '../tycoon/pit-layout-state.js';
+import { minigameEligibility } from '../tycoon/replay-access.js';
 import { trainingStage, trainingGuidance } from '../ui/training.js';
 import { selectBaburExpression, attachBaburArtFallback } from '../ui/babur.js';
 import { V7, advance, available, activeLot, cents, claim, leave, haggle, closeQuarter, openQuarter } from '../tycoon/arcade.js';
@@ -46,9 +47,6 @@ let storage; try { storage = localStorage; } catch { storage = { getItem() { thr
 const campaign = arcadeStore(storage);
 const training = trainingStore(storage);
 const taskView = taskViewStore(storage);
-// Existing completed lessons establish learned play access without copying any
-// practice build, ownership, resources or actual deployment milestone.
-if (!training.state?.launchPending) migrateLearnedAccess(campaign,training.completed);
 // Input controllers use the same engine callbacks against the active company.
 // A lesson can never write the campaign record, even when replayed mid-round.
 const store = {
@@ -90,10 +88,9 @@ const seed = () => urlSeed() ?? newSeed();
 // Every player action re-renders from authoritative state, then the room answers what changed.
 const act = fn => {
   const before = fx.snapshot(store.state), workshop=store.state?.arcade.workshop, ok = store.act(fn);
-  if (ok && workshop && store.state?.phase==='floor' && !store.state.arcade.workshop) {
-    ui.panel=ui.workshopReturnPanel || 'floor';returnFocus=ui.workshopReturnFocus || null;
-    if (ui.panel!=='floor') ui.panelReturnFocus=ui.workshopOuterReturnFocus;
-    delete ui.workshopReturnPanel;delete ui.workshopReturnFocus;delete ui.workshopOuterReturnFocus;
+  if (ok && workshop && store.state?.phase==='report' && !store.state.arcade.workshop) {
+    ui.panel='floor';
+    returnFocus=`[data-action="workshop"][data-kind="${workshop.kind}"]`;
   }
   if (ok || store.error) render();
   if (ok) fx.play(root, fx.effects(before, fx.snapshot(store.state)), sound);
@@ -275,9 +272,14 @@ function focusTaskSupply(g,d) {
   const card=g.arcade.objectives.find(c=>c.id===d.card);
   if (!card || !taskView.choose(g,card.id)) return false;
   ui.taskId=card.id;ui.taskLane=card.lane;ui.taskRound=g.q;ui.panel='floor';ui.floorGpu=d.gpu;ui.floorNeed=Math.max(1,Number(d.need)||1);ui.floorPage=0;
+  // This deliberate sourcing action may choose the first page with matching
+  // live supply. Ordinary arrivals never reshuffle the occupied broker seats.
+  ui.floorPage=stableOfferSeats(g,ui,innerWidth<=600?2:4).firstLivePage ?? 0;
   clearInputs();const clock=last;render();last=clock;
   const offer=[...root.querySelectorAll('[data-floor-offer],[data-action="focus-supplier"]')].find(el=>!el.disabled && el.getClientRects().length);
-  (offer || root.querySelector('[data-floor-filter]') || root.querySelector('[data-task-area]'))?.focus({preventScroll:true});
+  const target=offer || root.querySelector('[data-floor-filter]') || root.querySelector('[data-task-area]');
+  target?.focus({preventScroll:true});
+  if (innerWidth<=768) target?.scrollIntoView({block:'center',behavior:'auto'});
   return true;
 }
 function completeTraining(skip = false) {
@@ -287,12 +289,12 @@ function completeTraining(skip = false) {
     if (!training.prepareFinish(campaign.state)) { render(); return; }
     const status = trainingHandoffStatus(training.state, campaign.state);
     if (status === 'conflict') { ui.handoffError = 'Your company changed in another tab. Your lesson and company are preserved. Reload the latest tab before starting a new company.'; render(); return; }
-    if (status === 'retry' && !campaign.restart(t.seed, t.name,{learnedGames:true})) { render(); return; }
-    if (status === 'complete' && !campaign.state.arcade.replays && !campaign.act(grantTrainingReplays)) { render(); return; }
+    if (status === 'retry' && !campaign.restart(t.seed, t.name)) { render(); return; }
   }
   if (!training.finish()) { render(); return; }
-  migrateLearnedAccess(campaign,training.completed);
-  if (!t.replay) taskView.reset();
+  if (!t.replay) {
+    taskView.reset();delete ui.pitSeatState;ui.pitFundingSeen=[];ui.floorPageCount=1;
+  }
   ui.panel = 'floor'; ui.cardId = null; ui.guide = null; ui.entry = null; ui.training = null;
   ui.floorGpu=null;ui.floorNeed=0;ui.floorPage=0;
   clearInputs(); prefs.founded = prefs.intro = prefs.welcome = true; prefs.save();
@@ -329,7 +331,14 @@ root.addEventListener('input', e => {
 });
 
 // Charm stops on the press itself; the click that press later synthesizes is swallowed once.
-let swallowClick = false,taskSwipe=null,taskSwipeClickUntil=0;
+let swallowClick = false,taskSwipe=null,taskSwipeClickUntil=0,pressedMarketTarget=null;
+// A quote that refreshes between press and release must never select a different
+// broker or funding offer. Keyboard activation uses the currently focused offer.
+root.addEventListener('pointerdown',e=>{
+  const b=e.target.closest?.('button[data-action]');
+  pressedMarketTarget=b && ['focus-supplier','review-term'].includes(b.dataset.action)
+    ? `${b.dataset.action}:${b.dataset.id}` : null;
+});
 root.addEventListener('pointerdown',e=>{
   if (!taskNavigationReady() || !['touch','pen'].includes(e.pointerType) || !e.target.closest?.('[data-task-area]') || e.target.closest?.('input,textarea,select,[contenteditable="true"]')) return;
   taskSwipe={id:e.pointerId,x:e.clientX,y:e.clientY};
@@ -345,13 +354,15 @@ root.addEventListener('pointerup',e=>{
   if (Math.abs(dx)<48 || Math.abs(dx)<=Math.abs(dy)*1.4) return;
   if (changeTask(dx<0?1:-1)) {taskSwipeClickUntil=performance.now()+400;if(e.cancelable)e.preventDefault();}
 });
-root.addEventListener('pointercancel',()=>{taskSwipe=null;});
+root.addEventListener('pointercancel',()=>{taskSwipe=null;pressedMarketTarget=null;});
 root.addEventListener('pointerdown', e => { swallowClick = false; const b = e.target.closest('[data-action="stop-rizz"]'); if (b && !b.disabled && e.button === 0) { swallowClick = true; e.preventDefault(); stopMeter(); } });
 root.addEventListener('click', e => {
   if (performance.now()<taskSwipeClickUntil) {e.preventDefault();return;}
   if (swallowClick) { swallowClick = false; e.preventDefault(); return; }
   const b = e.target.closest('button[data-action]'); if (!b || b.disabled) return;
   const a = b.dataset.action, g = store.state, d = b.dataset;
+  const pressed=pressedMarketTarget;pressedMarketTarget=null;
+  if (e.detail>0 && pressed && ['focus-supplier','review-term'].includes(a) && pressed!==`${a}:${d.id}`) {e.preventDefault();return;}
   if (a === 'enter-floor') { prefs.welcome = true; prefs.save(); ui.entry = null; render(); return; }
   if (a === 'hint-dismiss') { ui.hint = null; render(); return; }
   if (a === 'guide-close' || a === 'guide-dismiss') { closeGuide(); return; }
@@ -381,15 +392,14 @@ root.addEventListener('click', e => {
   if (a==='task-source') {focusTaskSupply(g,d);return;}
   if (a==='floor-filter-reset') {ui.floorGpu=null;ui.floorNeed=0;ui.floorPage=0;returnFocus=remember(b);const clock=last;render();last=clock;return;}
   if (a==='floor-page') {
-    const count=g.arcade.lots.filter(l=>available(g,l) && (!ui.floorGpu || l.gpu===ui.floorGpu)).length,size=innerWidth<=600?2:4;
-    ui.floorPage=Math.max(0,Math.min(Math.max(0,Math.ceil(count/size)-1),ui.floorPage+(Number(d.step)||0)));
+    if (!taskNavigationReady()) return;
+    const pages=Math.max(1,Number(ui.floorPageCount)||1);
+    ui.floorPage=Math.max(0,Math.min(pages-1,ui.floorPage+(Number(d.step)||0)));
     returnFocus=remember(b);const clock=last;render();last=clock;return;
   }
   if (a === 'open-details' || a === 'open-inventory') { returnFocus = remember(b); openPanel(a === 'open-details' ? 'details' : 'inventory'); return; }
   if (a === 'workshop') {
-    if (ui.focusOpen && !['inventory','details'].includes(ui.panel) || g.phase !== 'floor') return;
-    ui.workshopReturnPanel=ui.panel;ui.workshopReturnFocus=remember(b);
-    ui.workshopOuterReturnFocus=returnFocus;
+    if (!minigameEligibility(g,d.kind).available) return;
     returnFocus = remember(b); ui.panel = 'floor';
     act(g => startWorkshop(g, d.kind)); return;
   }

@@ -1,6 +1,7 @@
 import { V7 } from './arcade.js';
 import { validSave } from './arcade-store.js';
 import { createTraining, validTraining, trainingAction, upgradeTraining } from './training.js';
+import { normalizeReplayAccess } from './replay-access.js';
 
 export const TRAINING_KEY = `${V7.key}-training`;
 const empty = () => ({version:1,rev:0,completed:false,session:null});
@@ -15,6 +16,7 @@ export function trainingStore(storage) {
     if (raw!==null) {
       profile=JSON.parse(raw);
       if (profile?.session?.version===1) {profile.session=upgradeTraining(profile.session);migrated=true;}
+      if (profile?.session?.practice?.arcade && normalizeReplayAccess(profile.session.practice)) migrated=true;
       if (!valid(profile)) throw Error('Invalid training save');
     }
   } catch { profile=empty(); error='Cannot read this training save. It has been preserved. Your campaign save is unchanged.'; }

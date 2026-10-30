@@ -4,7 +4,7 @@
 // throughout (legacy g.cash/g.profit are dollars). Base streams keep their V10.5 names, so a
 // seed deals the same base market as V10.5.
 import { ECONOMY } from './economy-balance.js';
-import { learnedReplays } from './replay-access.js';
+import { campaignReplayAccess } from './replay-access.js';
 import { growProduct } from './commerce.js';
 import { HOURS_PER_MONTH } from '../data/gpus.js';
 import { openingNegotiation, counteroffer } from './arcade-negotiation.js';
@@ -13,7 +13,7 @@ import { FOUNDER, createCompany, dealCards, opportunityCard, openCards, freeOf, 
 import { createWorld, worldOpen, worldTick, worldBell, exitMarket, epilogue } from './world.js';
 import { makeRoundLots, makeResaleBids, marketEvent, commitmentLots, PHASES, sourcingQuote, sourcedLot } from './founder-market.js';
 import { planInvestor } from './investors.js';
-import { startIntegration, integrationOutcome, clearIntegration, finishWorkshop } from './integration.js';
+import { startIntegration, integrationOutcome, clearIntegration, finishWorkshop, crewIntegrationOutcome } from './integration.js';
 import { stream } from '../util.js';
 import { strategicOpen, strategicBell, strategicBusy, deliverCompute, endStrategic, computeAlternative } from './strategic.js';
 import { institutionalTerms, institutionalBell } from './institutional.js';
@@ -43,13 +43,13 @@ export function record(g, kind, amount) {
 }
 export const ledgerCash = L => V7.cash + L.raised + L.revenue + L.contracts + L.resale + (L.workshops || 0) - L.purchases - L.burn - L.research - L.capex - L.penalties;
 
-export function createArcade(seed, name = '', { scenarios = true, learnedGames = false } = {}) {
+export function createArcade(seed, name = '', { scenarios = true } = {}) {
   const g = { v: V7.version, seed, q: 1, phase: 'ready', cash: V7.cash / 100, profit: 0, clout: 0, firms: {}, company: createCompany(seed, name), world: createWorld() };
   g.arcade = { version: V7.version, rev: 0, seconds: V7.seconds, time: 0, active: null, confirm: null, signing: null, history: [], receipts: [], lots: [], inventory: [], purchases: [],
     buyers: [], sales: [], objectives: [], reservations: [], built: [], terms: [], event: null, message: null, sourcingFor: null,
     workshops: {seq:0,awards:[]}, ledger: { workshops: 0, raised: 0, inKind: 0, revenue: 0, contracts: 0, resale: 0, purchases: 0, burn: 0, research: 0, capex: 0, penalties: 0, expired: 0 }, exit: null, ending: null };
   g.world.scen = createScenarios(scenarios);
-  if (learnedGames) g.arcade.replays=learnedReplays();
+  g.arcade.replays=campaignReplayAccess();
   openQuarter(g);
   return g;
 }
@@ -186,7 +186,14 @@ export function closeQuarter(g) {
   g.arcade.reservations = [];
   if (pendingIntegration(g).some(b => b.status === 'integrating')) {
     g.phase = 'integration';
-    startIntegration(g);
+    g.arcade.bellIntegration={q:g.q,kind:null};
+    if (!startIntegration(g)) {
+      // A locked automatically chosen game cannot bypass earned access. The
+      // existing integration crew brings up the same fixed 75% baseline.
+      g.arcade.integration ||= {kind:g.arcade.bellIntegration.kind || 'node',id:`q${g.q}-crew`,tier:'node'};
+      g.arcade.integration.crew=crewIntegrationOutcome(g);
+      return finishIntegration(g);
+    }
     const kind = g.arcade.integration?.kind || 'node';
     notice(g, kind === 'cable' ? 'The bell has rung. Cable your nodes into the fabric: every node the link signal reaches comes online now.'
       : kind === 'kernel' ? 'The bell has rung. Put the new capacity to work: every kernel you schedule brings more of it online now.'
@@ -200,6 +207,7 @@ export function closeQuarter(g) {
 export function finishIntegration(g) {
   if (g.phase !== 'integration') return false;
   if (g.arcade.workshop) return finishWorkshop(g);
+  if (g.arcade.bellIntegration?.q!==g.q) return false;
   const out = integrationOutcome(g);
   if (!out || !(out.efficiency >= 0 && out.efficiency <= 1)) return false;
   return settle(g, out);
@@ -226,6 +234,7 @@ function settle(g, out) {
   for (const b of c.builds.filter(b => !b.outcome && b.online > 0 && (!b.reward.ip || b.online === 1) && outcomeEligible(b))) resolveOutcome(g, b);
   const gains = grade ? applyGrade(g, grade, racked) : null;
   const puzzle = out ? { efficiency: out.efficiency, perfect: !!out.perfect, skipped: !!out.skipped, score: out.score ?? null, rows: out.rows ?? null, placed: out.placed ?? null, pieces: out.pieces ?? null, grade, gains } : null;
+  if (puzzle && out.reason==='crew-locked') puzzle.reason='crew-locked';
   // V20: which game integrated this bell, and at what operational scale (absent in classic mode).
   if (puzzle && a.integration) Object.assign(puzzle, { kind: out.kind, tier: a.integration.tier, scale: a.integration.scale, nodes: a.integration.nodes, detail: out.detail ?? null });
   clearIntegration(g);

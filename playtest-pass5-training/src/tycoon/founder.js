@@ -4,6 +4,7 @@
 // recipes, allocation, builds, integration and the company's growth. Rules: docs/V10_5_FOUNDER.md.
 // Money is integer cents. Every random draw comes from a named seeded stream.
 import { ECONOMY } from './economy-balance.js';
+import { contextualUnlocks, unlockBuiltGames } from './replay-access.js';
 import { stream } from '../util.js';
 import { businessCard, campusCard, hiringCard, researchProject, commercialBurn, commerceReward, staffEffect } from './commerce.js';
 
@@ -449,6 +450,7 @@ export function fill(g, cardId) {
 export function build(g, cardId) {
   const a = g.arcade, c = g.company, card = a.objectives.find(o => o.id === cardId);
   if (!card || a.active || a.signing || a.confirm || !cardState(g, card).ready) return false;
+  const previousReplayAccess=contextualUnlocks(g);
   const moonshot = card.moonshot !== undefined, m = g.world.institutional?.moonshot;
   if (moonshot && (m?.card !== card.id || m.state !== (card.moonshot ? 'training' : 'cluster'))) return false;
   // Validate every reservation before consuming any: the build is all or nothing.
@@ -475,6 +477,7 @@ export function build(g, cardId) {
   const customer = card.customer || customerOf(card);
   if (customer) b.customer = customer;
   c.builds.push(b);
+  unlockBuiltGames(g,b,previousReplayAccess);
   if (moonshot) {
     b.moonshot = card.moonshot; b.cashCost = cashCost;
     m[card.moonshot ? 'trainingBuild' : 'clusterBuild'] = b.id;

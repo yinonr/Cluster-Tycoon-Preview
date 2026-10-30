@@ -80,7 +80,7 @@ export function upgradeTraining(previous) {
   return t;
 }
 
-export const canonicalRoundOne = t => createArcade(t.seed,t.name,{learnedGames:true});
+export const canonicalRoundOne = t => createArcade(t.seed,t.name);
 
 // Restart increments a storage revision; every economic/progression field must
 // still match the full canonical company. An unrelated tab's progress is never
@@ -97,7 +97,11 @@ export function trainingHandoffStatus(t, main) {
     delete copy.arcade.replays;delete canonical.arcade.replays;
     if (JSON.stringify(copy)===JSON.stringify(canonical)) return 'complete';
   }
-  return JSON.stringify(main??null)===t.launchFrom ? 'retry' : 'conflict';
+  try {
+    const current=main?structuredClone(main):null,previous=JSON.parse(t.launchFrom);
+    for (const value of [current,previous]) if (value?.arcade) {delete value.arcade.replays;value.arcade.rev=0;}
+    return JSON.stringify(current)===JSON.stringify(previous) ? 'retry' : 'conflict';
+  } catch {return 'conflict';}
 }
 
 // Call through trainingStore.act. A practice facade can wrap every existing

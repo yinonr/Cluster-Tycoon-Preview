@@ -23,6 +23,7 @@ import { money, signed, rate, short, pctOf, bpsText, phaseName, plural, supplier
   laneOf, laneLabel, runText, draftOwnership } from './pit-ledger.js';
 import { cardDeskView, builtView, gchip, gpuTag } from './pit-company.js';
 import { integrationView } from './integration.js';
+import { minigameEligibility } from '../tycoon/replay-access.js';
 
 export { money };
 const button = (action, label, attrs = '') => `<button type="button" data-action="${action}" ${attrs}>${label}</button>`;
@@ -347,6 +348,13 @@ function buildLine(g, b) {
   if (R.hype) return `Breakthrough · +${short(b.ipPaid || 0)} research IP`;
   return 'Built';
 }
+function betweenRoundGames(g) {
+  if (g.phase !== 'report') return '';
+  const games = [['node','Node Tetris'],['cable','Cable Mania'],['kernel','Cluster Snake']]
+    .filter(([kind]) => minigameEligibility(g,kind).available);
+  if (!games.length) return '';
+  return `<section class="between-round-games" data-between-round-games aria-labelledby="between-round-games-title"><h3 id="between-round-games-title">Between-round games</h3><p>Play with loaner hardware, or open the next round.</p><div>${games.map(([kind,name]) => button('workshop',name,`data-kind="${kind}" data-replay-kind="${kind}"`)).join('')}</div></section>`;
+}
 function reportView(g) {
   const a = g.arcade, r = a.history.at(-1), c = g.company, next = marketEvent(g);
   const builds = r.builds.map(id => c.builds.find(b => b.id === id)).filter(Boolean).sort((a,b) => Number(!!b.scenario || !!b.result) - Number(!!a.scenario || !!a.result));
@@ -392,6 +400,7 @@ function reportView(g) {
       (r.expiredQty ? `<p class="bu-expired"><span>Expired unbuilt</span><b>${plural(r.expiredQty, 'GPU')}</b><small>${money(r.expiredCost)} already paid</small></p>` : '') +
       (r.prepaid ? `<p class="bu-expired"><span>Prepaid earlier</span><b>${money(r.prepaid)}</b></p>` : '') +
       `<p class="bu-value"><span>Valuation</span><b>${short(r.valueBefore)}</b><i aria-hidden="true">→</i><b class="${r.value >= r.valueBefore ? 'pos' : 'neg'}">${short(r.value)}</b><span class="bu-own">You own <b>${pctOf(r.founderPct)}</b></span></p>` +
+      betweenRoundGames(g) +
       `<p class="news-next"><span>Next</span><b>R${g.q} · ${esc(phaseName(g.q))}</b><em class="bu-event kind-${esc(next.kind)}">${esc(next.text)}</em></p></article></div>`,
     footer: button('restart-review', 'New run', 'class="mat-exit rail-quiet"') + (g.world?.memo ? '<span class="rail-fact">Answer the board first</span>' : moveOn('next', `Open round ${g.q}<span class="wide"> / ${V7.rounds}</span>`)) };
 }

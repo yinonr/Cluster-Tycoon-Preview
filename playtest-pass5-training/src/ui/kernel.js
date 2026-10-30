@@ -57,7 +57,7 @@ export function kernelView(g,ui={}) {
     `<div class="ks-board" data-ks-board style="--cols:${t.w};--rows:${t.h}" role="img" aria-label="${esc(`Fleet grid: ${t.ran} of ${t.target} kernels run, stream length ${t.snake.length}, heading ${t.dir}`)}">${gridHTML(t)}</div>${result}</div>` +
     `<aside class="arc-side">${t.training ? '<p class="training-board-note">Each arrow press moves one cell in this lesson. The main game moves continuously.</p>' : manifest(t)}</aside></div>${intro}</div>` +
     `<span class="tt-say" data-arc-say aria-live="polite"></span></div>`;
-  return { title: name, role: 'report', desk: 'tetris', exit: null, body, footer: footerFor({ out, started: t.started, name, workshop, training: !!t.training, returnTo: ui.workshopReturnPanel==='inventory'?'Inventory':ui.workshopReturnPanel==='details'?'Company':'floor', controls: controls(!!t.training) }) };
+  return { title: name, role: 'report', desk: 'tetris', exit: null, body, footer: footerFor({ out, started: t.started, name, workshop, training: !!t.training, returnTo: 'board update', controls: controls(!!t.training) }) };
 }
 
 export function paintKernel(root, g) {

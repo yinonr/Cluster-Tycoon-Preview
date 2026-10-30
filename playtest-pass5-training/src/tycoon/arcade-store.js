@@ -6,13 +6,14 @@ import { validStrategicSave } from './strategic.js';
 import { validInstitutionalSave } from './institutional.js';
 import { validMoonshotSave } from './moonshot.js';
 import { validScenarioSave } from './scenarios.js';
-import { validIntegrationSave, validWorkshopSave } from './integration.js';
-import { validReplayAccess } from './replay-access.js';
+import { validIntegrationSave, validWorkshopSave, normalizeMinigameSave } from './integration.js';
+import { validReplayAccess, normalizeReplayAccess } from './replay-access.js';
+import { validPendingMemo } from './world.js';
 
 const int = n => Number.isSafeInteger(n);
 const GPU = ['H100', 'H200', 'B200'];
 // V10.15 save validation: a damaged or foreign save is preserved and never half-loaded.
-export function validSave(g) {
+export function validSave(g,{legacyMinigames=false}={}) {
   const a = g?.arcade, c = g?.company, L = a?.ledger;
   if (typeof c?.name !== 'string' || (c.name && nameError(c.name))) return false;
   if (!(a?.version === V7.version && int(a.rev) && a.rev >= 0 && ['floor', 'integration', 'report', 'over'].includes(g.phase) && int(g.q) && g.q > 0 && g.q <= V7.rounds)) return false;
@@ -52,7 +53,7 @@ export function validSave(g) {
   if (!w || typeof w !== 'object' || !['flags', 'seen', 'inv'].every(k => w[k] && typeof w[k] === 'object' && !Array.isArray(w[k])) || !['due', 'spawns', 'sentiment', 'exitMods', 'news', 'log'].every(k => Array.isArray(w[k]))) return false;
   if (w.vulture !== undefined && (!w.vulture || !int(w.vulture.offers) || w.vulture.offers < 0 || w.vulture.offers > 2 || !int(w.vulture.attemptQ) || w.vulture.attemptQ < 1 || w.vulture.attemptQ > g.q)) return false;
   if (a.terms.filter(t => t.vulture).length > 1 || a.terms.some(t => t.vulture && (t.id !== `q${g.phase === 'report' ? g.q - 1 : g.q}-vulture` || t.pct < 4000 || t.pct > 4900 || typeof t.cardId !== 'string' || !w.vulture?.offers))) return false;
-  if (w.memo !== null && !(g.phase === 'report' && typeof w.memo === 'object' && Array.isArray(w.memo.options) && w.memo.options.length === 2)) return false;
+  if (w.memo !== null && !(g.phase === 'report' && validPendingMemo(w.memo))) return false;
   if (!c.mods || !['revenue', 'burn', 'prepaid'].every(k => Array.isArray(c.mods[k]))) return false;
   if (c.mods.tech !== null && !(typeof c.mods.tech === 'object' && Number.isFinite(c.mods.tech.mult) && c.mods.tech.mult > 0 && c.mods.tech.mult <= 1 && int(c.mods.tech.until))) return false;
   // V10.15: scale, integration bonuses (capped), grades, the AGI outcome, sourcing orders this round.
@@ -83,7 +84,7 @@ export function validSave(g) {
     const s = b.agiStakes, A = FOUNDER.agi;
     if (b.kind !== 'agi' || !s || !['capital','tech','partialTech','failBurn'].every(k => int(s[k]) && s[k] >= 0) || s.capital !== b.cashCost || s.capital < A.capital || s.tech !== Math.max(A.tech, s.capital * 8) || s.partialTech !== Math.max(A.partialTech, s.capital * 3) || s.failBurn !== Math.max(A.failBurn, Math.round(s.capital * .15))) return false;
   }
-  if (!validIntegrationSave(g) || !validWorkshopSave(g) || !validReplayAccess(g)) return false;   // V20: integration and learned replay access
+  if (!validIntegrationSave(g,{legacy:legacyMinigames}) || !validWorkshopSave(g,{legacy:legacyMinigames}) || !validReplayAccess(g,{legacy:legacyMinigames})) return false;
   if (!['floor', 'integration'].includes(g.phase) && a.history.length === 0) return false;
   if (g.phase === 'over' && !a.exit) return false;
   return validCommerce(g) && validStrategicSave(g) && validInstitutionalSave(g) && validMoonshotSave(g) && validScenarioSave(g);
@@ -97,7 +98,7 @@ export function arcadeStore(storage) {
     raw = storage.getItem(V7.key);
     if (raw) {
       state = JSON.parse(raw);
-      if (!validSave(state)) throw Error('Unsupported or damaged V7 save');
+      if (!validSave(state,{legacyMinigames:true})) throw Error('Unsupported or damaged V7 save');
     }
   } catch { state = null; error = 'Cannot read this V20 save. It has been preserved. Restore a valid save or clear only hsc-tycoon-preview-pass5-training in browser storage. Earlier ten-round saves are unchanged.'; }
   function commit(next) {
@@ -109,6 +110,14 @@ export function arcadeStore(storage) {
       storage.setItem(V7.key, encoded);
       raw = encoded; state = next; return true;
     } catch { error = 'Saving is unavailable. Trading is paused to protect your progress. Free browser storage and reload.'; return false; }
+  }
+  if (state && !error) {
+    const next=structuredClone(state);
+    const accessChanged=normalizeReplayAccess(next),gameChanged=normalizeMinigameSave(next);
+    if (accessChanged || gameChanged) {
+      if (!validSave(next)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';
+      else commit(next);
+    } else if (!validSave(state)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';
   }
   return {
     get state() { return state; }, get error() { return error; },
