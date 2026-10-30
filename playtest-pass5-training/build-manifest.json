@@ -1,7 +1,7 @@
 {
   "version": "HSC Pass 6 trading floor and single-task playtest preview",
   "baseline_commit": "8299abcf415097d94b5a006d98386259c1ec26ce",
-  "source_commit": "9eeb8c10f8128e26f7f5822349d1337f081da63b",
+  "source_commit": "7acd6aa30283b2973fb9ee60faba001d1ea28c0c",
   "source_path": "v20/",
   "babur_art": {
     "status": "ready",
@@ -24,7 +24,7 @@
     "hsc-tycoon-preview-pass5-training-training",
     "hsc-tycoon-preview-pass5-training-view"
   ],
-  "source_date": "2026-10-30T05:47:23Z",
+  "source_date": "2026-10-30T05:49:56Z",
   "transforms": {
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
     "src/tycoon/economy-balance.js": "Only the save-key string changes; all game values/rules remain identical.",
@@ -149,7 +149,7 @@
     "styles/pass1.css": "88bd3c4445dcee96d14e8eb53d24659b539b84df3e8da101e14e989a8a9aa39d",
     "styles/pass4.css": "28b9c781e97991cbb5400aecd37d5f108bfd0373ff0364c42ff4d8bad59fae58",
     "styles/pass5.css": "4754d46ef75cb605251c429a2808802636ff3d9cdcd16e31f7d29b1448e48a24",
-    "styles/pass6.css": "e2e72c4e87989e2d3b0bfd08269ea6c695904505606e17c92bf2ae6932f594c6",
+    "styles/pass6.css": "f0c22824ff04abc604cf6054b32ad3f1b8baf8aa742f028a68da2bd0dc2c724b",
     "styles/pit-charm.css": "625c1d13aeb0630f78b71161752b6e983719055d3cb0cde0e32cc9cad829c652",
     "styles/pit-company.css": "a6676bc7e994a54299ed5f5584dbc0d206bc60a2f1c6711ac34b95192f25218d",
     "styles/pit-deals.css": "d7e2d9577389db9183c81ac903225d5b1c4d1de824c22558fb670c0bffd98eb1",
@@ -280,7 +280,7 @@
     "styles/pass1.css": "88bd3c4445dcee96d14e8eb53d24659b539b84df3e8da101e14e989a8a9aa39d",
     "styles/pass4.css": "28b9c781e97991cbb5400aecd37d5f108bfd0373ff0364c42ff4d8bad59fae58",
     "styles/pass5.css": "4754d46ef75cb605251c429a2808802636ff3d9cdcd16e31f7d29b1448e48a24",
-    "styles/pass6.css": "e2e72c4e87989e2d3b0bfd08269ea6c695904505606e17c92bf2ae6932f594c6",
+    "styles/pass6.css": "f0c22824ff04abc604cf6054b32ad3f1b8baf8aa742f028a68da2bd0dc2c724b",
     "styles/pit-charm.css": "625c1d13aeb0630f78b71161752b6e983719055d3cb0cde0e32cc9cad829c652",
     "styles/pit-company.css": "a6676bc7e994a54299ed5f5584dbc0d206bc60a2f1c6711ac34b95192f25218d",
     "styles/pit-deals.css": "d7e2d9577389db9183c81ac903225d5b1c4d1de824c22558fb670c0bffd98eb1",

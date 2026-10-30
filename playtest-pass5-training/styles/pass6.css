@@ -181,3 +181,6 @@
 @media (max-width:600px) { #pit .floor-main { gap:8px; padding:8px 10px 14px; } }
 #pit .single-task-company .current-task .fc-foot { align-self:stretch; width:100%; }
 #pit .current-task :is(.fc-name,.fc-reward) { display:block; overflow:visible; max-height:none; text-overflow:clip; -webkit-line-clamp:unset; }
+/* Horizontal task swipes stay with the task navigator; vertical page scrolling
+   and native pinch zoom remain available. */
+#pit .single-task-company[data-task-area] { touch-action:pan-y; touch-action:pan-y pinch-zoom; }
