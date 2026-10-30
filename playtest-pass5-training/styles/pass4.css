@@ -1,0 +1,146 @@
+/* Pass 4: decisions in ink, supporting context on paper, the room behind them.
+   Scope stays inside gameplay; the naming and six-click opening keep their timing and art. */
+#pit .pit-architecture { opacity: .35; }
+#pit .pit-center { opacity: .22; box-shadow: none; }
+#pit .pit-hud { border-bottom: 1px solid var(--hsc-grey-light); box-shadow: none; }
+#pit .pit-help, #pit .pit-sound { box-shadow: none; border-width: 1px; }
+#pit .hud-name > b { font-size: 18px; }
+#pit .hud-cash strong { font-size: 22px; }
+#pit .hud-val strong, #pit .hud-model strong { color: var(--hsc-grey); }
+#pit .pit-clock, #pit .pit-clock.is-paused { background: var(--hsc-paper); color: var(--hsc-ink); box-shadow: none; border: 1px solid var(--hsc-grey-light); }
+#pit .pit-hud .pit-clock > span, #pit .pit-clock strong,
+#pit .pit-clock.is-paused strong, #pit .pit-clock.is-closed strong { color: var(--hsc-grey); }
+#pit .pit-clock strong { font-family: var(--hsc-term); font-weight: 400; }
+
+/* The supplier targets stay in place as arrivals and affordability change. */
+#pit .broker-station { justify-content: center; box-shadow: var(--hsc-shadow-sm); }
+#pit .broker-station .broker-offer { width: auto; align-self: center; }
+#pit .broker-price { font-family: var(--hsc-term); letter-spacing: 0; }
+#pit .broker-state { color: var(--hsc-ink); }
+#pit .broker-station:has(.broker-state) { border-style: dashed; box-shadow: none; }
+#pit .broker-row { border: 1px solid var(--hsc-grey-light); margin-bottom: 8px; }
+#pit .broker-row:last-child { margin-bottom: 0; }
+#pit .pit-station.is-empty { opacity: .45; }
+#pit .pit-desk-rest { border-top: 1px solid var(--hsc-grey-light); box-shadow: none; }
+#pit .pit-desk-rest .pit-ledger, #pit .pit-desk-rest .pit-resale-btn { background: var(--hsc-paper); color: var(--hsc-ink); border: 1px solid var(--hsc-grey); box-shadow: none; }
+#pit .pit-ledger :is(b, i, .pit-ledger-tag, .ledger-next, .pit-fuse),
+#pit .pit-resale-btn :is(b, .pit-ledger-tag) { color: var(--hsc-ink); }
+#pit .pit-ledger .ledger-next .pit-fuse::before { background: var(--hsc-grey-light); }
+#pit .workshop-button { border-width: 1px; box-shadow: none; }
+#pit .workshop-button small { font-size: 12px; }
+#pit .pit-bell { box-shadow: none; border-width: 1px; }
+#pit .rest-resale { opacity: 1; }
+#pit .resale-ticket { box-shadow: none; border-color: var(--hsc-grey-light); }
+
+/* Product, Research and Infrastructure remain equally available choices. */
+#pit .pit-board { border-left: 1px solid var(--hsc-grey-light); box-shadow: none; }
+#pit .stack { box-shadow: none; border: 1px solid var(--hsc-grey-light); }
+#pit .stack.is-none .stack-free { color: var(--hsc-grey); }
+#pit .fc, #pit .fcc { box-shadow: none; border-width: 1px; }
+#pit [class*="lane-"] .fc-head, #pit [class*="lane-"] .fcc-lane { background: var(--hsc-paper); border-bottom-color: var(--hsc-grey-light); }
+#pit .fc-head .fc-lane, #pit .fcc-lane { color: var(--hsc-grey); }
+#pit .fc.is-empty { border-color: var(--hsc-grey-light); }
+#pit .fc.is-empty .fc-head { background: var(--hsc-paper); }
+#pit .fc.is-ready, #pit .fcc.is-ready { box-shadow: inset 0 0 0 2px var(--hsc-ink); }
+#pit .fcc.has-stock, #pit .fc.has-stock { border-color: var(--hsc-ink); }
+#pit .fc-fill, #pit .fc-build { min-width: 44px; min-height: 44px; box-shadow: none; }
+#pit .fc-fill, #pit .fc-build.is-lit { background: var(--hsc-ink); color: var(--hsc-paper); border-color: var(--hsc-ink); box-shadow: none; }
+#pit .fc-build:disabled { opacity: 1; color: var(--hsc-grey); border-color: var(--hsc-grey-light); border-style: dashed; }
+#pit .fc-foot { padding-top: 6px; }
+#pit .cards .fc-what { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-height: 2.6em; }
+#pit .fcc-state.is-stock { padding: 2px 5px; background: var(--hsc-ink); color: var(--hsc-paper); }
+#pit .fc-count small, #pit .fcc-deficit { color: var(--hsc-ink); }
+
+/* Requirements and reservation are the working area; detail remains available below. */
+#pit .card-desk { gap: 12px; }
+#pit .cd-action { display: grid; gap: 12px; padding: 12px; border: 1px solid var(--hsc-grey-light); background: var(--hsc-coupon); }
+#pit .cd-capital-status { margin: 0; font: 400 15px/1.4 var(--hsc-sans); }
+#pit .cd-capital-status b { font-weight: 700; }
+#pit .cd-row { font: 400 15px/1.35 var(--hsc-sans); }
+#pit .cd-details, #pit .term-negotiation { font: 400 15px/1.4 var(--hsc-sans); }
+#pit .cd-details > summary, #pit .term-negotiation > summary,
+#pit .compute-terms > summary, #pit .cd-inventory-lots > summary { display: list-item; min-height: 44px; padding-block: 10px; cursor: pointer; }
+#pit .cd-details .cd-blurb { margin-bottom: 8px; }
+#pit .cd-economics { font-size: 13px; }
+#pit .cd-stakes { display: grid; gap: 4px; padding-block: 8px; border-block: 1px solid var(--hsc-grey-light); font: 400 14px/1.4 var(--hsc-sans); }
+#pit .cd-release { box-shadow: none; border-color: var(--hsc-grey); }
+#pit .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) { background: var(--hsc-ink); color: var(--hsc-paper); border-color: var(--hsc-ink); box-shadow: none; }
+#pit .pit-focus-footer .rail-commit:not(:disabled) :is(b, .vault-amt) { color: inherit; }
+#pit .pit-focus-footer .rail-quiet { box-shadow: none; border-color: var(--hsc-grey); }
+#pit .pit-focus-footer .mat-vault:disabled { opacity: 1; background: var(--hsc-paper); color: var(--hsc-grey); border: 1px dashed var(--hsc-grey-light); box-shadow: none; }
+#pit .pit-focus-footer .cd-source-btn { background: var(--hsc-paper); color: var(--hsc-ink); box-shadow: none; border-color: var(--hsc-grey); }
+#pit .pit-focus-footer .cd-source-btn span { color: var(--hsc-grey); }
+
+/* A purchase offers destinations, with full names and an accurate projected state. */
+#pit .receipt.is-purchase .deal-stamp { font-size: 14px; box-shadow: none; opacity: .45; }
+#pit .receipt.is-purchase .payoff-stock .gpu-chips { display: none; }
+#pit .receipt.is-purchase .payoff-hero { font-size: clamp(23px, 3vw, 30px); }
+#pit .receipt.is-purchase .payoff-sub { font-weight: 400; }
+#pit .receipt.is-purchase { padding: 12px; gap: 6px; }
+#pit .receipt.is-purchase .payoff { padding: 4px 0; gap: 4px; }
+#pit .allocate, #pit .allocate.is-ready { grid-template-areas: "lane" "name" "after"; grid-template-columns: minmax(0,1fr); gap: 5px; padding-block: 10px; box-shadow: none; }
+#pit .allocate b { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+#pit .al-after { justify-self: start; white-space: normal; line-height: 1.4; }
+#pit .al-after em { display: inline-block; box-shadow: none; background: var(--hsc-coupon); font-size: 12px; letter-spacing: 0; }
+#pit .receipt.is-purchase .allocate { min-height: 64px; padding-block: 7px; gap: 3px; }
+#pit .receipt.is-purchase .allocate b { font-size: 16px; line-height: 1.15; }
+
+/* Financial and scenario decisions receive the same neutral treatment. */
+#pit .term-desk { grid-template-columns: minmax(0, 680px); justify-content: center; gap: 12px; }
+#pit .term-negotiation .term-counter { width: min(100%, 440px); margin-top: 6px; }
+#pit .ts-hero { gap: 20px; padding-block: 12px; }
+#pit .ts-own { padding-block: 10px; border-bottom: 1px solid var(--hsc-grey-light); }
+#pit .ts-tradeoff { font-size: 15px; line-height: 1.4; }
+#pit .desk-term .pit-focus-footer { justify-content: center; }
+#pit .desk-term .pit-focus-footer .term-choice { flex: 1 1 0; max-width: 260px; min-height: 48px; background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: none; font: 700 16px/1.2 var(--hsc-sans); }
+#pit .dr-opt, #pit .dr-opt.is-primary, #pit .dr-opt.is-decline { background: var(--hsc-paper); border: 1px solid var(--hsc-ink); box-shadow: none; }
+#pit .dr-opt small { color: var(--hsc-ink); }
+#pit .dr-opt:disabled { border-style: dashed; }
+#pit .dr-title { font-size: clamp(22px, 3vw, 32px); }
+#pit .dr-options { gap: 12px; margin-top: 18px; }
+#pit .scn-chip.is-offer.is-major { animation: none; box-shadow: var(--hsc-shadow-sm); }
+
+/* Cash actually earned is the result's headline; the rail names its destination. */
+#pit .workshop-result { width: min(100%, 440px); padding: 16px; }
+#pit .workshop-result .tt-stamp { font-size: 15px; background: none; border: 0; padding: 0; box-shadow: none; }
+#pit .workshop-result p.workshop-prize { margin-block: 12px; font: 600 clamp(23px, 3vw, 32px)/1.15 var(--hsc-serif); }
+#pit .workshop-result p { font-size: 15px; line-height: 1.4; }
+#pit .tt.is-done .tt-side { opacity: .45; }
+#pit .final-share-group { border-top: 1px solid var(--hsc-grey-light); padding-top: 20px; }
+#pit .final-share-group h3 { font-size: 16px; }
+#pit .final-share, #pit .final-shared button { box-shadow: none; border-width: 1px; }
+#pit .game-maker { font-size: 13px; color: var(--hsc-grey); }
+
+#pit :is(.pit-stage, .pit-focus) :is(button,input,summary,textarea,a):focus-visible { outline: 3px solid var(--hsc-ink); outline-offset: 3px; box-shadow: 0 0 0 6px var(--hsc-paper); }
+#pit .pit-focus-footer .rail-commit:focus-visible { outline-offset: 4px; }
+@media (max-width: 768px) {
+  /* Keep the 44px Help target inside its row across browser font metrics. */
+  :root { --hud-h: 88px; }
+  #pit .pit-hud { grid-template-rows: 44px minmax(0, 1fr); }
+  #pit .pit-hud button:focus-visible { outline-offset: -4px; box-shadow: none; }
+  #pit .hud-name > b { font-size: 14px; }
+  #pit .hud-cash strong { font-size: 17px; }
+  #pit .pit-stations .broker-offer { gap: 8px; }
+  #pit .pit-frieze { background: var(--hsc-paper); color: var(--hsc-grey); box-shadow: none; font-size: 10px; letter-spacing: .12em; }
+  #pit .pit-frieze img { display: none; }
+  #pit .pit-phone-company { box-shadow: none; border-bottom: 1px solid var(--hsc-grey-light); }
+  #pit .fcc-lane { background: var(--hsc-paper); }
+  #pit .cd-action { padding: 10px; gap: 10px; }
+  #pit .cd-row { font-size: 14px; }
+  #pit .cd-capital-status { font-size: 14px; }
+  #pit .workshop-result { padding: 12px; }
+  #pit .workshop-result p { font-size: 14px; }
+}
+@media (max-width: 360px) {
+  #pit .hud-cash strong { font-size: 15px; }
+  #pit .allocate b { font-size: 16px; }
+  #pit .al-after { font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #pit .scn-chip, #pit .pit-fuse::before { animation: none; }
+}
+
+#pit .pit-focus-footer .rail-quiet.rail-keep { max-width: none; margin-right: 0; white-space: normal; }
+@container (max-height: 300px) {
+  #pit .cards .fc-reward { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
