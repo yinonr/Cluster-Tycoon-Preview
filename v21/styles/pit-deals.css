@@ -1,0 +1,533 @@
+/* V10.3 The Broker's Desk: instruments on the mahogany desk (DESK-owned).
+   Frame geometry (dock, band, desk surface, rail) is pit-desk.css. One material per verb:
+   mat-key (cent keys) · mat-paper (slips, contracts) · mat-strip (OFFER/ASK tear-off) ·
+   mat-carbon (rival) · mat-vault (Bank/Sell) · mat-risk (Push) · mat-stamp (Sign) · mat-exit. */
+#pit{--hero:clamp(30px,3.5vw,46px);--ink:#21190f;--ink-soft:#5b4a35;--cream:#f3e9d0;--cream-2:#e9dcbd;--crt:#0d1c14;--crt-glow:#9df0b0;--crt-dim:#5fae7b;
+ --ox:#7d1d16;--ox-ink:#8d2a1f;--good:#2f7a47;--good-bright:#9fe9a9;--bad:#b23a2e;--bad-bright:#ffb2a2;
+ --money:'IBM Plex Mono','SFMono-Regular',Menlo,Consolas,'Liberation Mono','Courier New',monospace}
+
+/* ---- Generic desk controls --------------------------------------------------------------- */
+#pit .pit-focus-body{min-width:0}
+#pit :where(.pit-focus-body,.pit-focus-footer) button{font:inherit;line-height:1.2;cursor:pointer;border-radius:3px;min-height:44px}
+#pit :where(.pit-focus-body,.pit-focus-footer) button:disabled{cursor:default}
+#pit .pit-focus-body :is(button,input,select,summary):focus-visible,#pit .pit-focus-footer button:focus-visible{outline:3px solid #fff1c2;outline-offset:2px}
+#pit .pit-focus-body :where(button:not([class])){border:1px solid #a28b58;background:#22372a;color:#f0e2c1;padding:.55rem .75rem;font-size:.88rem}
+#pit .t-chip{display:inline-block;margin-left:8px;padding:1px 6px;border:1px solid currentColor;border-radius:9px;font:700 11px/1.3 var(--money);font-style:normal;letter-spacing:0;opacity:.85;vertical-align:middle}
+#pit .money-hero{font-family:var(--money);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.05;white-space:nowrap}
+
+/* ---- Materials --------------------------------------------------------------------------- */
+#pit .mat-key{position:relative;display:grid;place-content:center;gap:2px;min-width:48px;min-height:52px;padding:2px 4px;border-radius:7px;
+ background:linear-gradient(#fbf4e2,#e6dabe);color:var(--ink);border:1px solid #9a8a6a;box-shadow:0 4px 0 #6d5d42,0 5px 6px #0005;transform:translateY(0);transition:transform .06s,box-shadow .06s}
+#pit .mat-key b{font:700 15px/1 var(--money)}#pit .mat-key small{font:600 10px/1 var(--money);color:var(--ink-soft)}
+#pit .mat-key.key-5{min-width:56px;min-height:56px;background:linear-gradient(#3b302a,#16110e);color:#f5e6c4;border:2px solid #c9a861;box-shadow:0 5px 0 #4a3a1c,0 6px 8px #0007}
+#pit .mat-key.key-5 b{font-size:16px}#pit .mat-key.key-5 small{color:#d9c08a}
+#pit .mat-key:active{transform:translateY(3px);box-shadow:0 1px 0 #6d5d42,0 1px 2px #0005}
+#pit .mat-key.key-5:active{box-shadow:0 2px 0 #4a3a1c,0 1px 2px #0006}
+
+#pit .mat-paper{background:linear-gradient(#f6eed8,#eadfc2);color:var(--ink);border:1px solid #cdb889;box-shadow:0 2px 0 #b9a378,0 10px 18px -6px #000a}
+
+#pit .mat-strip{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;width:100%;min-height:50px;padding:8px 12px;border:0;border-top:2px dashed #9b8763;border-radius:0 0 3px 3px;
+ background:#e8dcbc;color:#8a7a5c;font:700 14px/1.2 var(--money);letter-spacing:.04em;text-transform:uppercase}
+#pit .mat-strip:before,#pit .mat-strip:after{content:'';position:absolute;top:-7px;width:12px;height:12px;border-radius:50%;background:var(--desk-wood,#5b3a26)}
+#pit .mat-strip:before{left:-7px}#pit .mat-strip:after{right:-7px}
+#pit .mat-strip.is-lit{background:#fffaf0;color:#14472f;box-shadow:inset 0 0 0 2px #1f6b45,0 0 0 3px #f3d27a88}
+#pit .mat-strip.is-lit:hover{background:#fff}
+#pit .mat-strip.is-lit:active{transform:translateY(2px)}
+#pit .mat-strip:disabled{font-weight:600;letter-spacing:.01em;text-transform:none;font-size:13px}
+#pit .mat-strip:disabled .t-chip{display:none}
+
+#pit .mat-carbon{background:linear-gradient(#f6dcd3,#ecc9bd);color:#3a2219;border:1px solid #c79a86;border-left:5px solid #a4473a;box-shadow:0 3px 6px #0005;transform:rotate(-.5deg)}
+
+#pit .mat-vault{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:8px 16px;border:1px solid #6e5420;border-radius:4px;
+ background:linear-gradient(#fbe8ae,#d9b45d 48%,#b48d3e 52%,#caa452);color:#2a1d0b;font:700 15px/1.15 var(--money);letter-spacing:.06em;text-shadow:0 1px 0 #fff5;
+ box-shadow:inset 0 1px 0 #fff8,inset 0 -2px 0 #8a6a2a,0 3px 0 #4b3714,0 6px 12px #0007}
+#pit .mat-vault b{font-weight:800}#pit .mat-vault .vault-amt{font-weight:700;letter-spacing:0}
+#pit .mat-vault:hover:not(:disabled){filter:brightness(1.06)}
+#pit .mat-vault:active:not(:disabled){transform:translateY(2px);box-shadow:inset 0 1px 0 #fff8,inset 0 -1px 0 #8a6a2a,0 1px 0 #4b3714}
+#pit .mat-vault:disabled{background:linear-gradient(#7d6a45,#5a4a2c);color:#efe0bd;border-color:#3a2c14;text-shadow:none;box-shadow:inset 0 2px 4px #0006}
+#pit .vault-lock{position:relative;flex:0 0 auto;width:14px;height:11px;margin-top:6px;border-radius:2px;background:currentColor;opacity:.85}
+#pit .vault-lock:before{content:'';position:absolute;left:2px;bottom:9px;width:6px;height:7px;border:2px solid currentColor;border-bottom:0;border-radius:6px 6px 0 0;transform:translateX(4px)}
+#pit .mat-vault:disabled .vault-lock:before{transform:none}
+
+#pit .mat-risk{position:relative;display:inline-grid;grid-template-columns:auto auto;align-items:center;justify-items:start;column-gap:8px;row-gap:1px;min-height:46px;padding:6px 12px 6px 14px;border-radius:4px;
+ background:transparent;border:2px solid #c0473a;color:#ffd9cc;text-align:left;font:800 14px/1.1 var(--money);letter-spacing:.05em}
+#pit .mat-risk small{grid-column:1;font:600 11px/1.1 var(--money);letter-spacing:0;opacity:.9}
+#pit .mat-risk .t-chip{grid-column:2;grid-row:1/3;margin:0}
+#pit .mat-risk.tier-2{background:linear-gradient(#b8392c,#7c1d15);border-color:#e0786a;color:#fff1e8;box-shadow:inset 0 1px 0 #ffffff40,0 3px 0 #3b0c08}
+#pit .mat-risk.tier-3{background:#1a1210;border-color:#e0a526;color:#ffe2b0;padding-left:22px;box-shadow:0 3px 0 #000}
+#pit .mat-risk.tier-3:before{content:'';position:absolute;left:0;top:0;bottom:0;width:12px;border-radius:2px 0 0 2px;background:repeating-linear-gradient(-45deg,#e0a526 0 5px,#b23a2e 5px 10px)}
+#pit .mat-risk:hover:not(:disabled){filter:brightness(1.12)}
+#pit .mat-risk:active:not(:disabled){transform:perspective(300px) rotateX(18deg)}
+#pit .mat-risk:disabled{opacity:.45}
+
+#pit .mat-stamp{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border:3px double #f0d2b0;border-radius:3px;background:radial-gradient(circle at 30% 30%,#9a2b20,#6c160f);
+ color:#fff2df;font:700 16px/1.1 Georgia,serif;letter-spacing:.1em;box-shadow:0 3px 0 #3b0a06,0 6px 12px #0006;transform:rotate(-1deg)}
+#pit .mat-stamp:active{transform:rotate(-1deg) scale(.94)}
+#pit .mat-stamp.is-lit{box-shadow:0 3px 0 #3b0a06,0 0 0 4px #f3d27a66,0 6px 14px #0007}
+#pit .mat-exit{background:#1c140ecc;border:1px solid #b69553aa;color:#ead9b2;padding:8px 14px;font-size:14px}
+#pit .mat-exit:hover{border-color:#ecd297;color:#fff3d4}
+#pit .mat-move{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:8px 18px;border:2px solid #c9a861;border-radius:4px;background:linear-gradient(#5d3b27,#3a2418);color:#f6e6c4;
+ font:700 15px/1.15 var(--money);letter-spacing:.08em;text-transform:uppercase;box-shadow:inset 0 1px 0 #ffffff22,0 3px 0 #1c110a,0 6px 12px #0007}
+#pit .mat-move:hover{border-color:#f3dc9b;color:#fff}#pit .mat-move:active{transform:translateY(2px);box-shadow:0 1px 0 #1c110a}
+#pit .desk-center{display:grid;align-content:center;min-height:100%}
+
+
+/* Units and separators drawn by CSS, so the ledger reads as figures, not sentences. */
+#pit .ink-field:before{content:'$';color:var(--ink-soft)}#pit .ink-field:after{content:'/h';color:var(--ink-soft)}
+#pit .rail-back:before{content:'↩';margin-right:7px}
+#pit .is-match{opacity:.42}
+
+/* ---- Rail --------------------------------------------------------------------------------- */
+#pit .pit-focus-footer .rail-commit{min-width:min(250px,56%);max-width:62%;flex:0 0 auto}
+#pit .pit-focus-footer .rail-solo{margin-left:auto;margin-right:0}
+#pit .pit-focus-footer .rail-back.rail-solo{max-width:70%}
+#pit .pit-focus-footer :is(.rail-quiet,.rail-back):not(.rail-solo){margin-right:auto;flex:0 1 auto;min-width:0;max-width:44%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pit .pit-focus-footer .rail-fact{display:flex;align-items:center;min-height:48px;flex:1 1 auto;min-width:0;margin-right:auto;font:13px/1.3 var(--money);color:#e2cf9f;letter-spacing:.02em}
+#pit .pit-focus-footer .rail-warn{justify-content:center;margin:0;color:#ffbfae;letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+#pit .pit-focus-footer [data-buyer-actions]{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:1 1 auto;min-width:0}
+#pit .pit-focus-footer [data-buyer-actions]:empty{display:none}
+
+/* ---- The face-off: THEIR | GAP | YOUR ------------------------------------------------------ */
+#pit .face-off{display:grid;grid-template-columns:minmax(0,1fr) clamp(118px,14vw,176px) minmax(0,1fr);grid-template-areas:"their gap yours" "lever gap yours";grid-template-rows:auto auto;
+ gap:12px 16px;align-items:start;align-content:center;max-width:1120px;min-height:100%;margin:0 auto}
+#pit .face-off>.their{grid-area:their}#pit .face-off>.gap-col{grid-area:gap}#pit .face-off>.slip{grid-area:yours}#pit .face-off>.leverage{grid-area:lever}
+#pit .plate-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font:700 11px/1.2 var(--money);letter-spacing:.14em;text-transform:uppercase}
+
+/* THEIR plate: green CRT glass in a brass bezel. */
+#pit .plate.their{position:relative;display:grid;grid-template-areas:"head" "news" "total" "sub" "note";align-content:start;min-width:0;padding:10px 14px 12px;border-radius:6px;
+ background:radial-gradient(ellipse at 50% 0,#173a27,var(--crt) 75%);color:var(--crt-glow);border:5px solid #b8975a;border-bottom-width:7px;
+ box-shadow:inset 0 0 18px #000c,inset 0 0 0 1px #000,0 3px 0 #6a5226,0 8px 16px #0008;text-shadow:0 0 8px #6fe39255}
+#pit .plate.their>[data-sale-math]{display:contents}
+#pit .plate.their .plate-head{grid-area:head;color:var(--crt-dim)}
+#pit .plate.their .plate-total{grid-area:total;font-size:var(--hero);color:#c9ffd3;margin:2px 0 3px}
+#pit .plate.their .plate-sub{grid-area:sub;font:600 14px/1.2 var(--money);color:var(--crt-dim)}
+#pit .plate.their .plate-note{grid-area:note;margin:5px 0 0;font:700 13px/1.2 var(--money)}
+#pit .plate .plate-note.positive{color:var(--good-bright)}#pit .plate .plate-note.negative,#pit .plate .plate-sub.negative{color:#ffb39c}
+#pit .plate-news{grid-area:news;display:flex;align-items:center;gap:8px;min-height:18px;font:600 13px/1 var(--money)}
+#pit .plate-news s{color:#6d9c7b;text-decoration-thickness:2px}
+#pit .delta{font-style:normal;padding:2px 6px;border-radius:3px;font-weight:700}
+#pit .delta.down{background:#1f6b3f;color:#e4ffe9}#pit .delta.up{background:#8d2a1f;color:#ffe3dc}
+#pit .desk-fuse{position:relative;display:inline-flex;align-items:center;gap:6px;color:inherit;letter-spacing:.04em}
+#pit .desk-fuse:before{content:'';width:46px;height:4px;border-radius:2px;background:linear-gradient(90deg,currentColor calc(var(--left,1)*100%),#ffffff1c 0)}
+#pit .desk-fuse.is-short{color:#ffb547}
+
+/* GAP column: the distance between the two numbers. */
+#pit .gap-col{display:grid;justify-items:center;align-content:start;gap:6px;padding-top:44px;text-align:center;min-width:0}
+#pit .gap-label{display:flex;align-items:center;gap:6px;width:100%;font:700 11px/1 var(--money);letter-spacing:.3em;color:#e2c787}
+#pit .gap-label:before,#pit .gap-label:after{content:'';flex:1;height:2px;background:linear-gradient(90deg,#c9a861,#f3dc9b)}
+#pit .gap-figs{display:grid;justify-items:center;gap:3px;padding:8px 10px;min-width:100%;box-sizing:border-box;border:1px solid #c9a86155;border-radius:4px;background:#0000002e;box-shadow:inset 0 1px 6px #0006}
+#pit .gap-figs b{font:700 clamp(18px,1.9vw,24px)/1.1 var(--money);color:#fbe7b4}#pit .gap-figs small{font:600 13px/1 var(--money);color:#d9c08a}
+#pit .gap-fact{margin:4px 0 0;font:600 12px/1.3 var(--money);color:#e9d7a8}#pit .gap-fact .pos{color:#a9f0b3;font-weight:800}#pit .gap-fact .neg{color:#ffb3a3;font-weight:800}
+#pit .gap-col:has(.gap-figs:empty) .gap-label{display:none}
+
+/* YOUR slip: cream paper; the total at the same weight as theirs; keys; the OFFER strip. */
+#pit .slip.yours{display:grid;grid-template-areas:"head" "total" "keys" "strip";align-content:start;min-width:0;padding:10px 14px 0;border-radius:3px 3px 4px 4px;overflow:visible}
+#pit .slip .plate-head{grid-area:head;color:var(--ink-soft)}
+#pit .slip-total{grid-area:total;font-size:var(--hero);color:var(--ink);margin:20px 0 8px}
+#pit .slip .keys{grid-area:keys}#pit .slip>.mat-strip{grid-area:strip;margin:0 -14px;width:calc(100% + 28px)}
+#pit .slip.is-spent{padding-bottom:12px;opacity:.8}#pit .slip-spent{margin:10px 0 0;font:600 15px/1.3 Georgia,serif;color:var(--ink-soft)}
+#pit .keys{display:grid;grid-template-columns:auto auto minmax(76px,1fr) auto auto;align-items:center;gap:6px;margin-bottom:12px}
+#pit .ink-field{display:flex;align-items:center;gap:2px;min-width:0;height:48px;padding:0 6px;border-bottom:2px solid var(--ink);font:700 15px/1 var(--money);color:var(--ink-soft)}
+#pit .ink-field input{flex:1 1 auto;width:100%;min-width:0;height:46px;padding:0;border:0;background:transparent;color:var(--ink);font:700 20px/1 var(--money);text-align:center;appearance:textfield;-moz-appearance:textfield}
+#pit .ink-field input::-webkit-inner-spin-button,#pit .ink-field input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#pit .ink-field:focus-within{background:#fff8e7;border-bottom-color:#1f6b45}
+#pit .qty-chip{display:inline-flex;align-items:center;gap:6px;padding:2px 2px 2px 10px;border:1px solid #9b8763;border-radius:22px;background:#fff7e3;color:var(--ink-soft);font:700 11px/1 var(--money);letter-spacing:.06em}
+#pit .qty-chip input{width:58px;height:40px;min-height:0;padding:0 4px;border:0;border-radius:18px;background:#e9dcbd;color:var(--ink);font:700 17px/1 var(--money);text-align:center}
+#pit .qty-chip input:focus-visible{outline:3px solid #1f6b45;outline-offset:1px}
+
+/* Leverage column: the rival carbon, then the Charm card. */
+#pit .leverage{display:grid;gap:9px;align-content:start;min-width:0}
+#pit .rival-slip{display:flex;align-items:center;gap:10px;padding:7px 8px 7px 12px;border-radius:2px}
+#pit .rival-slip>div{display:grid;gap:2px;flex:1;min-width:0}
+#pit .rival-slip>div>span{font:700 10px/1.2 var(--money);letter-spacing:.12em;text-transform:uppercase;color:#8d3b2f}
+#pit .rival-slip b{font:700 15px/1.2 var(--money);overflow-wrap:anywhere}
+#pit .rival-slip em{font:normal 700 12px/1.2 var(--money);color:#8d2a1f}
+#pit .rival-play{flex:0 0 auto;padding:6px 10px;background:#fff3ee66;border:2px solid #8d2a1f;color:#8d2a1f;font:800 13px/1.1 var(--money);letter-spacing:.04em;text-transform:uppercase;transform:rotate(-2deg);white-space:nowrap}
+#pit .rival-play:hover{background:#fff3ee}#pit .rival-play:active{transform:rotate(-2deg) scale(.95)}
+#pit .rival-played{display:flex;align-items:baseline;gap:8px;margin:0;padding:4px 10px;width:max-content;max-width:100%;font:600 12px/1.2 var(--money)}
+#pit .rival-played span{font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8d2a1f}
+
+/* ---- Verdict and closed desks ------------------------------------------------------------- */
+#pit .verdict-face{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"their verdict" "lever verdict"}
+#pit .verdict-face>.verdict-col{grid-area:verdict;min-width:0;align-self:stretch;display:grid}
+#pit .verdict-col>.verdict-block{align-content:center}
+#pit .closed-desk{display:grid;gap:12px;max-width:640px;margin:0 auto}
+#pit .plate.their.is-closed{filter:saturate(.35) brightness(.85)}
+#pit .plate.their.is-closed .plate-total s{text-decoration-thickness:3px;text-decoration-color:#ff8f7d}
+#pit .plate-off{color:#ff9d8a}
+#pit .closed-stamp{position:absolute;right:14px;top:50%;padding:4px 12px;border:4px double #e2513f;color:#ff6d58;background:#1a0d0b99;font:800 26px/1 var(--money);letter-spacing:.12em;transform:translateY(-50%) rotate(-8deg);text-shadow:none}
+#pit .closed-ledger{display:grid;gap:8px}
+#pit .closed-facts{display:flex;flex-wrap:wrap;gap:6px 10px;margin:0;justify-content:center}
+#pit .closed-facts span{padding:4px 10px;border:1px solid #c0473a88;background:#2a0f0b88;color:#ffcfc3;font:700 13px/1.2 var(--money);border-radius:3px}
+
+/* ---- Buyer desk and supply cards ---------------------------------------------------------- */
+#pit .buyer-face{grid-template-areas:"their gap yours" ". gap yours"}
+#pit .buyer-face .slip-total{margin-top:14px}
+#pit .source-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:14px;width:100%;max-width:1040px;margin:0 auto}
+#pit .source-card{display:grid;grid-template-columns:64px minmax(0,1fr) auto;grid-template-areas:"face who rate" "face total fuse";align-items:center;gap:4px 12px;min-height:118px;padding:10px 14px 10px 6px;text-align:left;
+ border:4px solid #b8975a;border-bottom-width:6px;border-radius:6px;background:radial-gradient(ellipse at 50% 0,#173a27,var(--crt) 75%);color:var(--crt-glow);box-shadow:inset 0 0 14px #000a,0 6px 12px #0007}
+#pit .source-card:hover{border-color:#f3d27a}#pit .source-card:active{transform:translateY(2px)}
+#pit .src-face{grid-area:face;align-self:end;height:92px;overflow:hidden}#pit .src-face .fig{width:64px;height:auto}
+#pit .face-mono{display:block;width:46px;height:58px;margin:0 auto;border-radius:23px 23px 6px 6px;background:radial-gradient(circle at 50% 30%,#d9a57c 0 13px,transparent 14px),linear-gradient(#0000 0 30px,#486957 30px)}
+#pit .src-who{grid-area:who;display:grid;gap:2px;min-width:0}#pit .src-who b{font:700 17px/1.15 Georgia,serif;color:#f4ead2;overflow-wrap:break-word}#pit .src-who small{font:600 12px var(--money);color:var(--crt-dim)}
+#pit .src-rate{grid-area:rate;font:700 26px/1 var(--money);color:#c9ffd3;white-space:nowrap}#pit .src-rate small{font-size:13px;color:var(--crt-dim)}
+#pit .src-total{grid-area:total;font:600 14px var(--money);color:var(--crt-dim)}
+#pit .source-card .desk-fuse{grid-area:fuse;justify-self:end;font:700 12px var(--money);color:var(--crt-dim)}
+#pit .desk-empty{max-width:520px;margin:30px auto;padding:18px;text-align:center;font:16px/1.4 Georgia,serif;color:#f1e3c0;border:1px dashed #c9a86188}
+
+/* ---- Contract and receipt: paper stamped in place ----------------------------------------- */
+#pit :is(.contract,.receipt){position:relative;display:grid;justify-items:center;gap:10px;width:100%;max-width:640px;box-sizing:border-box;margin:0 auto;padding:16px 26px 20px;text-align:center;border-radius:2px;
+ background:repeating-linear-gradient(0deg,#f6eed8 0 25px,#ece2c8 25px 26px)}
+#pit .contract-head{display:flex;justify-content:space-between;gap:12px;width:100%;padding-bottom:6px;border-bottom:1px solid #8f795d66;font:600 11px/1.2 var(--money);letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase}
+#pit .contract-terms{margin:4px 0 0;font:700 14px/1.3 var(--money);letter-spacing:.04em;color:var(--ink)}
+#pit .contract-total{font-size:clamp(36px,4.6vw,56px);color:var(--ink)}
+#pit .contract-sub{margin:0;font:600 14px/1.35 var(--money);color:#3d5c45}
+#pit .sign-line{display:flex;align-items:flex-end;justify-content:flex-start;gap:14px;width:100%;margin-top:8px;padding-bottom:6px;border-bottom:1.5px solid var(--ink)}
+#pit .sig-rule{flex:1;text-align:left;font:italic 20px Georgia,serif;color:var(--ink-soft)}
+#pit .contract-fine,#pit .payoff-fine{margin:2px 0 0;font:12px/1.35 var(--money);color:var(--ink-soft)}
+#pit .contract .deal-metrics{width:100%}
+#pit .deal-stamp{position:absolute;right:18px;top:34px;padding:4px 10px;border:4px double #98503a;color:#98503a;font:800 22px/1 var(--money);letter-spacing:.14em;transform:rotate(-8deg);background:#f6eed8cc;z-index:1}
+#pit .payoff{display:grid;justify-items:center;gap:6px;width:100%;padding:8px 0 4px}
+#pit .payoff-hero{font:800 30px/1.1 Georgia,serif;color:var(--ink)}
+#pit .payoff-stock .payoff-hero{text-transform:uppercase;letter-spacing:.03em}
+#pit .payoff-sub{margin:0;font:600 15px/1.35 var(--money);color:var(--ink)}
+#pit .payoff-label{font:800 12px/1 var(--money);letter-spacing:.24em;text-transform:uppercase;color:var(--ink-soft)}
+#pit .payoff-hero.money-hero{font-family:var(--money);font-size:clamp(44px,6.2vw,76px)}
+#pit .payoff-hero.win{color:#1f6b3f}#pit .payoff-hero.loss{color:#a42a1c}
+#pit .gpu-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+#pit .gpu-chip{width:54px;height:38px;border-radius:4px;background:linear-gradient(135deg,#3f6b55,#1d3a2c);border:2px solid #b8975a;box-shadow:inset 0 0 0 5px #0f241a,inset 0 0 0 7px #c9a861,0 3px 0 #0006}
+#pit .gpu-chip.gpu-h200{background:linear-gradient(135deg,#4f4f7a,#26264a)}#pit .gpu-chip.gpu-b200{background:linear-gradient(135deg,#7a5130,#4a2c14)}
+#pit .spread-bar{display:flex;width:min(420px,100%);height:14px;border-radius:7px;overflow:hidden;background:#d8cba9;box-shadow:inset 0 1px 2px #0004}
+#pit .bar-base{background:#8f7f62}#pit .spread-bar.win .bar-tail{background:#2f8a52}#pit .spread-bar.loss .bar-tail{background:#b33a2b}
+#pit .spread-ends{display:flex;justify-content:space-between;width:min(420px,100%);margin:0;font:700 12px/1.2 var(--money);color:var(--ink-soft)}
+#pit .receipt .payoff-equity,#pit .receipt .payoff-cash{justify-items:stretch;text-align:left}
+
+/* ---- Paper views: the desk becomes a ledger page ------------------------------------------ */
+#pit .paper-sheet{width:100%;max-width:768px;box-sizing:border-box;margin:0 auto;padding:12px 18px 14px;border-radius:2px}
+#pit .paper-sheet .sign-line{margin-top:12px}
+#pit .mat-paper .deal-quote{display:grid;gap:3px;padding:6px 0 10px;background:none;border:0;border-bottom:1px solid #8f795d55;color:var(--ink)}
+#pit .mat-paper .deal-quote>span{font:700 11px/1.2 var(--money);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+#pit .mat-paper .deal-quote>strong{font:700 clamp(26px,3.4vw,36px)/1.1 var(--money);color:var(--ink);overflow-wrap:anywhere}
+#pit .mat-paper .deal-quote>small{font-size:13px;color:var(--ink-soft)}
+#pit .deal-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:8px 0}
+#pit .deal-metric{display:grid;align-content:start;gap:3px;padding:7px 9px;border:1px solid #8f795d55;background:#ffffff40;min-width:0}
+#pit .deal-metric span{font-size:12px;line-height:1.25;color:var(--ink-soft)}
+#pit .deal-metric strong{font:700 17px/1.2 var(--money);color:var(--ink);overflow-wrap:anywhere}
+#pit .deal-metric.positive strong{color:#1f6b3f}#pit .deal-metric.negative strong{color:#973a28}
+#pit .deal-note{margin:7px 0;font-size:13px;line-height:1.4;color:var(--ink-soft)}
+#pit .deal-note.negative{color:#973a28}
+#pit .deal-details{margin-top:8px;padding-top:6px;border-top:1px solid #8f795d55;font-size:13px;line-height:1.4;color:var(--ink-soft)}
+#pit .deal-details summary{min-height:32px;align-content:center;cursor:pointer;color:#5a3b17;font:700 12px var(--money);letter-spacing:.06em}
+#pit .deal-details p{margin:6px 0}
+#pit .deal-bid{display:grid;gap:3px;padding:8px 0;border-bottom:1px solid #8f795d55}
+#pit .deal-bid>b{font:700 18px/1.2 var(--money);color:var(--ink)}#pit .deal-bid>span{font-size:13px;color:var(--ink-soft)}
+#pit .deal-field-row{display:flex;align-items:end;gap:10px;margin:8px 0}
+#pit .deal-field-row>label{display:grid;flex:1;gap:4px;min-width:0;font:700 11px var(--money);letter-spacing:.08em;color:var(--ink-soft);text-transform:uppercase}
+#pit :is(.paper-sheet,.contract,.vd-deal) :is(input[type=number],select){box-sizing:border-box;width:100%;min-height:44px;padding:6px 8px;border:0;border-bottom:2px solid var(--ink);border-radius:0;background:#fff7e3;color:var(--ink);font:700 17px var(--money)}
+#pit .deal-quantity{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;font-size:14px;color:var(--ink)}
+#pit .deal-quantity input{max-width:8rem}
+#pit .deal-stock-row,#pit .deal-list-card{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #8f795d44}
+#pit :is(.deal-stock-row,.deal-list-card)>div{flex:1 1 10rem;display:grid;gap:3px}
+#pit :is(.deal-stock-row,.deal-list-card) b{font:700 16px var(--money);color:var(--ink)}#pit :is(.deal-stock-row,.deal-list-card) span{font-size:13px;color:var(--ink-soft)}
+#pit .mat-paper .mat-exit{background:#2a1d12;color:#f4e5c3}
+#pit .deal-other-orders{display:grid;gap:6px;margin-top:8px}
+#pit .deal-inline-action{margin:6px 0}
+#pit .deal-round-orders{margin:8px 0}
+#pit .mat-paper .deal-details article b{color:var(--ink)}
+
+/* Mid widths (tablets, small laptops): narrower keys so the rate field keeps its digits. */
+@media (min-width:769px) and (max-width:1100px){
+ #pit .face-off:not(.verdict-face){grid-template-columns:minmax(0,1fr) 112px minmax(0,1fr);gap:12px 12px}
+ #pit .keys{grid-template-columns:auto auto minmax(96px,1fr) auto auto;gap:5px}
+ #pit .mat-key{min-width:44px;min-height:50px;padding:2px}#pit .mat-key.key-5{min-width:50px;min-height:54px}
+ #pit .mat-key small{font-size:9.5px}
+ #pit .rival-play{font-size:12px;padding:5px 8px}
+ #pit .gap-col{padding-top:40px}
+}
+
+/* ---- Phones: the ledger reads top to bottom, both totals right-aligned ---------------------- */
+@media (max-width:768px){
+ #pit{--hero:clamp(22px,7.2vw,30px)}
+ #pit .wide,#pit .wide-s,#pit .rail-fact.wide-only,#pit .mat-key small.w1,#pit .gap-label,#pit .lever-risk{display:none}
+ #pit .gap-figs:empty{display:none}
+
+ #pit .face-off,#pit .buyer-face,#pit .verdict-face{grid-template-columns:minmax(0,1fr);grid-template-areas:"their" "gap" "yours" "lever";grid-template-rows:none;gap:6px;min-height:0}
+ #pit .verdict-face{grid-template-areas:"their" "verdict" "lever"}
+ #pit .plate.their{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head total" "sub total" "news note";column-gap:10px;align-items:center;padding:6px 10px 7px;border-width:4px;border-bottom-width:5px}
+ #pit .plate.their .plate-total{margin:0;text-align:right}
+ #pit .plate.their .plate-sub{font-size:12px}
+ #pit .plate-news{font-size:11px;min-height:0}#pit .plate-news:empty{display:none}
+ #pit .plate.their .plate-note{margin:0;font-size:11px;text-align:right}
+ #pit .plate-head{font-size:10px;letter-spacing:.1em}
+ #pit .desk-fuse:before{width:28px}
+ #pit .gap-col{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;padding:0}
+ #pit .gap-figs{display:flex;align-items:baseline;gap:8px;min-width:0;padding:2px 10px;border-block-width:1px}
+ #pit .gap-figs b{font-size:15px}#pit .gap-figs small{font-size:11px}#pit .gap-label{font-size:10px;letter-spacing:.2em}
+ #pit .gap-fact{margin:0;font-size:11px}
+ #pit .slip.yours{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head total" "keys keys" "strip strip";align-items:center;padding:7px 10px 0}
+ #pit .slip-total{margin:0;text-align:right}
+ #pit .slip>.mat-strip{margin:0 -10px;width:calc(100% + 20px)}
+ #pit .keys{grid-template-columns:auto auto minmax(64px,1fr) auto auto;gap:5px;margin:6px 0 9px}
+ #pit .mat-key{min-height:44px;min-width:46px}#pit .mat-key.key-5{min-height:46px;min-width:50px}
+ #pit .mat-key b{font-size:14px}#pit .mat-key small{font-size:9.5px}
+ #pit .ink-field{height:46px;padding:0 3px;font-size:13px}#pit .ink-field input{font-size:18px;height:44px}
+ #pit .mat-strip{min-height:44px;padding:6px 10px;font-size:13px}
+ #pit .mat-strip:disabled{font-size:12px}
+ #pit .rival-slip{padding:5px 6px 5px 9px;gap:8px}#pit .rival-slip b{font-size:13px}#pit .rival-play{padding:5px 8px;font-size:12px}
+ #pit .buyer-face{grid-template-areas:"their" "gap" "yours"}
+ #pit .buyer-face .slip-total{margin:0}
+ #pit .buyer-face .slip.yours{grid-template-areas:"head head" "qty total" "keys keys" "strip strip"}
+ #pit .buyer-face .slip .plate-head{display:contents}
+ #pit .buyer-face .slip .plate-head>span{grid-area:head}
+ #pit .buyer-face .qty-chip{grid-area:qty;justify-self:start}
+ #pit .source-cards{grid-template-columns:minmax(0,1fr);gap:8px}
+ #pit .source-card{grid-template-columns:48px minmax(0,1fr) auto;min-height:84px;padding:6px 10px 6px 4px;border-width:3px;border-bottom-width:4px}
+ #pit .src-face{height:66px}#pit .src-face .fig{width:48px}
+ #pit .src-who b{font-size:14px}#pit .src-rate{font-size:21px}#pit .src-total{font-size:12px}
+ #pit :is(.contract,.receipt){padding:10px 12px 12px;gap:6px}
+ #pit .contract-total{font-size:clamp(26px,8.6vw,34px)}
+ #pit .contract-terms{font-size:12px}#pit .contract-sub{font-size:12px}
+ #pit .mat-stamp{padding:9px 12px;font-size:14px}
+ #pit .deal-stamp{right:8px;top:4px;font-size:14px;border-width:3px;padding:3px 8px}
+ #pit .payoff-hero{font-size:22px}#pit .payoff-hero.money-hero{font-size:clamp(34px,11vw,44px)}
+ #pit .payoff-sub{font-size:12px}
+ #pit .gpu-chip{width:42px;height:30px}
+ #pit .plate.their.is-closed{grid-template-areas:"head head" "total stamp" "sub stamp"}
+ #pit .plate.their.is-closed .plate-total{text-align:left}
+ #pit .closed-stamp{position:static;grid-area:stamp;justify-self:end;align-self:center;font-size:17px;transform:rotate(-8deg)}
+ #pit .pit-focus-footer .rail-commit{min-width:0;max-width:64%;padding:6px 10px;font-size:13px;gap:7px}
+ #pit .pit-focus-footer .rail-fact{font-size:11px}
+ #pit .pit-focus-footer :is(.rail-quiet,.rail-back){padding:6px 9px;font-size:12px}
+ #pit .paper-sheet{padding:8px 11px 10px}
+ #pit .deal-metrics{gap:6px;margin:6px 0}#pit .deal-metric{padding:5px 7px}#pit .deal-metric strong{font-size:15px}
+}
+@media (max-width:360px){
+ #pit .keys{gap:4px}
+ #pit .mat-key{min-width:44px;padding:2px}#pit .mat-key.key-5{min-width:46px}
+ #pit .plate.their{padding:5px 8px 6px}
+ #pit .slip.yours{padding:6px 8px 0}#pit .slip>.mat-strip{margin:0 -8px;width:calc(100% + 16px)}
+ #pit .rival-slip span{display:none}
+ #pit .pit-focus-footer .rail-commit{font-size:12px;padding:6px 8px}
+}
+/* Integration polish. An empty live gap (draft equals their quote) shows nothing, at every width. */
+#pit .gap-figs:empty{display:none}
+/* Tall phones: spend the spare desk height on bigger keys and a lower, thumb-reachable instrument. */
+@media (max-width:768px) and (min-height:780px){
+ #pit{--hero:clamp(24px,8vw,34px)}
+ #pit .face-off,#pit .buyer-face,#pit .verdict-face{align-content:end;min-height:100%;gap:10px}
+ #pit .plate.their{padding:9px 12px 10px}
+ #pit .slip.yours{padding:10px 12px 0}
+ #pit .keys{gap:7px;margin:10px 0 12px}
+ #pit .mat-key{min-height:54px;min-width:52px}#pit .mat-key.key-5{min-height:56px;min-width:58px}
+ #pit .mat-key b{font-size:16px}
+ #pit .ink-field{height:52px}#pit .ink-field input{font-size:20px;height:50px}
+ #pit .mat-strip{min-height:54px;font-size:15px}
+ #pit .rival-slip{padding:8px 8px 8px 11px}#pit .rival-slip b{font-size:14px}
+}
+
+@media (max-height:640px) and (min-width:769px){#pit .face-off{gap:8px 14px}#pit .slip-total{margin:10px 0 6px}}
+
+/* ---- V10.5 founder desks ------------------------------------------------------------------- */
+#pit .plate-sub .gtag{font-size:.9em}
+#pit .gap-need{margin:6px 0 0;padding:5px 8px;border-radius:3px;border-left:4px solid var(--gc,#c9a861);background:#00000030;font:600 12px/1.3 var(--money);color:#e9d7a8;text-align:left}
+#pit .gap-need b{color:#fff1c2;font-size:14px}
+
+/* Investor term sheet: the check, the slice, the cap table before → after; a half-point counter. */
+#pit .term-desk{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:16px;align-items:start;align-content:center;width:100%;max-width:1060px;min-height:100%;margin:0 auto}
+#pit .term-sheet{display:grid;gap:10px;min-width:0;padding:12px 18px 14px;border-radius:2px;background:repeating-linear-gradient(0deg,#f6eed8 0 25px,#ece2c8 25px 26px)}
+#pit .term-sheet .contract-head .desk-fuse{color:#4f6b3f}
+#pit .ts-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#pit .ts-hero p{display:grid;gap:2px;margin:0}
+#pit .ts-hero span{font:800 11px var(--money);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft)}
+#pit .ts-hero strong{font-size:var(--hero);color:#174f30}
+#pit .ts-for{text-align:right}#pit .ts-for strong{font:900 clamp(28px,3.2vw,42px)/1 var(--money);color:#7d1d16}
+#pit .ts-figs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+#pit .ts-figs>div{display:grid;gap:2px;padding:5px 8px;border:1px solid #8f795d55;background:#ffffff40;min-width:0}
+#pit .ts-figs dt{font:700 10px/1.2 var(--money);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+#pit .ts-figs dd{margin:0;font:800 16px/1.2 var(--money);color:var(--ink);white-space:nowrap}
+#pit .ts-own{display:grid;gap:5px}
+#pit .ts-own p{display:flex;align-items:baseline;gap:10px;margin:0;font:700 13px var(--money);color:var(--ink-soft)}
+#pit .ts-own p span{font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+#pit .ts-own b{font:800 22px var(--money);color:var(--ink)}#pit .ts-own b.is-after{color:#174f30;font-size:26px}
+#pit .ts-fine{margin:0;font:12px/1.35 var(--money);color:var(--ink-soft)}
+#pit .own-bar{display:flex;width:100%;height:14px;border-radius:7px;overflow:hidden;background:#d8cba9;box-shadow:inset 0 1px 2px #0004}
+#pit .own-you{background:linear-gradient(#3f9a5e,#1f6b3f)}#pit .own-new{background:repeating-linear-gradient(-45deg,#d8a62c 0 6px,#b8862b 6px 12px)}#pit .own-old{background:#8f7f62}
+#pit .slip.term-counter{grid-template-areas:"head" "total" "would" "keys" "strip"}
+#pit .term-counter .ts-would{grid-area:would}
+#pit .term-counter .slip-total{margin:14px 0 2px}
+#pit .ts-would{margin:0 0 8px;font:600 13px var(--money);color:var(--ink-soft)}#pit .ts-would b{color:#174f30}
+#pit .term-keys{grid-template-columns:auto minmax(76px,1fr) auto}
+#pit .pct-field:before{content:''}#pit .pct-field:after{content:'%'}
+#pit .term-counter .plate-head>span:last-child{font-weight:600;letter-spacing:.04em;text-transform:none}
+#pit .pit-focus:has(.mat-strip.is-lit:not(:disabled)) .pit-focus-footer .mat-vault:is([data-action="accept-term"],[data-action="sell-buyer"]):not(:disabled){background:linear-gradient(#3a2a18,#2a1d10);color:#ecd297;border-color:#c9a861;text-shadow:none;box-shadow:inset 0 0 0 1px #00000080,0 2px 0 #1c110a}
+
+/* Receipts: allocate straight onto a card; the raise; the resale. */
+#pit .receipt.is-purchase{gap:8px}
+#pit .gpu-chips{--chip:30px;gap:10px}
+#pit .allocations{display:grid;gap:8px;width:100%}
+#pit .allocate{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lane after" "name name";align-items:center;gap:2px 12px;min-height:56px;padding:6px 14px 7px 14px;text-align:left;
+ border:2px solid var(--lane-deep);border-left:8px solid var(--lane);border-radius:4px;background:#fffaf0;color:var(--ink);box-shadow:0 3px 0 #b9a378;overflow:hidden}
+#pit .allocate:hover{background:#fff;box-shadow:0 3px 0 #b9a378,0 0 0 3px color-mix(in srgb,var(--lane) 50%,transparent)}
+#pit .allocate:active{transform:translateY(2px);box-shadow:0 1px 0 #b9a378}
+#pit .al-lane{grid-area:lane;justify-self:start;font:800 10px var(--money);letter-spacing:.14em;color:var(--lane-deep)}
+#pit .lane-infra .al-lane{color:#6a4d05}
+#pit .allocate b{grid-area:name;font:700 16px/1.2 Georgia,serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pit .al-after{grid-area:after;justify-self:end;font:700 12px var(--money);color:var(--ink-soft);white-space:nowrap}
+#pit .al-after em{font-style:normal;padding:0 6px;border-radius:2px;background:#7d1d16;color:#fff2df;letter-spacing:.08em}
+#pit .allocate.is-ready{box-shadow:0 3px 0 #b9a378,0 0 0 3px color-mix(in srgb,var(--lane) 55%,transparent)}
+#pit .pit-focus-footer .rail-keep{margin-left:auto}
+#pit .payoff-raise .own-bar{width:min(420px,100%)}
+#pit .payoff-raise .payoff-sub b{color:#174f30}
+
+/* Before the bell. */
+#pit .bell-list{display:grid;gap:3px;margin:8px 0;padding:0;list-style:none}
+#pit .bell-list li{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:4px 8px;border-left:4px solid var(--lane);background:#ffffff40;font:600 13px var(--money);color:var(--ink-soft)}
+#pit .bell-list b{font:700 15px Georgia,serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pit .bell-flow{display:flex;flex-wrap:wrap;gap:4px 18px;margin:8px 0;font:600 14px var(--money);color:var(--ink-soft)}
+#pit .bell-flow b{color:var(--ink)}#pit .bell-flow small{flex-basis:100%;font-size:12px}
+
+/* The board update: one punchy page per bell. */
+#pit .board-sheet{position:relative;display:grid;gap:10px;width:100%;max-width:820px;margin:0 auto;padding:12px 20px 16px;border-radius:2px;box-sizing:border-box}
+#pit .news-mast{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:6px;border-bottom:3px double var(--ink)}
+#pit .news-mast span{font:700 11px/1 var(--money);letter-spacing:.24em;color:var(--ink-soft)}
+#pit .news-mast b{font:900 clamp(20px,2.6vw,30px)/1 Georgia,serif;letter-spacing:.04em;color:var(--ink)}
+#pit .news-next{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:2px 0 0;padding-top:8px;border-top:1px solid #8f795d66}
+#pit .news-next span{font:700 11px var(--money);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+#pit .news-next b{font:700 17px/1.2 Georgia,serif;color:var(--ink)}
+#pit .bu-event{font:normal 700 13px var(--money);color:var(--ink)}#pit .bu-event.kind-shortage{color:#a42a1c}#pit .bu-event.kind-glut{color:#1f6b3f}
+#pit .pos{color:#1f6b3f}#pit .neg{color:#a42a1c}
+#pit .bu-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
+#pit .bu-flow p{display:grid;gap:2px;margin:0;padding:6px 10px;border:1px solid #8f795d55;background:#ffffff40}
+#pit .bu-flow span{font:700 10.5px var(--money);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+#pit .bu-flow b{font:800 22px/1.1 var(--money)}
+#pit .bu-flow .bu-net{border:2px solid var(--ink);background:#fffaf0}
+#pit .bu-builds{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+#pit .bu-builds li{display:grid;grid-template-columns:auto minmax(0,auto) 1fr;align-items:center;gap:4px 12px;padding:7px 10px;border-left:6px solid var(--lane);background:#ffffff55}
+#pit .bu-stamp{padding:2px 8px;border:3px double var(--lane-deep);color:var(--lane-deep);font:900 13px/1.2 var(--money);letter-spacing:.1em;transform:rotate(-3deg)}
+#pit .lane-infra .bu-stamp{color:#6a4d05;border-color:#6a4d05}
+#pit .run-setback .bu-stamp{color:#a42a1c;border-color:#a42a1c}
+#pit .run-breakthrough .bu-stamp{color:#8a5a12;border-color:#b8862b;background:#fff6d6;box-shadow:0 0 12px #ffd88c99}
+#pit .bu-builds b{font:700 16px/1.2 Georgia,serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pit .bu-builds span{font:600 13px var(--money);color:var(--ink-soft);min-width:0}
+#pit .bu-quiet{margin:0;font:italic 15px Georgia,serif;color:var(--ink-soft)}
+#pit .bu-integ{display:grid;gap:3px;margin:0;padding:6px 10px;list-style:none;border:1px dashed #8f795d;background:#ffffff30}
+#pit .bu-integ li{display:flex;justify-content:space-between;gap:10px;font:700 13px var(--money);color:var(--ink)}
+#pit .bu-integ li span{color:#1f6b3f}
+#pit .bu-integ .bu-tetris{font:italic 12px/1.35 Georgia,serif;color:var(--ink-soft)}
+#pit .bu-expired{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0;font:600 13px var(--money);color:#a42a1c}
+#pit .bu-expired span{font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+#pit .bu-value{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0;font:600 13px var(--money);color:var(--ink-soft)}
+#pit .bu-value>span:first-child{font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+#pit .bu-value>b{font:800 20px var(--money);color:var(--ink)}
+#pit .bu-own{margin-left:auto}#pit .bu-own b{color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){
+ #pit .bu-builds li{animation:bu-in .38s cubic-bezier(.2,.9,.3,1.1) both}
+ #pit .bu-builds li:nth-child(2){animation-delay:.12s}#pit .bu-builds li:nth-child(n+3){animation-delay:.24s}
+ #pit .run-breakthrough .bu-stamp{animation:bu-boom .7s .2s cubic-bezier(.3,1.6,.5,1) both}
+}
+@keyframes bu-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes bu-boom{from{opacity:0;transform:scale(2.4) rotate(-12deg)}to{opacity:1;transform:rotate(-3deg)}}
+
+/* The exit: founder payout first, then how the equity was valued, who owns it and how you got there. */
+#pit .final-sheet{position:relative;display:grid;gap:8px;width:100%;max-width:768px;margin:0 auto;padding:12px 20px 16px;border-radius:2px;box-sizing:border-box;justify-items:stretch;text-align:center}
+#pit .exit-title{justify-self:center;margin:4px 0 0;padding:4px 16px;border:4px double #1f6b3f;color:#1f6b3f;font:900 clamp(18px,2.4vw,26px)/1.1 var(--money);letter-spacing:.14em;transform:rotate(-2deg);background:#eafbe9}
+#pit .kind-ipo .exit-title,#pit .exit-sheet[class*="unicorn"] .exit-title{border-color:#b8862b;color:#8a5a12;background:#fff6d6;box-shadow:0 0 16px #ffd88c88}
+#pit .is-shutdown .exit-title{border-color:#7d1d16;color:#7d1d16;background:#fbe9e5}
+#pit .exit-mark{margin:0;font:700 12px var(--money);letter-spacing:.06em;color:#8a5a12}
+#pit .final-rounds{margin:0;font:600 13px/1.3 var(--money);color:var(--ink-soft)}
+#pit .final-basis{margin:0;font:500 13px/1.4 var(--money);color:var(--ink-soft);overflow-wrap:anywhere}
+#pit .final-label{margin:4px 0 0;font:800 12px/1 var(--money);letter-spacing:.3em;text-transform:uppercase;color:var(--ink-soft)}
+#pit .final-cash{justify-self:center;--fit:calc((min(100vw,760px) - 96px) / (var(--chars,12) * .62));font-size:min(clamp(48px,7vw,86px),var(--fit));white-space:nowrap;color:#174f30;text-shadow:0 2px 0 #fff8}
+#pit .is-shutdown .final-cash{color:#7d1d16}
+#pit .final-vs{display:flex;justify-content:center;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin:0;font:600 14px var(--money);color:var(--ink-soft)}
+#pit .final-vs b{font:800 19px var(--money);color:var(--ink)}
+#pit .final-note{margin:0;font:15px/1.4 Georgia,serif;color:#7d1d16}
+#pit .exit-math{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 12px;margin:0;padding:6px 10px;border:1px dashed #8f795d;font:600 13px var(--money);color:var(--ink-soft)}
+#pit .exit-math b{color:var(--ink)}
+#pit .exit-story{margin:0;font:15px/1.4 Georgia,serif;color:var(--ink)}
+#pit .exit-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;text-align:left}
+#pit .cap-table{width:100%;border-collapse:collapse;font:600 13px var(--money);color:var(--ink)}
+#pit .cap-table caption{text-align:left;font:800 10.5px var(--money);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);padding-bottom:3px}
+#pit .cap-table th{font:700 14px Georgia,serif;text-align:left;padding:3px 6px 3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:12em}
+#pit .cap-table td{padding:3px 4px;text-align:right;white-space:nowrap;color:var(--ink-soft)}
+#pit .cap-table td:nth-of-type(1){font-weight:800;color:var(--ink)}
+#pit .cap-table tr{border-bottom:1px dashed #8f795d66}
+#pit .cap-table tr.is-you th,#pit .cap-table tr.is-you td:nth-of-type(1){color:#174f30}
+#pit .exit-choices{display:grid;gap:3px;margin:0;padding:0;list-style:none;font:600 12.5px/1.3 var(--money);color:var(--ink)}
+#pit .exit-choices li{display:flex;gap:8px;min-width:0}#pit .exit-choices i{flex:0 0 auto;font-style:normal;font-weight:800;color:#8a5a12}
+#pit .exit-choices .more{color:var(--ink-soft)}
+#pit .exit-choices.is-none{font:italic 14px Georgia,serif;color:var(--ink-soft)}
+#pit .final-pb{display:flex;justify-content:center;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin:0;font:600 13px var(--money);color:var(--ink-soft)}
+#pit .final-pb b{font-weight:800;color:var(--ink)}
+#pit .final-pb.is-new b{padding:3px 10px;border:3px double #b8862b;color:#8a5a12;letter-spacing:.16em;transform:rotate(-2deg);background:#fff6d6}
+#pit .final-share-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}
+#pit .final-share{min-height:44px}
+#pit .final-shared{display:grid;gap:3px;flex:1 1 320px;text-align:left}
+#pit .final-shared textarea{width:100%;box-sizing:border-box;min-height:44px;padding:6px 8px;resize:none;border:1px solid #8f795d;background:#fffaf0;color:var(--ink);font:12px/1.35 var(--money)}
+#pit .final-shared small{font:600 11px var(--money);color:#1f6b3f}
+@media (prefers-reduced-motion:no-preference){#pit .final-cash{animation:final-in .7s cubic-bezier(.2,1.3,.4,1) both}#pit .exit-title{animation:bu-boom .6s .1s cubic-bezier(.3,1.6,.5,1) both}}
+@keyframes final-in{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+
+@media (max-height:730px) and (min-width:769px){
+ #pit :is(.board-sheet,.final-sheet){gap:6px;padding:9px 16px 12px}
+ #pit .final-cash{font-size:min(clamp(40px,6vw,64px),var(--fit))}
+ #pit .bu-builds li{padding:5px 10px}
+ #pit .term-sheet{gap:7px;padding:9px 14px 10px}
+}
+@media (max-width:768px){
+ #pit .term-desk{grid-template-columns:minmax(0,1fr);gap:8px;align-content:end}
+ #pit .term-sheet{gap:6px;padding:8px 10px 10px}
+ #pit .ts-hero strong{font-size:clamp(24px,8vw,32px)}#pit .ts-for strong{font-size:24px}
+ #pit .ts-figs dd{font-size:13px}#pit .ts-figs dt{font-size:9px;letter-spacing:.02em}#pit .ts-figs>div{padding:4px 6px}
+ #pit .ts-own b{font-size:17px}#pit .ts-own b.is-after{font-size:19px}
+ #pit .ts-fine{font-size:11px}
+ #pit .term-counter .slip-total{margin:0}
+ #pit .slip.term-counter{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head total" "would would" "keys keys" "strip strip"}
+ #pit .term-counter .plate-head{flex-direction:column;align-items:flex-start;gap:1px}
+ #pit .ts-figs{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+ #pit .ts-fine{display:none}
+ #pit .ts-hero{flex-wrap:nowrap}
+ #pit .ts-own{gap:3px}#pit .own-bar{height:10px}
+ #pit .term-keys{margin:4px 0 8px}
+ #pit .term-counter .ts-would{grid-area:would;margin:0 0 4px;font-size:12px}
+ #pit .allocate{min-height:52px}#pit .allocate b{font-size:14px}
+ #pit .gpu-chips{--chip:24px;gap:7px}
+ #pit :is(.board-sheet,.final-sheet){gap:6px;padding:9px 11px 11px}
+ #pit .news-mast b{font-size:17px}#pit .news-mast span{font-size:9px;letter-spacing:.12em}
+ #pit .bu-flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+ #pit .bu-flow p{padding:4px 8px}#pit .bu-flow b{font-size:17px}
+ #pit .bu-builds li{grid-template-columns:auto minmax(0,1fr);padding:5px 8px;gap:2px 8px}
+ #pit .bu-builds span{grid-column:1/-1;font-size:12px}
+ #pit .bu-builds b{font-size:14px}
+ #pit .bu-stamp{font-size:11px;padding:1px 6px}
+ #pit .bu-integ li{font-size:12px}
+ #pit .bu-value>b{font-size:16px}
+ #pit .news-next b{font-size:14px}#pit .bu-event{font-size:12px}
+ #pit .final-cash{--fit:calc((100vw - 64px) / (var(--chars,12) * .62));font-size:min(clamp(38px,13vw,56px),var(--fit))}
+ #pit .final-vs{font-size:12px}#pit .final-vs b{font-size:16px}
+ #pit .exit-math{font-size:11.5px;padding:4px 6px}
+ #pit .exit-story{font-size:13px}
+ #pit .exit-cols{grid-template-columns:minmax(0,1fr);gap:8px}
+ #pit .cap-table{font-size:12px}#pit .cap-table th{font-size:13px}
+ #pit .exit-choices{font-size:11.5px}
+ #pit .final-shared{flex-basis:100%}
+ #pit .final-shared textarea{font-size:11px}
+ #pit .gap-need{font-size:11px;margin:0;padding:3px 7px}
+}
+@media (max-width:360px){
+ #pit .final-label{letter-spacing:.18em}
+ #pit .ts-figs dt{font-size:8px;letter-spacing:0}#pit .ts-figs dd{font-size:12px}
+ #pit .ts-hero strong{font-size:24px}#pit .ts-for strong{font-size:21px}
+}
+
+#pit .final-share-group{display:grid;justify-items:center;gap:9px;margin-top:6px;padding:12px;border:1px solid #b69452;background:#f4ecd7;width:100%;box-sizing:border-box}
+#pit .final-share-group h3{margin:0;font:800 13px var(--money);letter-spacing:.16em;color:#25543b}
+#pit .final-scorecard-preview{width:min(100%,480px);height:auto;display:block;border:2px solid #b69452;box-sizing:border-box}
+#pit .final-share-group .final-share-row{width:100%}
+#pit .final-share-group .final-share{flex:1 1 140px;padding:8px}
+#pit .final-share-group .final-shared{width:100%;flex-basis:auto}
+#pit .final-shared textarea{min-height:64px}
+@media(max-width:390px){#pit .final-share-group{padding:8px}#pit .final-share-group .final-share{flex-basis:120px;font-size:11px}}
+#pit .challenge-invite{position:fixed;z-index:80;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(94vw,560px);box-sizing:border-box;padding:8px 10px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;border:2px solid #d9bf78;background:#173d2d;color:#fff0cc;box-shadow:0 4px 14px #0008;font:700 12px var(--money);text-align:center}
+#pit .challenge-invite button{min-height:36px;padding:4px 8px;border:1px solid #d9bf78;background:#f4ecd7;color:#173d2d;font:700 12px var(--money);cursor:pointer}
+#pit .final-jump{justify-self:center;border:0;border-bottom:1px solid #8a5a12;background:none;color:#75501e;font:800 11px var(--money);letter-spacing:.12em;cursor:pointer}
