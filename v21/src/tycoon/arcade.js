@@ -14,7 +14,7 @@ import { FOUNDER, createCompany, dealCards, opportunityCard, openCards, freeOf, 
 import { createWorld, worldOpen, worldTick, worldBell, exitMarket, epilogue } from './world.js';
 import { makeRoundLots, makeResaleBids, marketEvent, commitmentLots, PHASES, sourcingQuote, sourcedLot } from './founder-market.js';
 import { planInvestor } from './investors.js';
-import { startIntegration, integrationOutcome, clearIntegration, finishWorkshop, crewIntegrationOutcome } from './integration.js';
+import { startIntegration, integrationOutcome, clearIntegration, finishWorkshop } from './integration.js';
 import { stream } from '../util.js';
 import { strategicOpen, strategicBell, strategicBusy, deliverCompute, endStrategic, computeAlternative } from './strategic.js';
 import { institutionalTerms, institutionalBell } from './institutional.js';
@@ -186,14 +186,21 @@ export function closeQuarter(g) {
   // 1. Reservations lapse: anything not built is just unused capacity.
   g.arcade.reservations = [];
   if (pendingIntegration(g).some(b => b.status === 'integrating')) {
+    // An integration failure must never quietly turn into a crew result. Keep
+    // the project pending, restore unlock/progression state, and allow retry.
+    const beforeDeploy=structuredClone(g.company.deploy);
+    const beforeReplays=structuredClone(g.arcade.replays);
+    const beforeSnakeIntro=structuredClone(g.arcade.snakeIntro);
     g.phase = 'integration';
     g.arcade.bellIntegration={q:g.q,kind:null};
     if (!startIntegration(g)) {
-      // A locked automatically chosen game cannot bypass earned access. The
-      // existing integration crew brings up the same fixed 75% baseline.
-      g.arcade.integration ||= {kind:g.arcade.bellIntegration.kind || 'node',id:`q${g.q}-crew`,tier:'node'};
-      g.arcade.integration.crew=crewIntegrationOutcome(g);
-      return finishIntegration(g);
+      g.company.deploy=beforeDeploy;
+      g.arcade.replays=beforeReplays;
+      g.arcade.snakeIntro=beforeSnakeIntro;
+      clearIntegration(g);
+      g.phase='floor';
+      notice(g,'The GPU integration game could not open. Your deployment is still pending. Try closing the round again.','bad');
+      return false;
     }
     const kind = g.arcade.integration?.kind || 'node';
     notice(g, kind === 'cable' ? 'The bell has rung. Cable your nodes into the fabric: every node the link signal reaches comes online now.'
