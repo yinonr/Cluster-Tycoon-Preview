@@ -19,7 +19,7 @@ const gpusIn = r => Object.values(r || {}).reduce((n, x) => n + (x || 0), 0);
 // The two first-time milestones: they come from the company's infrastructure (the first bell at each tier), never
 // from the round number. Shown once, on that bell's intro card.
 export const MILESTONES = Object.freeze({
-  cluster: { kicker: 'First multi-node deployment', text: 'Your company has graduated from provisioning hardware to networking it. Connect every GPU node to the switch. Planning is untimed; TEST NETWORK commits your design. This achievement also unlocks free Cluster Snake through Minigames.' },
+  cluster: { kicker: 'First multi-node deployment', text: 'Your company has graduated from provisioning hardware to networking it. Connect every GPU node to the switch. Planning is untimed; TEST NETWORK commits your design. This achievement also unlocks free Cluster Snake through Company.' },
   fleet: { kicker: 'First large distributed deployment', text: 'You now operate a massive, expensive compute fleet. Idle GPUs burn money; the job now is keeping every one of them productive. Steer the work across the fleet, and never let it stall.' },
 });
 
@@ -60,10 +60,10 @@ export function resultBlock(g, builds, out, { perfectLine, line }) {
   return `<div class="tt-result" role="status"><strong class="tt-stamp">${pct(out.efficiency)} INTEGRATED</strong>${grade}<p>${esc(line)} · ${pct(delayed)} next bell</p><p class="tt-score">Score ${out.score.toLocaleString('en-US')}</p></div>`;
 }
 // The footer: before START, the crew skip and START; while playing, the game's own controls; after, Continue.
-export function footerFor({ out, started, name, controls, workshop = false, training = false }) {
+export function footerFor({ out, started, name, controls, workshop = false, training = false, returnTo = 'floor' }) {
   if (training && out) return button(out.perfect && !out.skipped ? 'training-continue' : 'training-retry',out.perfect && !out.skipped ? name==='Cluster Snake' ? 'Training complete →' : 'Bring the rack online →' : name==='Cluster Snake' ? 'Try the workload again →' : 'Try the network again →','class="mat-move rail-commit rail-solo" data-arc-continue data-autofocus');
   if (training && !started) return button('int-start',name==='Cluster Snake'?'Start the workload →':'Start connecting →','class="mat-move rail-commit rail-solo" data-autofocus');
-  if (out) return button('int-continue', `${workshop ? 'Continue to floor' : 'Continue'} <span aria-hidden="true">→</span>`, `class="mat-move rail-commit rail-solo" data-arc-continue data-autofocus aria-label="${workshop ? 'Return to the floor and collect your best-prize improvement' : 'Continue to the board update'}"`);
+  if (out) return button('int-continue', `${workshop ? `Continue to ${esc(returnTo)}` : 'Continue'} <span aria-hidden="true">→</span>`, `class="mat-move rail-commit rail-solo" data-arc-continue data-autofocus aria-label="${workshop ? `Return to ${esc(returnTo)}${name==='Cluster Snake'?'': ' and collect your best-prize improvement'}` : 'Continue to the board update'}"`);
   if (!started && workshop) return button('int-skip', 'Leave practice', 'class="mat-exit rail-quiet"') + button('int-start', `Start ${esc(name)} ▶`, 'class="mat-move rail-commit" data-autofocus');
   if (!started) return button('int-skip', `Skip<span class="wide"> · crew baseline</span> · ${pct(INTEGRATION.skip)}`, `class="mat-exit rail-quiet tt-skip" aria-label="Skip ${esc(name)}: the integration crew brings ${pct(INTEGRATION.skip)} online now, the rest next bell"`) +
     button('int-start', `Start <span class="wide">${esc(name)} </span><span aria-hidden="true">▶</span>`, `class="mat-move rail-commit" data-autofocus aria-label="Start ${esc(name)}"`);

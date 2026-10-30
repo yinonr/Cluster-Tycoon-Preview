@@ -5,10 +5,11 @@ import { esc } from '../util.js';
 import { activeLot, available, cash, cents, owned, V7 } from '../tycoon/arcade.js';
 import { buyerLive } from '../tycoon/arcade-buyers.js';
 import { liveTerm } from '../tycoon/investors.js';
-import { companyStats, openCards, cardState } from '../tycoon/founder.js';
-import { money as sum, short, pctOf, bpsText } from './pit-ledger.js';
+import { companyStats, openCards, cardState, GPUS, freeOf } from '../tycoon/founder.js';
+import { money as sum, short, pctOf, bpsText, reservedOf, rackStock } from './pit-ledger.js';
 import { companyBoard, assets, tray, gpuTag } from './pit-company.js';
-import { workshopQuote, snakeAvailable } from '../tycoon/integration.js';
+import { taskDeck } from '../tycoon/task-navigation.js';
+import { replayAvailable } from '../tycoon/replay-access.js';
 import { brokerOffer } from './broker-offer.js';
 import { baburSays, baburPortrait } from './babur.js';
 
@@ -64,35 +65,35 @@ function station(g, l, seatName, ctx) {
     : `<div class="${cls}" data-station-id="${esc(l.id)}" ${ctx.open ? 'aria-hidden="true"' : `role="group" aria-label="${esc(label)}"`}>${inner}</div>`;
 }
 
-function hud(g, ui, open) {
-  const s = companyStats(g), clock = Math.max(0,Math.ceil(V7.seconds-g.arcade.time));
-  return `<header class="pit-hud simplified-hud"><div class="hud-co"><button class="pit-help" data-action="help" aria-label="Help from Babur" title="Help from Babur" ${activeLot(g)?.negotiation.running?'disabled':''}>?</button><span class="hud-name"><b title="${esc(s.name)}">${esc(s.name)}</b></span></div><div class="hud-cash"><span>Cash</span><strong data-fx-cash>${money(cash(g))}</strong></div><div class="hud-val" title="Estimated paper stake, not final payout"><span>Your stake · est.</span><strong data-paper-stake="${s.founderValue}">${short(s.founderValue)}</strong><small>${pctOf(s.founderPct)} owned</small></div><div class="hud-round" aria-label="Round ${g.q} of ${V7.rounds}"><span>Round</span><strong>${g.q}<small>/${V7.rounds}</small></strong></div><div class="pit-clock ${open?'is-paused':''}"><span>${g.phase!=='floor'?'Closed':open?'Paused':'Remaining'}</span><strong data-floor-clock>${g.phase!=='floor'?'—':`${clock}s`}</strong></div></header>`;
+function hud(g,ui,open) {
+ const st=companyStats(g),clock=Math.max(0,Math.ceil(V7.seconds-g.arcade.time)),free=GPUS.reduce((n,gpu)=>n+freeOf(g,gpu),0);
+ return `<header class="pit-hud floor-hud"><div class="hud-co"><span class="hud-name"><b title="${esc(st.name)}">${esc(st.name)}</b><span class="floor-cycle">Round ${g.q}/${V7.rounds} · ${g.phase!=='floor'?'Closed':`${open?'Paused · ':''}<span data-floor-clock>${clock}s</span>`}</span></span></div><div class="hud-cash" style="--cash-chars:${money(cash(g)).length}"><span>Cash</span><strong data-fx-cash>${money(cash(g))}</strong></div><div class="hud-val" title="Estimated paper stake, not final payout"><span>Your stake · est.</span><strong data-paper-stake="${st.founderValue}">${short(st.founderValue)}</strong><small>${pctOf(st.founderPct)} owned</small></div>${button('open-inventory',`Inventory <small>${free} free</small>`,`class="hud-inventory" ${g.phase!=='floor'||g.arcade.active||g.arcade.confirm||g.arcade.signing?'disabled':''}`)}${button('help','Help',`class="pit-help floor-help" ${activeLot(g)?.negotiation.running?'disabled':''}`)}</header>`;
 }
-
-function workshopButtons(g, live) {
-  if (g.phase !== 'floor') return '';
-  return `<div class="pit-workshops" role="group" aria-label="Free minigames">${['node', 'cable'].map(kind => {
-    const q = workshopQuote(g, kind), name = kind === 'node' ? 'Node Tetris' : 'Cable Mania';
-    const inner = `<b>${name}</b><small>${q.remaining > 0 ? `Best prize · ${sum(q.remaining)} left` : 'Free practice'}</small>`;
-    return control(live, 'workshop', 'workshop-button', inner, `data-kind="${kind}" aria-label="Play ${name} for free. ${q.remaining > 0 ? `Up to ${sum(q.remaining)} more performance prize this round.` : 'Round prize already earned; unlimited free practice.'}"`);
-  }).join('')}</div>`;
+const floorSize=()=>{try{return matchMedia('(max-width:600px)').matches?2:4;}catch{return 4;}};
+function floorOffer(g,lot,live) {
+ const total=cents(lot.qty,lot.negotiation?.price??lot.ask),shortfall=total>cash(g),cooling=lot.cooldown>g.arcade.time;
+ const label=`Review ${lot.qty} ${lot.gpu} for ${sum(total)} total from ${lot.firm}${shortfall?'. Not enough cash at this quote.':'.'}`;
+ const inside=`<span class="floor-broker-art" aria-hidden="true">${person('seller',lot.firm)}</span><span class="floor-quote">${brokerOffer(lot,total,cooling?'Back shortly':shortfall?'Not enough cash':'')}</span>`;
+ return live&&!cooling?`<button type="button" class="floor-offer" data-floor-offer data-gpu="${esc(lot.gpu)}" data-action="focus-supplier" data-id="${esc(lot.id)}" data-station-id="${esc(lot.id)}" aria-label="${esc(label)}">${inside}</button>`:`<div class="floor-offer is-backdrop" aria-hidden="true">${inside}</div>`;
 }
-
-export function stage(g, ui = {}) {
-  const live = !ui.focusOpen, a = g.arcade, need = [...neededGPUs(g)];
-  const term = g.phase==='floor' ? liveTerm(g) : null;
-  return `<section class="pit-stage simplified-stage ${live?'':'is-backdrop'}" aria-label="Your company"><div>${hud(g,ui,!live)}</div><div class="pit-main simplified-main"><div class="company-workspace"><section class="compact-inventory"><h2>Your GPUs</h2>${tray(g,live)}<p>Free GPUs can fill a task. Unbuilt stock expires at the bell.</p></section><div class="pit-hintbar"></div><section class="sourcing-entry"><h2>Build your business</h2><p>Start with a task on the right. Its empty GPU tiles open matching broker offers.</p>${need.length ? `<div class="sourcing-types">${need.slice(0,2).map(gpu=>control(live,'open-market','source-needed',`Find ${esc(gpu)} →`,`data-filter="supply" data-gpu="${esc(gpu)}" data-context="1" data-need="1"`)).join('')}</div>` : '<p>Your current tasks have their GPU stock. Allocate it on a task, or inspect another offer.</p>'}${control(live,'open-market','all-offers-link','All offers →','data-filter="all" data-context="all"')}</section>${term ? `<section class="context-funding"><b>Funding offer available</b>${control(live,'review-term','funding-entry',`Review ${esc(term.name)} →`,`data-id="${esc(term.id)}"`)}</section>` : ''}<div class="workspace-secondary">${control(live,'open-minigames','secondary-entry','Minigames')}${control(live,'open-details','secondary-entry','Company details')}</div></div><aside class="pit-board">${companyBoard(g,ui,live)}</aside></div></section>`;
+export function stage(g,ui={}) {
+ const live=!ui.focusOpen,a=g.arcade,lots=g.phase==='floor'?a.lots.filter(l=>available(g,l)):[],filtered=ui.floorGpu?lots.filter(l=>l.gpu===ui.floorGpu):lots;
+ const size=floorSize(),pages=Math.max(1,Math.ceil(filtered.length/size)),page=Math.max(0,Math.min(pages-1,Number(ui.floorPage)||0)),shown=filtered.slice(page*size,page*size+size);
+ const future=a.lots.some(l=>l.at>a.time&&(!ui.floorGpu||l.gpu===ui.floorGpu)),term=g.phase==='floor'?liveTerm(g):null,bids=a.buyers.filter(b=>buyerLive(g,b));
+ const selected=taskDeck(g,ui).card,row=selected&&cardState(g,selected).rows.find(r=>r.gpu===ui.floorGpu),remaining=selected?.status==='open'&&row?Math.max(0,row.need-row.held-row.free):0;
+ const title=ui.floorGpu?remaining?`Find ${remaining} ${ui.floorGpu}`:`${ui.floorGpu} offers`:'Trading floor';
+ const empty=`<div class="floor-empty"><h3>${ui.floorGpu?`No ${esc(ui.floorGpu)} offers right now`:'No live offers right now'}</h3><p>${future?'More supply arrives while the floor is open.':ui.floorGpu?'No more matching supply is scheduled this round.':'No more supplier arrivals are scheduled this round.'}</p>${ui.floorGpu?control(live,'floor-filter-reset','floor-empty-reset','See other GPUs') : ''}</div>`;
+ return `<section class="pit-stage floor-stage ${live?'':'is-backdrop'}" aria-label="The GPU trading floor and your current task">${hud(g,ui,!live)}<div class="pit-main floor-main"><section class="trading-room" aria-label="Live broker offers"><header class="floor-heading"><div class="floor-filter-heading" data-floor-filter tabindex="-1"><h2>${esc(title)}</h2>${ui.floorGpu?control(live,'floor-filter-reset','floor-reset','Reset','aria-label="Reset GPU filter: show every GPU"'):''}</div><div class="floor-pagination">${control(live,'floor-page','floor-page-button','‹',`data-step="-1" aria-label="Previous broker offers" ${page===0?'disabled':''}`)}<span>${filtered.length?`${page*size+1}–${Math.min((page+1)*size,filtered.length)} of ${filtered.length}`:'0 offers'}</span>${control(live,'floor-page','floor-page-button','›',`data-step="1" aria-label="Next broker offers" ${page>=pages-1?'disabled':''}`)}</div></header><div class="floor-scene"><div class="floor-room-mark" aria-hidden="true"><img src="brand/logo/hsc-lockup-ink.svg" width="148" height="52" alt=""></div><div class="visible-brokers ${shown.length<3?'has-few':''}">${shown.length?shown.map(l=>floorOffer(g,l,live)).join(''):empty}</div></div><nav class="floor-secondary" aria-label="Trading information">${control(live,'open-market','floor-secondary-button',`Suppliers <span>${lots.length}</span>`,'data-filter="supply" data-context="all"')}${control(live,'open-market','floor-secondary-button',`Buyers <span>${bids.length}</span>`,'data-filter="buyers" data-context="all"')}${control(live,'open-details','floor-secondary-button','Company')}</nav></section><aside class="pit-board current-task-panel">${companyBoard(g,ui,live)}${term?`<div class="floor-funding">${control(live,'review-term','funding-entry',`Funding · review ${esc(term.name)} →`,`data-id="${esc(term.id)}"`)}</div>`:''}</aside></div></section>`;
 }
-
-// Secondary information has a named destination, rather than a second permanent toolbar.
-export function utilityView(g, ui = {}) {
-  if (ui.panel === 'minigames') {
-    const kernel = snakeAvailable(g);
-    return { title:'Minigames',role:'minigames',desk:'paper',exit:null,body:`<div class="utility-sheet"><p>Play for free in every round. Prizes improve only when you beat your best result for that game this round.</p>${workshopButtons(g,true)}${kernel ? control(true,'workshop','workshop-button','<b>Cluster Snake</b><small>Earned cluster unlock · free play</small>','data-kind="kernel"') : '<details><summary>Cluster Snake unlock</summary><p>Reach a 48-GPU deployment at the bell to unlock Cluster Snake. A live fleet or a new integration batch qualifies.</p></details>'}</div>`,footer:button('close-focus','Back to company','class="mat-exit rail-quiet"') };
-  }
-  if (ui.panel !== 'details') return null;
-  const st = companyStats(g), terms = g.arcade.terms.filter(t=>t.status==='open' && t.at<=g.arcade.time && t.until>g.arcade.time);
-  return { title:'Company details',role:'details',desk:'paper',exit:null,body:`<div class="utility-sheet"><dl class="company-financials"><div><dt>Revenue / round</dt><dd>${sum(st.revenue)}</dd></div><div><dt>Burn / round</dt><dd>${sum(st.burn)}</dd></div><div><dt>Cash runway</dt><dd>${st.runway===Infinity?'Profitable':`${st.runway} rounds`}</dd></div><div><dt>Model</dt><dd>${esc(st.model)}</dd></div></dl>${assets(g)}<h3>Funding</h3>${terms.length?terms.map(t=>button('review-term',`Review ${esc(t.name)} · ${sum(t.amount)} for ${bpsText(t.pct)}`,`class="detail-action" data-id="${esc(t.id)}"`)).join(''):'<p>No live term sheets.</p>'}<h3>Market</h3>${button('open-market','Resale: inspect bids for spare GPUs','class="detail-action" data-filter="buyers" data-context="all"')}${button('open-market','All offers & full market ledger','class="detail-action" data-filter="all" data-context="all"')}${button('sound',ui.sound?'Sound on · turn off':'Sound off · turn on',`class="detail-action" aria-pressed="${!!ui.sound}"`)}</div>`,footer:button('close-focus','Back to company','class="mat-exit rail-quiet"') };
+function replay(g,kind,label) {
+ if(!replayAvailable(g,kind))return '';
+ return button('workshop',label,`class="context-replay" data-kind="${kind}" data-replay-kind="${kind}"`);
+}
+export function utilityView(g,ui={}) {
+ if(ui.panel==='inventory')return {title:'GPU inventory',role:'inventory',desk:'paper',exit:null,body:`<div class="utility-sheet inventory-sheet"><table class="inventory-table"><caption>Your GPU stock</caption><thead><tr><th>GPU</th><th>Free</th><th>Allocated</th></tr></thead><tbody>${GPUS.map(gpu=>`<tr><th scope="row">${gpuTag(gpu)}</th><td>${freeOf(g,gpu)}</td><td>${reservedOf(g,gpu)}</td></tr>`).join('')}</tbody></table><p>Allocate free GPUs on a task. Unbuilt stock expires at the bell.</p><section class="activity-replay"><h3>GPU placement</h3>${replay(g,'node','Replay Node Tetris')}</section></div>`,footer:button('close-focus','Back to floor','class="mat-exit rail-quiet"')};
+ if(ui.panel!=='details')return null;
+ const st=companyStats(g),terms=g.arcade.terms.filter(t=>t.status==='open'&&t.at<=g.arcade.time&&t.until>g.arcade.time);
+ return {title:'Company details',role:'details',desk:'paper',exit:null,body:`<div class="utility-sheet"><dl class="company-financials"><div><dt>Revenue / round</dt><dd>${sum(st.revenue)}</dd></div><div><dt>Burn / round</dt><dd>${sum(st.burn)}</dd></div><div><dt>Cash runway</dt><dd>${st.runway===Infinity?'Profitable':`${st.runway} rounds`}</dd></div><div><dt>Model</dt><dd>${esc(st.model)}</dd></div></dl>${assets(g)}<section class="activity-replay"><h3>Infrastructure connections</h3>${replay(g,'cable','Replay Cable Mania')}</section>${replayAvailable(g,'kernel')?`<section class="activity-replay"><h3>Cluster operations</h3>${replay(g,'kernel','Replay Cluster Snake')}</section>`:''}<h3>Funding</h3>${terms.length?terms.map(t=>button('review-term',`Review ${esc(t.name)} · ${sum(t.amount)} for ${bpsText(t.pct)}`,`class="detail-action" data-id="${esc(t.id)}"`)).join(''):'<p>No live term sheets.</p>'}${button('sound',ui.sound?'Sound on · turn off':'Sound off · turn on',`class="detail-action" aria-pressed="${!!ui.sound}"`)}</div>`,footer:button('close-focus','Back to floor','class="mat-exit rail-quiet"')};
 }
 
 // The desk frame: no modal over a blurred room. A dock below the never-dimmed HUD holds a

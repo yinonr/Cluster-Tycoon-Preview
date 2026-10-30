@@ -80,7 +80,7 @@ export function upgradeTraining(previous) {
   return t;
 }
 
-export const canonicalRoundOne = t => createArcade(t.seed,t.name);
+export const canonicalRoundOne = t => createArcade(t.seed,t.name,{learnedGames:true});
 
 // Restart increments a storage revision; every economic/progression field must
 // still match the full canonical company. An unrelated tab's progress is never
@@ -90,7 +90,12 @@ export function trainingHandoffStatus(t, main) {
   if (main) {
     const copy=structuredClone(main);
     if (copy.arcade) copy.arcade.rev=0;
-    if (JSON.stringify(copy)===JSON.stringify(canonicalRoundOne(t))) return 'complete';
+    // A pending launch from the earlier local pass may have committed the same
+    // canonical resources before learned-access metadata existed. Its handoff
+    // may finish after granting access; no company deployment is copied.
+    const canonical=canonicalRoundOne(t);
+    delete copy.arcade.replays;delete canonical.arcade.replays;
+    if (JSON.stringify(copy)===JSON.stringify(canonical)) return 'complete';
   }
   return JSON.stringify(main??null)===t.launchFrom ? 'retry' : 'conflict';
 }

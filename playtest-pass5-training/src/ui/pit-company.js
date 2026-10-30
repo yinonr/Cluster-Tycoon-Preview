@@ -4,15 +4,17 @@
 // call the engine's reserve/release; nothing here reserves, ranks or recommends on its own.
 import { vultureReviewAvailable } from '../tycoon/investors.js';
 import { esc } from '../util.js';
-import { businessNext } from '../tycoon/commerce.js';
+import { businessNext, HIRES } from '../tycoon/commerce.js';
 import { deliveryText } from '../tycoon/strategic.js';
 import { PARTNERSHIPS } from '../tycoon/strategic-content.js';
-import { moonshotOdds } from '../tycoon/moonshot.js';
+import { moonshotOdds, MOONSHOT } from '../tycoon/moonshot.js';
 import { moonshotStatus } from './moonshot.js';
 import { scenarioStatus, scenarioCardTerms, scenarioWhat } from './scenarios.js';
 import { V7, cash } from '../tycoon/arcade.js';
 import { GPUS, MODEL_NAMES, FOUNDER, researchOdds, cardState, freeOf, freeIn, reservedOn, openCards, companyStats, rackOutput, opsOf, BOOSTS, boostMet, burnOf, cashRevenueNow, batchableCard, batchAvailability } from '../tycoon/founder.js';
 import { NODE_GPUS, nodeGroups } from '../tycoon/integration.js';
+import { taskDeck } from '../tycoon/task-navigation.js';
+import { replayAvailable } from '../tycoon/replay-access.js';
 import { sourcingQuote, sourcingLeft } from '../tycoon/founder-market.js';
 import { money, short, rewardLine, laneOf, laneLabel, competesWith, reservedOf, rackStock, buildChange, plural, PILOT_TIMING, infrastructureTerms, rackDeliveryLine, pilotStamp } from './pit-ledger.js';
 
@@ -65,12 +67,12 @@ export function boardCards(g) {
 // Filled = reserved to this card (tap to release one). Empty = still needed: tap reserves one
 // when free stock exists, otherwise it opens the market filtered to that GPU. A bar row reserves the
 // whole row in one tap and releases it with its Release control.
-export function slotsHTML(g, card, { live = true, big = false } = {}) {
+export function slotsHTML(g, card, { live = true, big = false, floor = false } = {}) {
   const st = cardState(g, card), built = card.status === 'built', can = live && st.live;
   return `<div class="fc-slots ${big ? 'is-big' : ''} ${st.total > 8 ? 'is-dense' : ''}">${st.rows.map(r => {
     // V10.15: a big row is one bar (tap it to fill the row from free stock): above 12 GPUs on the
     // desk, and every row of a floor card above 16 GPUs so the recipe never covers the build rail.
-    if (r.need > BAR_FROM || (!big && st.total > FLOOR_BARS)) return barRow(g, card, r, { can, built });
+    if (r.need > BAR_FROM || (!big && st.total > FLOOR_BARS)) return barRow(g, card, r, { can, built, floor });
     const chips = [];
     for (let i = 0; i < r.need; i++) {
       const filled = built || i < r.held, key = `data-slot="${esc(card.id)}|${r.gpu}|${i}"`;
@@ -79,21 +81,21 @@ export function slotsHTML(g, card, { live = true, big = false } = {}) {
       if (!can || built) { chips.push(`<i class="${cls}" ${key} aria-hidden="true">${inner}</i>`); continue; }
       if (filled) chips.push(button('release', inner, `class="${cls}" ${key} data-card="${esc(card.id)}" data-gpu="${r.gpu}" aria-label="Release one ${r.gpu} from ${esc(card.name)}"`));
       else if (r.free > 0) chips.push(button('reserve', inner, `class="${cls} can-fill" ${key} data-card="${esc(card.id)}" data-gpu="${r.gpu}" aria-label="Reserve one ${r.gpu} for ${esc(card.name)}: ${r.free} free"`));
-      else chips.push(button('open-market', inner, `class="${cls} is-wanting" ${key} data-filter="supply" data-gpu="${r.gpu}" data-context="1" data-card="${esc(card.id)}" data-need="${Math.max(1, r.need - r.held)}" aria-label="No free ${r.gpu}. Find ${r.gpu} on the floor for ${esc(card.name)}"`));
+      else chips.push(button(floor ? 'task-source' : 'open-market', inner, `class="${cls} is-wanting" ${key} data-filter="supply" data-gpu="${r.gpu}" data-context="1" data-card="${esc(card.id)}" data-need="${Math.max(1, r.need - r.held)}" aria-label="No free ${r.gpu}. Find ${r.gpu} on the floor for ${esc(card.name)}"`));
     }
     return `<span class="slot-row ${gcls(r.gpu)}"><span class="slot-label">${r.gpu}<small>${built ? r.need : r.held}/${r.need}</small></span><span class="slot-chips">${chips.join('')}</span></span>`;
   }).join('')}</div>`;
 }
 
 const BAR_FROM = 12, FLOOR_BARS = 16;
-function barRow(g, card, r, { can, built }) {
+function barRow(g, card, r, { can, built, floor = false }) {
   const held = built ? r.need : r.held, w = Math.round(100 * held / r.need), label = `${r.gpu} ${held}/${r.need}`;
   const bar = `<span class="slot-bar ${gcls(r.gpu)}" aria-hidden="true"><i style="width:${w}%"></i></span>`;
   const tag = `<span class="slot-label">${r.gpu}<small>${held}/${r.need}</small></span>`;
   if (!can || built) return `<span class="slot-row is-bar ${gcls(r.gpu)}" data-slot="${esc(card.id)}|${r.gpu}|bar">${tag}${bar}</span>`;
   const act = held >= r.need ? bar
     : r.free > 0 ? button('reserve', bar, `class="slot-bar-btn" data-card="${esc(card.id)}" data-gpu="${r.gpu}" data-qty="${Math.min(r.free, r.need - r.held)}" aria-label="Reserve ${Math.min(r.free, r.need - r.held)} ${r.gpu} for ${esc(card.name)}: ${label}"`)
-    : button('open-market', bar, `class="slot-bar-btn is-wanting" data-filter="supply" data-gpu="${r.gpu}" data-context="1" data-card="${esc(card.id)}" data-need="${Math.max(1, r.need - r.held)}" aria-label="No free ${r.gpu}. Find ${r.gpu} on the floor for ${esc(card.name)}: ${label}"`);
+    : button(floor ? 'task-source' : 'open-market', bar, `class="slot-bar-btn is-wanting" data-filter="supply" data-gpu="${r.gpu}" data-context="1" data-card="${esc(card.id)}" data-need="${Math.max(1, r.need - r.held)}" aria-label="No free ${r.gpu}. Find ${r.gpu} on the floor for ${esc(card.name)}: ${label}"`);
   // Release returns this row's GPUs to free stock (other rows keep theirs), so a block can move between projects.
   const off = held ? button('release', 'Release', `class="slot-bar-release" data-card="${esc(card.id)}" data-gpu="${r.gpu}" data-qty="${held}" aria-label="Release ${held} ${r.gpu} from ${esc(card.name)}"`) : '';
   return `<span class="slot-row is-bar ${gcls(r.gpu)}" data-slot="${esc(card.id)}|${r.gpu}|bar">${tag}${act}${off}</span>`;
@@ -212,16 +214,23 @@ export function assets(g) {
     (deal ? `<p class="assets strategic-status">${esc(PARTNERSHIPS.find(p => p.id === deal.id).name)} · ${deal.state === 'waiting' ? 'Integration delayed; next stage waits for delivery.' : esc(deal.state)} · ${deal.history.length} stages delivered</p>` : '') + statusRow(g);
 }
 
-// The main screen keeps the requirement/action pair; full economics stay on the card desk.
-function taskTile(g, card, live) {
-  if (card.status !== 'open' || !cardState(g, card).live) return card.status === 'built' ? `<article class="task-complete"><b>✓ ${esc(card.name)}</b></article>` : '';
-  const st = cardState(g, card), lane = laneOf(card);
-  return `<article class="fc task-card lane-${lane} ${st.ready ? 'is-ready' : ''}" data-card-id="${esc(card.id)}"><header class="fc-head"><span>${esc(laneLabel(card))}</span>${card.until ? fuse(card.until,card.at,g.arcade.time) : ''}</header>${live ? button('open-card',esc(card.name),`class="fc-name" data-card="${esc(card.id)}" aria-label="Review ${esc(card.name)} requirements and details"`) : `<b class="fc-name">${esc(card.name)}</b>`}<p class="fc-reward">${esc(rewardLine(g,card))}</p>${card.cashCost ? `<p class="task-capital">Capital ${short(card.cashCost)}${st.cashNeeded ? ` · Short ${short(st.cashNeeded)}` : ''}</p>` : ''}${slotsHTML(g,card,{live})}<footer class="fc-foot">${live ? `${canFill(st) && !st.ready ? button('fill','Fill from stock',`class="fc-fill" data-card="${esc(card.id)}"`) : ''}${button('build','BUILD',`class="fc-build ${st.ready?'is-lit':''}" data-card="${esc(card.id)}" ${st.ready?'':'disabled'} aria-label="${st.ready?'Build '+esc(card.name):'Reserve required GPUs and capital before building'}"`)}` : ''}</footer></article>`;
+// One chosen task stays present while the floor is filtered or a secondary view is inspected.
+export function taskTile(g, card, live = true) {
+  const st=cardState(g,card), built=card.status==='built', expired=card.status==='expired'||!st.live&&!built;
+  const build=built?g.company.builds.find(b=>b.card===card.id):null, change=build?buildChange(g,build):null;
+  const needsReview=!!(card.agiStakes||card.kind==='agi'||card.kind==='hire'||card.reward?.hire||card.moonshot!==undefined||card.scenario||card.strategic||researchRunway(g,card));
+  const action=built?button('build','✓ Built','class="fc-build" disabled')
+    :expired?button('build','Window closed','class="fc-build" disabled')
+    :st.ready&&needsReview?button('open-card','Review build →',`class="fc-build is-lit" data-card="${esc(card.id)}" ${live?'':'disabled'}`)
+    :st.ready?button('build','BUILD',`class="fc-build is-lit" data-card="${esc(card.id)}" aria-label="Build ${esc(card.name)}" ${live?'':'disabled'}`)
+    :canFill(st)?button('fill','Allocate from stock',`class="fc-fill" data-card="${esc(card.id)}" ${live?'':'disabled'}`)
+    :button('build','BUILD',`class="fc-build" disabled aria-label="${st.cashNeeded?'Missing capital or GPUs':'Allocate the required GPUs before building'}"`);
+  const replay=card.lane==='infra'?'cable':'node', replayName=replay==='cable'?'Cable Mania':'Node Tetris';
+  return `<article class="fc task-card current-task lane-${laneOf(card)} ${built?'is-built':''} ${expired?'is-expired':''}" data-card-id="${esc(card.id)}"><div class="current-task-content"><h3 class="fc-name">${esc(card.name)}</h3><p class="fc-reward">${esc(rewardLine(g,card))}</p>${card.cashCost?`<p class="task-capital">${built?'Capital paid':'Capital'} <b>${money(card.cashCost)}</b>${!built&&!expired&&st.cashNeeded?` · short ${money(st.cashNeeded)}`:''}</p>`:''}${card.reward.lease&&card.commercial?`<p class="task-capital">Operating cost: ${Math.round(card.commercial.cost*100)}% of base lease income</p>`:''}${slotsHTML(g,card,{live,floor:true})}<p class="task-progress">${built?'✓ Completed':expired?'Window closed':`${st.held}/${st.total} GPUs allocated`}${card.until&&!built&&!expired?fuse(card.until,card.at,g.arcade.time):''}</p>${change?`<p class="task-result"><b>${esc(change.head)}</b> ${esc(change.text)}</p>`:''}</div><footer class="fc-foot">${live&&!(st.ready&&needsReview)?button('open-card','Task details',`class="task-detail" data-card="${esc(card.id)}"`):'<span></span>'}${action}</footer>${live&&replayAvailable(g,replay)?`<div class="task-activity"><span>${replay==='node'?'Placement':'Infrastructure'}</span>${button('workshop',`Replay ${replayName}`,`data-kind="${replay}" data-replay-kind="${replay}"`)}</div>`:''}</article>`;
 }
-export function companyBoard(g, ui = {}, live = true) {
-  const { lanes, opp, shelf } = boardCards(g);
-  const cards = [...lanes.map(x=>x.card).filter(Boolean),...(opp?[opp]:[])];
-  return `<section class="company simplified-company" aria-label="Company tasks"><div class="task-heading"><h2>Your tasks</h2>${live && g.phase==='floor' ? button('finish-review','End round →','class="task-end-round" aria-label="End round: review and ring the bell"') : ''}</div><p class="task-instruction">Choose a task. Tap an empty GPU tile to source what it needs.</p><div class="cards">${cards.map(c=>taskTile(g,c,live)).join('')}</div>${shelf.length?`<p class="task-complete">✓ ${shelf.length} earlier ${shelf.length===1?'build':'builds'} this round</p>`:''}${statusRow(g)}</section>`;
+export function companyBoard(g,ui={},live=true) {
+  const deck=taskDeck(g,ui);
+  return `<section class="company single-task-company" data-task-area tabindex="0" role="region" aria-label="Current task. Use left and right arrows to switch tasks."><header class="task-navigation">${button('task-prev','‹ Previous',`aria-label="Previous task" ${live&&deck.total>1?'':'disabled'}`)}<span class="task-position"><b>${esc(deck.category)}</b><span>${deck.total?deck.index+1:0} / ${deck.total}</span></span>${button('task-next','Next ›',`aria-label="Next task" ${live&&deck.total>1?'':'disabled'}`)}</header>${deck.card?taskTile(g,deck.card,live):'<div class="task-empty"><h2>No open tasks</h2><p>Your builds are recorded. Inspect other offers or end the round when ready.</p></div>'}<div class="task-context-status">${statusRow(g)}</div>${live&&g.phase==='floor'?button('finish-review','End round →','class="task-end-round" aria-label="End round: review and ring the bell"'):''}</section>`;
 }
 
 // ---- Phones: a strip of compact cards; a tap opens the card desk --------------------------
@@ -288,13 +297,15 @@ export function cardDeskView(g, ui) {
   const run=researchRunway(g,card);
   const economics=`<section class="cd-economics" aria-label="This build's economics"><b>THIS BUILD</b><span>GPUs: ${st.rows.map(r=>`${r.need} ${r.gpu}`).join(' + ')||'none'}</span><span>Additional capital: ${money(card.cashCost||0)}</span>${infrastructureTerms(card, g).length ? infrastructureTerms(card, g).map(line => `<span>${esc(line)}</span>`).join('') : `<span>Expected reward: ${esc(rewardLine(g,card))}</span>`}${card.repeat?`<small>${esc(repeatNote(card))}</small>`:''}</section>`;
   const stakes = card.agiStakes ? `<section class="cd-stakes" aria-label="AGI outcomes"><span>Success: +${money(card.agiStakes.tech)} IP and +25% revenue</span><span>Partial: +${money(card.agiStakes.partialTech)} IP</span><span>Failure: capital spent; ${money(card.agiStakes.failBurn)}/round remediation for 2 rounds</span></section>` : '';
+  const hire=card.reward?.hire?HIRES.find(h=>h.id===card.reward.hire):null;
+  const binding=(hire?`<p class="cd-binding">Salary ${money(hire.salary)}/round · ${(hire.equity/100).toFixed(2)}% newly issued equity at the bell.</p>`:'')+(card.strategic?'<p class="cd-binding">Due at this bell. A missed deadline ends the remaining partnership; prior rewards remain.</p>':'')+(card.moonshot!==undefined?`<p class="cd-binding">Two-stage commitment: ${money(MOONSHOT.cluster.cash+MOONSHOT.training.cash)} total capital plus GPUs, with no refund. A setback adds ${money(MOONSHOT.recoveryBurn)}/round remediation for up to two rounds, through round ${V7.rounds}. Finish by round ${g.world.institutional?.moonshot?.deadline||V7.rounds}.</p>`:'');
   const block = batchAvailability(g, card), showBulk = st.live && batchableCard(card) && (g.company.scale || 1) >= 2;
   const bulk = showBulk ? `<section class="cd-bulk" aria-label="Build multiple projects"><b>BUILD ×</b>${[1,5,10,'max'].map(n => button('build-batch', n === 'max' ? 'MAX' : `×${n}`, `data-card="${esc(card.id)}" data-count="${n}" ${block ? `disabled title="${esc(batchReason(block))}"` : ''} aria-label="Build ${n === 'max' ? 'as many eligible projects as stock allows' : `up to ${n} eligible ${n === 1 ? 'project' : 'projects'}`} in one action${block ? `: ${esc(batchReason(block))}` : ''}"`)).join('')}${block ? `<small>${esc(batchReason(block))}</small>` : '<small>Uses only free GPUs. Each follow-up is checked separately.</small>'}</section>` : '';
   const runway=run?`<p class="cd-runway">At the current run rate, next round's operating costs (${money(run.burn)}) exceed ${card.cashCost?'cash after this build’s capital':'cash'} (${money(run.remaining)}) plus recurring cash revenue (${money(run.revenue)}). Research could leave you short at the bell.</p>`:'';
   const businessPlan = next ? `<details class="business-plan"><summary>Next: ${esc(next.name)}</summary><p>After delivery, in a later round (R${next.round} or later). ${next.scale === 3 ? 'AI Giant' : 'Scale-up'} · model ${esc(MODEL_NAMES[next.level])}. ${Object.entries(next.recipe).map(([k,n])=>`${n} ${k}`).join(' + ')} · ${money(next.capital)} capital. Adds ${money(next.revenue)}/round base before operating costs, integration and outcomes.</p></details>` : '';
   const body = `<div class="desk-center"><article class="card-desk mat-paper lane-${lane} ${st.ready ? 'is-ready' : ''}" data-card-id="${esc(card.id)}">` +
     `<header class="cd-head"><span>${esc(laneLabel(card).toUpperCase())}${card.kind === 'agi' ? ' · AGI ATTEMPT' : card.flagship ? ' · FLAGSHIP' : card.tier ? ` · TIER ${card.tier}` : ''}</span>${card.mixed ? '<span class="fc-mixed">MIXED · integration at the bell</span>' : ''}${card.until && st.live ? fuse(card.until, card.at, now) : ''}</header>` +
-    `<p class="cd-reward">${esc(rewardLine(g, card))}</p><p class="cd-what">${esc(whatLine(card, g))}</p>${stakes}` +
+    `<p class="cd-reward">${esc(rewardLine(g, card))}</p><p class="cd-what">${esc(whatLine(card, g))}</p>${stakes}${binding}` +
     `<section class="cd-action" aria-label="Requirements and stock"><p class="cd-capital-status"><b>${!st.live ? 'CLOSED' : st.ready ? 'READY TO BUILD' : stockAvailable(st) ? st.cashNeeded ? 'STOCK AVAILABLE · CASH SHORT' : 'STOCK AVAILABLE · FILL TO RESERVE' : st.missing && st.cashNeeded ? 'NEED GPUs + CASH' : st.cashNeeded ? 'NEED CASH' : st.missing ? 'NEED GPUs' : 'CLOSED'}</b><br>Capital ${money(card.cashCost || 0)} · Cash available ${money(cash(g))}${st.cashNeeded ? `<br>Shortfall: ${money(st.cashNeeded)}` : ''}</p>` +
     `<div class="cd-rows">${rows}</div>${slotsHTML(g, card, { live: !built, big: true })}</section>` +
     `${runway}${scenarioCardTerms(g, card)}${g.world.vulture?.attemptQ === g.q && !g.arcade.terms.some(t => t.vulture) ? '<p>No emergency investor is willing to fund this gap this round.</p>' : ''}` +

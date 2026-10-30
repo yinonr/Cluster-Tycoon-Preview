@@ -7,6 +7,7 @@
 // the valuation or lifetime purchases. Every game returns the same result shape and the engine applies it through
 // the V10.18 code paths (gradeOf, integrate, applyGrade): same 0.55 floor, 0.75 crew skip, same grades and bonuses.
 import { ECONOMY } from './economy-balance.js';
+import { replayAvailable } from './replay-access.js';
 import { stream } from '../util.js';
 import { pendingIntegration, GPUS } from './founder.js';
 import * as tetris from './tetris.js';
@@ -140,7 +141,7 @@ const WORKSHOP_KINDS = ['node','cable'];
 // The original fleet bell still requires 256 GPUs. In the five-round campaign,
 // earning the existing cluster milestone also opens optional Snake free play.
 // It awards no money and cannot touch either game's per-round reward record.
-export const snakeAvailable = g => !!(g?.company?.deploy?.milestones?.cluster || g?.company?.deploy?.milestones?.fleet);
+export const snakeAvailable = g => replayAvailable(g,'kernel');
 const playableWorkshop = (g, kind) => WORKSHOP_KINDS.includes(kind) || kind === 'kernel' && snakeAvailable(g);
 export function workshopQuote(g, kind) {
   if (!playableWorkshop(g,kind) || !g?.arcade || g.q<1 || g.q>ECONOMY.rounds) return null;

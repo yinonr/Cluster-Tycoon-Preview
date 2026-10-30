@@ -5,11 +5,12 @@ import { startWorkshop } from '../tycoon/integration.js';
 import { parseRate, stepRate, formatRate } from '../ui/offers.js';
 import { stage, focusFrame, directoryView, utilityView } from '../ui/pit-stage.js';
 import * as deals from '../ui/pit-deals.js';
-import { compact } from '../ui/pit-company.js';
 import * as transactions from '../tycoon/pit-transactions.js';
 import { arcadeStore } from '../tycoon/arcade-store.js';
 import { trainingStore, TRAINING_KEY } from '../tycoon/training-store.js';
 import { trainingMutate, trainingAction, trainingHandoffStatus } from '../tycoon/training.js';
+import { taskViewStore, selectTaskContext } from '../tycoon/task-navigation.js';
+import { grantTrainingReplays, migrateLearnedAccess } from '../tycoon/replay-access.js';
 import { trainingStage, trainingGuidance } from '../ui/training.js';
 import { selectBaburExpression, attachBaburArtFallback } from '../ui/babur.js';
 import { V7, advance, available, activeLot, cents, claim, leave, haggle, closeQuarter, openQuarter } from '../tycoon/arcade.js';
@@ -44,6 +45,10 @@ if (!document.querySelector('.hsc-figure-defs')) document.body.insertAdjacentHTM
 let storage; try { storage = localStorage; } catch { storage = { getItem() { throw Error('Storage blocked'); } }; }
 const campaign = arcadeStore(storage);
 const training = trainingStore(storage);
+const taskView = taskViewStore(storage);
+// Existing completed lessons establish learned play access without copying any
+// practice build, ownership, resources or actual deployment milestone.
+if (!training.state?.launchPending) migrateLearnedAccess(campaign,training.completed);
 // Input controllers use the same engine callbacks against the active company.
 // A lesson can never write the campaign record, even when replayed mid-round.
 const store = {
@@ -52,7 +57,7 @@ const store = {
   act(fn) { return training.state ? training.act(t => trainingMutate(t, fn)) : campaign.act(fn); },
 };
 if (campaign.state && !training.state) campaign.act(recoverRizz);
-const ui = { panel: 'floor', marketFilter: 'all', gpu: null, page: 0, cardId: null };
+const ui = { panel: 'floor', marketFilter: 'all', gpu: null, page: 0, cardId: null,taskId:null,taskLane:null,floorGpu:null,floorNeed:0,floorPage:0 };
 const prefs = guidePreferences(storage);
 ui.entry = store.state || store.error ? null : 'found';
 ui.nameDraft = 'My AI Startup';
@@ -83,11 +88,21 @@ function bestScore(g) {
 const urlSeed = () => { const s = new URLSearchParams(location.search).get('seed'); const n = Number(s); return s && /^\d+$/.test(s) && Number.isSafeInteger(n) && n <= 0xffffffff ? n : null; };
 const seed = () => urlSeed() ?? newSeed();
 // Every player action re-renders from authoritative state, then the room answers what changed.
-const act = fn => { const before = fx.snapshot(store.state), ok = store.act(fn); if (ok || store.error) render(); if (ok) fx.play(root, fx.effects(before, fx.snapshot(store.state)), sound); return ok; };
+const act = fn => {
+  const before = fx.snapshot(store.state), workshop=store.state?.arcade.workshop, ok = store.act(fn);
+  if (ok && workshop && store.state?.phase==='floor' && !store.state.arcade.workshop) {
+    ui.panel=ui.workshopReturnPanel || 'floor';returnFocus=ui.workshopReturnFocus || null;
+    if (ui.panel!=='floor') ui.panelReturnFocus=ui.workshopOuterReturnFocus;
+    delete ui.workshopReturnPanel;delete ui.workshopReturnFocus;delete ui.workshopOuterReturnFocus;
+  }
+  if (ok || store.error) render();
+  if (ok) fx.play(root, fx.effects(before, fx.snapshot(store.state)), sound);
+  return ok;
+};
 const controls = () => [...root.querySelectorAll('.pit-focus button:not(:disabled),.pit-focus input:not(:disabled),.pit-focus select:not(:disabled),.pit-focus summary,.pit-focus textarea')].filter(e => e.getClientRects().length && !e.closest('details:not([open]) > :not(summary)'));
 function remember(el) {
   if (!el?.dataset?.action) return null;
-  return [`[data-action="${CSS.escape(el.dataset.action)}"]`, ...['id', 'card', 'gpu', 'filter'].filter(k => el.dataset[k] !== undefined).map(k => `[data-${k}="${CSS.escape(el.dataset[k])}"]`)].join('');
+  return [`[data-action="${CSS.escape(el.dataset.action)}"]`, ...['id', 'card', 'gpu', 'filter','kind','step'].filter(k => el.dataset[k] !== undefined).map(k => `[data-${k}="${CSS.escape(el.dataset[k])}"]`)].join('');
 }
 function clearInputs() { for (const k of ['qty', 'counter', 'buyerCounter', 'termPct']) delete ui[k]; }
 // A full re-render happens only when the set of live counterparties or cards changes.
@@ -133,12 +148,17 @@ function render() {
     return;
   }
   ui.training = training.state;
+  if (!training.state) {
+    const deck=taskView.read(g);
+    if (deck.card) taskView.choose(g,deck.card.id);
+    ui.taskId=deck.card?.id || null;ui.taskLane=deck.card?.lane || null;ui.taskRound=g.q;
+  }
   ui.trainingCanSkip = training.completed || !!campaign.state;
   ui.hint = null; // Babur teaches actions in training; later guidance is available through Help.
   if (ui.hint) { prefs.seen.add(ui.hint); prefs.save(); }
   ui.guidanceOpen = !!(ui.entry || ui.guide);
   ui.best = training.state ? null : bestScore(g);
-  if (ui.panel === 'card' && !g.arcade.objectives.some(o => o.id === ui.cardId && o.status === 'open')) ui.panel = 'floor';
+  if (ui.panel === 'card' && !g.arcade.objectives.some(o => o.id === ui.cardId)) ui.panel = 'floor';
   const view = deals.dealView(g, ui) || (ui.panel === 'market' ? directoryView(g, ui) : utilityView(g, ui));
   if (view && training.state) {
     view.guidance = trainingGuidance(training.state);
@@ -146,15 +166,17 @@ function render() {
   }
   ui.focusOpen = !!view; if (view) ui.memo = null;
   const challenge = !training.state && new URLSearchParams(location.search).get('challenge') === '1' && urlSeed() !== null && !ui.challengeDismissed && ui.entry !== 'found';
-  root.innerHTML = `<div class="pit-background">${training.state ? trainingStage(training.state, ui) : stage(g, ui)}</div>${view ? focusFrame(g, view) : ''}${challenge ? `<aside class="challenge-invite" role="note">Challenge seed ${urlSeed()} is ready. <button type="button" data-action="start-challenge">Start a fresh challenge</button><button type="button" data-action="dismiss-challenge" aria-label="Dismiss challenge notice">×</button></aside>` : ''}<span class="pit-announcement" role="status" aria-live="polite">${!training.state && g.arcade.message?.text ? esc(`${g.company.name}: ${g.arcade.message.text}`) : ''}</span>`;
+  root.innerHTML = `<div class="pit-background">${training.state ? trainingStage(training.state, ui) : stage(g, ui)}</div>${view && !ui.guidanceOpen ? focusFrame(g, view) : ''}${challenge ? `<aside class="challenge-invite" role="note">Challenge seed ${urlSeed()} is ready. <button type="button" data-action="start-challenge">Start a fresh challenge</button><button type="button" data-action="dismiss-challenge" aria-label="Dismiss challenge notice">×</button></aside>` : ''}<span class="pit-announcement" role="status" aria-live="polite">${!training.state && g.arcade.message?.text ? esc(`${g.company.name}: ${g.arcade.message.text}`) : ''}</span>`;
   // The HUD stays live and uncovered during a desk; only the room and the board go inert.
   if (view) for (const el of root.querySelectorAll('.pit-background .pit-main')) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
   const focus = root.querySelector('.pit-focus');
   if (focus) {
     const same = focused && focus.querySelector(focused);
+    const restored=returnFocus && focus.querySelector(returnFocus);
     // The meter, then the control you were using, then a verdict to read. Never auto-focus Bank.
-    const target = root.querySelector('[data-action="stop-rizz"]') || (same && !same.disabled ? same : null) || root.querySelector('.pit-focus [data-autofocus]') || focus;
+    const target = root.querySelector('[data-action="stop-rizz"]') || (restored && !restored.disabled ? restored : null) || (same && !same.disabled ? same : null) || root.querySelector('.pit-focus [data-autofocus]') || focus;
     target.focus({ preventScroll: true });
+    if (restored) returnFocus=null;
   } else if (returnFocus || focused) {
     // Desktop board and phone strip both carry card controls; return to the one on screen.
     const shown = sel => [...root.querySelectorAll(sel)].find(e => !e.disabled && e.getClientRects().length);
@@ -194,6 +216,7 @@ function closeFocus() {
   if (g.arcade.signing) { act(g => { g.arcade.signing = null; return true; }); return; }
   if (g.arcade.confirm?.receipt || g.arcade.confirm?.built) { postReceipt(); return; }
   ui.panel = 'floor'; clearInputs();
+  if (ui.panelReturnFocus) {returnFocus=ui.panelReturnFocus;delete ui.panelReturnFocus;}
   if (g.arcade.active) act(leave); else if (g.arcade.confirm) act(g => { g.arcade.confirm = null; return true; }); else render();
   settleAtBell();
 }
@@ -238,6 +261,25 @@ function settleAtBell() { if (training.state) return; const g = store.state; if 
 function postReceipt() { ui.panel = 'floor'; clearInputs(); if (training.state) { training.act(t => trainingAction(t, 'receiptadvance')); render(); } else { act(transactions.postReceipt); settleAtBell(); } }
 function openPanel(panel) { const a = store.state.arcade; if (a.active || a.confirm || a.signing) return; ui.panel = panel; ui.page = 0; clearInputs(); render(); }
 function fresh(s) { if (training.state) return; ui.panel = 'floor'; ui.pendingSeed = s; ui.entry = 'found'; ui.guide = null; ui.nameDraft = 'My AI Startup'; ui.showInstructions = false; render(); }
+const taskNavigationReady = () => !training.state && !store.error && !ui.guidanceOpen && !ui.focusOpen && ui.panel==='floor' && store.state?.phase==='floor';
+function changeTask(delta, focus='[data-task-area]') {
+  if (!taskNavigationReady()) return false;
+  if (taskView.read(store.state).total<2) return false;
+  const card=taskView.move(store.state,delta);
+  if (!card) return false;
+  ui.taskId=card.id;ui.taskLane=card.lane;ui.taskRound=store.state.q;ui.floorGpu=null;ui.floorNeed=0;ui.floorPage=0;
+  returnFocus=focus;const clock=last;render();last=clock;return true;
+}
+function focusTaskSupply(g,d) {
+  if (training.state || g.phase!=='floor' || g.arcade.active || g.arcade.signing || g.arcade.confirm || !['H100','H200','B200'].includes(d.gpu)) return false;
+  const card=g.arcade.objectives.find(c=>c.id===d.card);
+  if (!card || !taskView.choose(g,card.id)) return false;
+  ui.taskId=card.id;ui.taskLane=card.lane;ui.taskRound=g.q;ui.panel='floor';ui.floorGpu=d.gpu;ui.floorNeed=Math.max(1,Number(d.need)||1);ui.floorPage=0;
+  clearInputs();const clock=last;render();last=clock;
+  const offer=[...root.querySelectorAll('[data-floor-offer],[data-action="focus-supplier"]')].find(el=>!el.disabled && el.getClientRects().length);
+  (offer || root.querySelector('[data-floor-filter]') || root.querySelector('[data-task-area]'))?.focus({preventScroll:true});
+  return true;
+}
 function completeTraining(skip = false) {
   const t = training.state;
   if (!t || (!t.launchPending && !skip && t.step !== 'ready') || (skip && !training.completed && !campaign.state)) return;
@@ -245,10 +287,14 @@ function completeTraining(skip = false) {
     if (!training.prepareFinish(campaign.state)) { render(); return; }
     const status = trainingHandoffStatus(training.state, campaign.state);
     if (status === 'conflict') { ui.handoffError = 'Your company changed in another tab. Your lesson and company are preserved. Reload the latest tab before starting a new company.'; render(); return; }
-    if (status === 'retry' && !campaign.restart(t.seed, t.name)) { render(); return; }
+    if (status === 'retry' && !campaign.restart(t.seed, t.name,{learnedGames:true})) { render(); return; }
+    if (status === 'complete' && !campaign.state.arcade.replays && !campaign.act(grantTrainingReplays)) { render(); return; }
   }
   if (!training.finish()) { render(); return; }
+  migrateLearnedAccess(campaign,training.completed);
+  if (!t.replay) taskView.reset();
   ui.panel = 'floor'; ui.cardId = null; ui.guide = null; ui.entry = null; ui.training = null;
+  ui.floorGpu=null;ui.floorNeed=0;ui.floorPage=0;
   clearInputs(); prefs.founded = prefs.intro = prefs.welcome = true; prefs.save();
   introInputUntil = performance.now() + 650; render();
 }
@@ -283,9 +329,26 @@ root.addEventListener('input', e => {
 });
 
 // Charm stops on the press itself; the click that press later synthesizes is swallowed once.
-let swallowClick = false;
+let swallowClick = false,taskSwipe=null,taskSwipeClickUntil=0;
+root.addEventListener('pointerdown',e=>{
+  if (!taskNavigationReady() || !['touch','pen'].includes(e.pointerType) || !e.target.closest?.('[data-task-area]') || e.target.closest?.('input,textarea,select,[contenteditable="true"]')) return;
+  taskSwipe={id:e.pointerId,x:e.clientX,y:e.clientY};
+});
+root.addEventListener('pointermove',e=>{
+  if (!taskSwipe || taskSwipe.id!==e.pointerId) return;
+  const dx=e.clientX-taskSwipe.x,dy=e.clientY-taskSwipe.y;
+  if (Math.abs(dx)>18 && Math.abs(dx)>Math.abs(dy)*1.4 && e.cancelable) e.preventDefault();
+},{passive:false});
+root.addEventListener('pointerup',e=>{
+  if (!taskSwipe || taskSwipe.id!==e.pointerId) return;
+  const dx=e.clientX-taskSwipe.x,dy=e.clientY-taskSwipe.y;taskSwipe=null;
+  if (Math.abs(dx)<48 || Math.abs(dx)<=Math.abs(dy)*1.4) return;
+  if (changeTask(dx<0?1:-1)) {taskSwipeClickUntil=performance.now()+400;if(e.cancelable)e.preventDefault();}
+});
+root.addEventListener('pointercancel',()=>{taskSwipe=null;});
 root.addEventListener('pointerdown', e => { swallowClick = false; const b = e.target.closest('[data-action="stop-rizz"]'); if (b && !b.disabled && e.button === 0) { swallowClick = true; e.preventDefault(); stopMeter(); } });
 root.addEventListener('click', e => {
+  if (performance.now()<taskSwipeClickUntil) {e.preventDefault();return;}
   if (swallowClick) { swallowClick = false; e.preventDefault(); return; }
   const b = e.target.closest('button[data-action]'); if (!b || b.disabled) return;
   const a = b.dataset.action, g = store.state, d = b.dataset;
@@ -314,16 +377,27 @@ root.addEventListener('click', e => {
     if (['tetris-continue','int-continue'].includes(a)) { training.act(t => trainingAction(t, 'continue')); render(); return; }
     if (['tetris-skip','int-skip','open-market','open-card','open-minigames','open-details','workshop','finish','finish-review','restart','replay-seed','new-market','start-challenge'].includes(a)) return;
   }
-  if (a === 'open-details' || a === 'open-minigames') { returnFocus = remember(b); openPanel(a === 'open-details' ? 'details' : 'minigames'); return; }
+  if (a==='task-prev' || a==='task-next') {changeTask(a==='task-prev'?-1:1,remember(b));return;}
+  if (a==='task-source') {focusTaskSupply(g,d);return;}
+  if (a==='floor-filter-reset') {ui.floorGpu=null;ui.floorNeed=0;ui.floorPage=0;returnFocus=remember(b);const clock=last;render();last=clock;return;}
+  if (a==='floor-page') {
+    const count=g.arcade.lots.filter(l=>available(g,l) && (!ui.floorGpu || l.gpu===ui.floorGpu)).length,size=innerWidth<=600?2:4;
+    ui.floorPage=Math.max(0,Math.min(Math.max(0,Math.ceil(count/size)-1),ui.floorPage+(Number(d.step)||0)));
+    returnFocus=remember(b);const clock=last;render();last=clock;return;
+  }
+  if (a === 'open-details' || a === 'open-inventory') { returnFocus = remember(b); openPanel(a === 'open-details' ? 'details' : 'inventory'); return; }
   if (a === 'workshop') {
-    if ((ui.focusOpen && ui.panel !== 'minigames') || g.phase !== 'floor') return;
-    returnFocus = '[data-action="open-minigames"]'; ui.panel = 'floor';
+    if (ui.focusOpen && !['inventory','details'].includes(ui.panel) || g.phase !== 'floor') return;
+    ui.workshopReturnPanel=ui.panel;ui.workshopReturnFocus=remember(b);
+    ui.workshopOuterReturnFocus=returnFocus;
+    returnFocus = remember(b); ui.panel = 'floor';
     act(g => startWorkshop(g, d.kind)); return;
   }
   if (a.startsWith('tetris-')) { handleTetrisAction(a, d); return; } // Node Tetris owns its controls
   if (a.startsWith('int-') || a.startsWith('cable-') || a.startsWith('kernel-')) { handleArcadeAction(a, d); return; } // V20: Cable Mania and Kernel Snake
   if (['focus-supplier', 'focus-buyer', 'review-term', 'open-card', 'open-market', 'finish-review', 'review-scenario'].includes(a) && !ui.focusOpen) returnFocus = remember(b);
   if (a === 'open-market') {
+    if (d.context==='1') {focusTaskSupply(g,d);return;}
     if (g.arcade.active || g.arcade.signing || g.arcade.confirm?.receipt || g.arcade.confirm?.built) return;
     if (g.arcade.confirm) store.act(g => { g.arcade.confirm = null; return true; }); // leave a bid or term sheet open on the floor
     ui.marketContext = d.context === '1'; ui.marketNeed = Math.max(1, Number(d.need) || 1);
@@ -333,13 +407,13 @@ root.addEventListener('click', e => {
     openPanel('market');
   }
   else if (a === 'market-page') { ui.page = Math.max(0, ui.page + Number(d.step)); render(); }
-  else if (a === 'open-card') { if (g.phase !== 'floor') return; ui.cardId = d.card; openPanel('card'); }
+  else if (a === 'open-card') { if (g.phase !== 'floor') return; if (d.card) selectTaskContext(g,taskView,ui,d.card); ui.cardId = d.card; openPanel('card'); }
   else if (a === 'review-vulture') {
     if (g.phase !== 'floor') return;
     let offered = false;
     ui.panel = 'floor';
     act(g => { const result = maybeVulture(g, d.card); offered = result === 'offer'; return !!result; });
-    if (!offered) { ui.cardId = d.card; openPanel('card'); }
+    if (!offered) { selectTaskContext(store.state,taskView,ui,d.card); ui.cardId = d.card; openPanel('card'); }
   }
   else if (a === 'focus-supplier') { ui.panel = 'floor'; clearInputs(); act(g => claim(g, d.id)); }
   else if (a === 'focus-buyer') { ui.panel = 'floor'; clearInputs(); act(g => reviewBuyer(g, d.id)); }
@@ -358,7 +432,7 @@ root.addEventListener('click', e => {
   }
   else if (a === 'close-focus') closeFocus();
   else if (a === 'review-moonshot') { ui.panel = 'floor'; act(reviewMoonshot); }
-  else if (a === 'accept-moonshot') { if (act(acceptMoonshot)) { ui.panel = 'card'; ui.cardId = store.state.world.institutional.moonshot.card; render(); } }
+  else if (a === 'accept-moonshot') { if (act(acceptMoonshot)) { ui.panel = 'card'; ui.cardId = store.state.world.institutional.moonshot.card; selectTaskContext(store.state,taskView,ui,ui.cardId); render(); } }
   else if (a === 'decline-moonshot') act(declineMoonshot);
   // The Deal Room: open a proposal, choose an option (a sale ends the run), pay a contract extension.
   else if (a === 'review-scenario') { ui.panel = 'floor'; clearInputs(); act(g => { if (g.arcade.confirm && !g.arcade.signing && !g.arcade.active && !g.arcade.confirm.receipt && !g.arcade.confirm.built) g.arcade.confirm = null; return reviewScenario(g, d.id); }); }
@@ -366,7 +440,7 @@ root.addEventListener('click', e => {
     const before = new Set(g.arcade.objectives.map(o => o.id));
     if (act(g => decideScenario(g, d.option))) {
       const s = store.state, made = s.phase === 'floor' && s.arcade.objectives.find(o => o.kind === 'scenario' && o.status === 'open' && !before.has(o.id));
-      if (made && !s.arcade.confirm) { ui.panel = 'card'; ui.cardId = made.id; render(); } else settleAtBell();
+      if (made && !s.arcade.confirm) { selectTaskContext(s,taskView,ui,made.id); ui.panel = 'card'; ui.cardId = made.id; render(); } else settleAtBell();
     }
   }
   else if (a === 'cure-stage') { if (act(g => cureStage(g, d.card))) { ui.panel = 'floor'; render(); } }
@@ -380,13 +454,14 @@ root.addEventListener('click', e => {
   else if (a === 'cancel-sign') act(g => { g.arcade.signing = null; return true; });
   else if (a === 'post-receipt') postReceipt();
   else if (a === 'allocate') {
-    // Phones go straight to that card's desk (BUILD is one tap away); desktops see it on the board.
-    const id = d.card, prev = [ui.panel, ui.cardId];
-    if (compact()) { ui.cardId = id; ui.panel = 'card'; } else ui.panel = 'floor';
-    if (act(g => transactions.allocateFromReceipt(g, id))) settleAtBell(); else { [ui.panel, ui.cardId] = prev; render(); }
+    const id = d.card;
+    if (act(g => transactions.allocateFromReceipt(g, id))) {
+      selectTaskContext(store.state,taskView,ui,id);
+      ui.panel='floor';ui.cardId=null;returnFocus='[data-task-area]';render();settleAtBell();
+    }
   }
   else if (a === 'reserve') {
-    if (!freeOf(g, d.gpu)) { ui.marketFilter = 'supply'; ui.gpu = d.gpu; ui.marketContext = true; ui.marketCardId = d.card; ui.marketNeed = Math.max(1, Number(d.qty) || 1); openPanel('market'); return; }
+    if (!freeOf(g, d.gpu)) {focusTaskSupply(g,{...d,need:Math.max(1,Number(d.qty)||1)});return;}
     act(g => reserve(g, d.card, d.gpu, Math.max(1, Number(d.qty) || 1)));
   }
   else if (a === 'source-block') { if (act(g => sourceBlock(g, d.card))) { ui.panel = 'floor'; ui.cardId = null; render(); } }
@@ -442,6 +517,9 @@ function paintInputs(e) {
 }
 root.addEventListener('input', paintInputs); root.addEventListener('change', paintInputs);
 document.addEventListener('keydown', e => {
+  if (taskNavigationReady() && e.target.closest?.('[data-task-area]') && !e.target.closest?.('input,textarea,select,[contenteditable="true"],[role="slider"],[role="combobox"]') && !e.ctrlKey && !e.metaKey && !e.altKey && ['ArrowLeft','ArrowRight'].includes(e.key)) {
+    e.preventDefault();if (!e.repeat) changeTask(e.key==='ArrowLeft'?-1:1);return;
+  }
   if (ui.guidanceOpen) {
     const dialog = root.querySelector('.founding-dialog');
     if (!dialog) return;

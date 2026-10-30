@@ -4,6 +4,7 @@
 // throughout (legacy g.cash/g.profit are dollars). Base streams keep their V10.5 names, so a
 // seed deals the same base market as V10.5.
 import { ECONOMY } from './economy-balance.js';
+import { learnedReplays } from './replay-access.js';
 import { growProduct } from './commerce.js';
 import { HOURS_PER_MONTH } from '../data/gpus.js';
 import { openingNegotiation, counteroffer } from './arcade-negotiation.js';
@@ -42,12 +43,13 @@ export function record(g, kind, amount) {
 }
 export const ledgerCash = L => V7.cash + L.raised + L.revenue + L.contracts + L.resale + (L.workshops || 0) - L.purchases - L.burn - L.research - L.capex - L.penalties;
 
-export function createArcade(seed, name = '', { scenarios = true } = {}) {
+export function createArcade(seed, name = '', { scenarios = true, learnedGames = false } = {}) {
   const g = { v: V7.version, seed, q: 1, phase: 'ready', cash: V7.cash / 100, profit: 0, clout: 0, firms: {}, company: createCompany(seed, name), world: createWorld() };
   g.arcade = { version: V7.version, rev: 0, seconds: V7.seconds, time: 0, active: null, confirm: null, signing: null, history: [], receipts: [], lots: [], inventory: [], purchases: [],
     buyers: [], sales: [], objectives: [], reservations: [], built: [], terms: [], event: null, message: null, sourcingFor: null,
     workshops: {seq:0,awards:[]}, ledger: { workshops: 0, raised: 0, inKind: 0, revenue: 0, contracts: 0, resale: 0, purchases: 0, burn: 0, research: 0, capex: 0, penalties: 0, expired: 0 }, exit: null, ending: null };
   g.world.scen = createScenarios(scenarios);
+  if (learnedGames) g.arcade.replays=learnedReplays();
   openQuarter(g);
   return g;
 }

@@ -7,6 +7,7 @@ import { validInstitutionalSave } from './institutional.js';
 import { validMoonshotSave } from './moonshot.js';
 import { validScenarioSave } from './scenarios.js';
 import { validIntegrationSave, validWorkshopSave } from './integration.js';
+import { validReplayAccess } from './replay-access.js';
 
 const int = n => Number.isSafeInteger(n);
 const GPU = ['H100', 'H200', 'B200'];
@@ -82,7 +83,7 @@ export function validSave(g) {
     const s = b.agiStakes, A = FOUNDER.agi;
     if (b.kind !== 'agi' || !s || !['capital','tech','partialTech','failBurn'].every(k => int(s[k]) && s[k] >= 0) || s.capital !== b.cashCost || s.capital < A.capital || s.tech !== Math.max(A.tech, s.capital * 8) || s.partialTech !== Math.max(A.partialTech, s.capital * 3) || s.failBurn !== Math.max(A.failBurn, Math.round(s.capital * .15))) return false;
   }
-  if (!validIntegrationSave(g) || !validWorkshopSave(g)) return false;   // V20: the bell's game (Node Tetris, Cable Mania or Kernel Snake)
+  if (!validIntegrationSave(g) || !validWorkshopSave(g) || !validReplayAccess(g)) return false;   // V20: integration and learned replay access
   if (!['floor', 'integration'].includes(g.phase) && a.history.length === 0) return false;
   if (g.phase === 'over' && !a.exit) return false;
   return validCommerce(g) && validStrategicSave(g) && validInstitutionalSave(g) && validMoonshotSave(g) && validScenarioSave(g);
@@ -111,8 +112,8 @@ export function arcadeStore(storage) {
   }
   return {
     get state() { return state; }, get error() { return error; },
-    start(seed, name) { return !state && !nameError(name) && commit(createArcade(seed, cleanName(name))); },
-    restart(seed, name) { return !nameError(name) && commit(createArcade(seed, cleanName(name))); },
+    start(seed, name, options) { return !state && !nameError(name) && commit(createArcade(seed, cleanName(name), options)); },
+    restart(seed, name, options) { return !nameError(name) && commit(createArcade(seed, cleanName(name), options)); },
     act(fn) {
       if (!state || error) return false;
       const next = structuredClone(state);
