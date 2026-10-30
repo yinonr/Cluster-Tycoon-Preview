@@ -145,7 +145,7 @@ function render() {
     root.querySelector('[data-autofocus]')?.focus({ preventScroll: true });
     return;
   }
-  ui.training = training.state;
+  ui.training = training.state; ui.trainingCampaign = campaign.state;
   if (!training.state) {
     const deck=taskView.read(g);
     if (deck.card) taskView.choose(g,deck.card.id);

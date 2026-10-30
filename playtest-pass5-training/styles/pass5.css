@@ -299,3 +299,23 @@
    images reserve exactly the same space as a loaded portrait. */
 #pit .babur-portrait { display:block; position:relative; width:100%; height:auto; aspect-ratio:1312 / 1199; overflow:visible; }
 #pit .babur-art-image { display:block; width:100%; height:100%; object-fit:contain; }
+
+/* Training scale and handoff: content reflects real practice and campaign state. */
+#pit .training-cluster { padding:18px 0; }
+#pit .training-racks { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; max-width:500px; }
+#pit .training-rack { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; padding:7px; border:2px solid var(--hsc-ink); background:#ece8de; }
+#pit .training-rack i { display:block; height:12px; border:1px solid var(--hsc-ink); background:repeating-linear-gradient(90deg,#35332f 0 3px,#f2eee5 3px 6px); }
+#pit .training-cluster > div:last-child { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline; margin-top:12px; }
+#pit .training-cluster strong { font:600 30px var(--hsc-serif); }
+#pit .training-cluster span { font:18px var(--hsc-sans); }
+#pit .training-network { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin:10px 0; font:14px/1.2 var(--hsc-sans); }
+#pit .training-network :is(span,b) { border:1px solid var(--hsc-ink); padding:10px; }
+#pit .training-network i { font-size:24px; letter-spacing:2px; font-style:normal; }
+#pit .training-stage.training-handoff { display:grid; grid-template-rows:minmax(0,1fr); place-items:safe center; overflow:auto; padding:24px; }
+#pit .training-handoff-content { width:min(600px,100%); }
+#pit .training-handoff h1 { font:600 30px/1.2 var(--hsc-serif); }
+#pit .training-handoff dl { margin:20px 0; }
+#pit .training-handoff dl div { display:flex; justify-content:space-between; gap:15px; padding:12px 0; border-bottom:1px solid var(--hsc-grey-light); }
+#pit .training-handoff dd { margin:0; font-weight:700; }
+/* Keep the player’s signing action visible below Babur on narrow training screens. */
+#pit:has(.training-stage) .desk-contract .desk-center { min-height:0; align-content:start; }

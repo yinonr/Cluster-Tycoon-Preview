@@ -26,7 +26,7 @@ function gridHTML(t) {
 }
 function stripHTML(t) {
   const e = evaluateKernel(t), left = Math.max(0, t.seconds - t.ms / 1000);
-  if (t.training) return `<div class="tt-strip training-progress"><b>Run both jobs</b><div class="tt-rowcount"><small class="tt-cap">JOBS</small><b data-ks-count>${t.ran}/${t.target}</b></div></div>`;
+  if (t.training) return `<div class="tt-strip training-progress"><b>Run the workload</b><div class="tt-rowcount"><small class="tt-cap">JOBS</small><b data-ks-count>${t.ran}/${t.target}</b></div></div>`;
   return `<div class="tt-strip arc-strip"><div class="tt-clock${left <= 6 && t.started && !t.done ? ' is-short' : ''}" data-ks-clock><small class="tt-cap">TIME</small><b data-ks-sec>${Math.ceil(left)}</b><i class="tt-fuse"><i data-ks-fuse style="--left:${(left / t.seconds).toFixed(3)}"></i></i></div>` +
     meterHTML(e.efficiency, 'PRODUCTIVE') +
     `<div class="tt-rowcount"><small class="tt-cap">KERNELS</small><b data-ks-count>${t.ran}/${t.target}</b></div></div>`;
@@ -40,7 +40,7 @@ function controls(training = false) {
   return `<div class="arc-pad ks-pad" role="group" aria-label="Steering">${key('left', '◀')}${key('up', '▲')}${key('down', '▼')}${key('right', '▶')}</div>`;
 }
 function resultHTML(g, t, out) {
-  if(t.training) return `<div class="tt-result training-result" role="status"><strong class="tt-stamp">${out.perfect?'BOTH JOBS RAN':'TRY A DIFFERENT TURN'}</strong><p>${out.perfect?'The workload reached both jobs. You’ve operated your new cluster.':'Turn before the edge or your own queue. Retry this short workload for free.'}</p></div>`;
+  if(t.training) return `<div class="tt-result training-result" role="status"><strong class="tt-stamp">${out.perfect?'WORKLOAD COMPLETE':'TRY A DIFFERENT TURN'}</strong><p>${out.perfect?'The workload reached its jobs. You’ve operated your new cluster.':'Turn before the edge or your own queue. Retry this short workload for free.'}</p></div>`;
   const d = out.detail || {}, why = d.crash === 'hot' ? 'Stalled on a throttled GPU' : d.crash === 'self' ? 'Stalled on its own queue' : d.crash === 'edge' ? 'Ran off the fleet' : out.reason === 'time' ? 'Time' : '';
   return resultBlock(g, t.builds, out, { perfectLine: 'Every kernel ran, no stalls · the build is tuned', line: `${why ? `${why} · ` : ''}${d.kernels}/${d.target} kernels run` });
 }
@@ -53,7 +53,7 @@ export function kernelView(g,ui={}) {
   const intro = !t.started && !out ? introCard(g, { kind: 'kernel', rule: RULE, keys: KEYS, manifest: manifest(t) }) : '';
   const result = out ? `<div class="tt-overlay tt-finish">${resultHTML(g, t, out)}</div>` : '';
   const body = `<div class="tt arc arc-kernel ${t.training ? 'is-training' : ''} ${state}${out?.perfect ? ' is-perfect' : ''}" data-arc="kernel">${stripHTML(t)}${t.training ? '' : '<p class="ks-hazard-legend">Orange / hatched tiles are throttled GPUs. Hitting one ends the run.</p>'}` +
-    `<div class="tt-field arc-field"><div class="arc-stage"><div class="ks-frame"><span class="tt-baylabel" aria-hidden="true"><img class="arc-seal" src="brand/logo/hsc-mark-white.svg" width="37" height="47" alt="">${t.training?'PRACTICE WORKLOAD · 2 JOBS':`FLEET · ${t.gpus.length} GPU GROUPS`}</span>` +
+    `<div class="tt-field arc-field"><div class="arc-stage"><div class="ks-frame"><span class="tt-baylabel" aria-hidden="true"><img class="arc-seal" src="brand/logo/hsc-mark-white.svg" width="37" height="47" alt="">${t.training?`PRACTICE WORKLOAD · ${t.target} JOBS`:`FLEET · ${t.gpus.length} GPU GROUPS`}</span>` +
     `<div class="ks-board" data-ks-board style="--cols:${t.w};--rows:${t.h}" role="img" aria-label="${esc(`Fleet grid: ${t.ran} of ${t.target} kernels run, stream length ${t.snake.length}, heading ${t.dir}`)}">${gridHTML(t)}</div>${result}</div>` +
     `<aside class="arc-side">${t.training ? '<p class="training-board-note">Each arrow press moves one cell in this lesson. The main game moves continuously.</p>' : manifest(t)}</aside></div>${intro}</div>` +
     `<span class="tt-say" data-arc-say aria-live="polite"></span></div>`;

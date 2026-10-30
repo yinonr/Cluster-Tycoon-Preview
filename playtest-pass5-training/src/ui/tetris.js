@@ -109,7 +109,7 @@ const recipeText = r => Object.entries(r || {}).filter(([, n]) => n > 0).map(([k
 
 // What each build stands to gain or wait for: the engine's own rules, in one line each.
 function stakes(g, t) {
-  if (t.training) return '<p class="training-board-note">Your H100 and H200 are reserved for this practice rack. Fit both shapes into its single row. The small fixed block is the rack switch.</p>';
+  if (t.training) return '<p class="training-board-note">Fit your H100 and H200 into Node Tetris. A full row powers up, contributing to integration efficiency and score.</p>';
   if (g.arcade.workshop) return workshopIntro(g, 'node');
   const builds = t.builds.map(id => g.company.builds.find(b => b.id === id)).filter(Boolean), T = FOUNDER.tuned, need = pct(FOUNDER.researchOnline);
   const lines = builds.map(b => {
@@ -141,8 +141,9 @@ function gradeLine(g, t, out) {
   const parts = Object.entries(gains).map(([k, d]) => `+${Math.max(1, Math.round(d * 100))}% ${k === 'readiness' ? 'FRONTIER READINESS' : `${k.toUpperCase()} EFFICIENCY`}`);
   return `<p class="tt-grade grade-${grade.toLowerCase()}"><b>${grade === 'CREW' ? 'CREW' : `GRADE ${grade}`}</b>${parts.length ? `<span>${parts.join(' · ')}</span>` : `<span>${grade === 'C' ? 'no lasting bonus' : 'bonus at its cap'}</span>`}</p>`;
 }
-function resultHTML(g, t, out) {
-  if (t.training) return `<div class="tt-result training-result" role="status"><strong class="tt-stamp">${out.perfect ? 'RACK PLAN READY' : 'LET’S TRY THAT AGAIN'}</strong><p>${out.perfect ? 'Both GPU shapes fit. Your hardware is reserved, ready for the infrastructure build.' : 'The shapes did not complete the row. Retry freely: place the H100 at one side, then fit the H200 beside it.'}</p></div>`;
+function resultHTML(g, t, out, legacy = false) {
+  if (t.training && legacy) return `<div class="tt-result training-result" role="status"><strong class="tt-stamp">${out.perfect ? 'RACK PLAN READY' : 'LET’S TRY THAT AGAIN'}</strong><p>${out.perfect ? 'Both shapes fit. Your GPUs remain reserved for the infrastructure build.' : 'Try placing the shapes again.'}</p></div>`;
+  if (t.training) return `<div class="tt-result training-result" role="status"><strong class="tt-stamp">${out.perfect ? 'NODES INTEGRATED' : 'LET’S TRY THAT AGAIN'}</strong><p>${out.perfect ? 'Both GPU shapes fit. Bring your model online.' : 'The shapes did not complete the row. Retry freely: place the H100 at one side, then fit the H200 beside it.'}</p></div>`;
   if (g.arcade.workshop) return workshopResult(g, 'node', out);
   const delayed = 1 - out.efficiency, grade = gradeLine(g, t, out);
   if (out.skipped) return `<div class="tt-result is-crew" role="status"><strong class="tt-stamp">CREW BASELINE · ${pct(out.efficiency)}</strong>${grade}<p>The crew racked it: ${pct(delayed)} next bell.</p></div>`;
@@ -157,12 +158,12 @@ const KEYS = '<kbd>←</kbd><kbd>→</kbd> move · <kbd>↑</kbd> rotate · <kbd
 
 export function tetrisView(g, ui = {}, now = globalThis.performance?.now?.() ?? 0) {
   const t = g.arcade.tetris, out = puzzleOutcome(g);
-  if (!t?.pieces) return { title: 'Node Tetris', role: 'report', desk: 'tetris', exit: null, body: '<div class="desk-center"><p>Integrating…</p></div>', footer: out ? button('tetris-continue', 'Continue', 'class="mat-move rail-commit rail-solo" data-autofocus') : '' };
+  if (!t?.pieces) return { title: t?.training ? 'Integrate your nodes' : 'Node Tetris', role: 'report', desk: 'tetris', exit: null, body: '<div class="desk-center"><p>Integrating…</p></div>', footer: out ? button('tetris-continue', 'Continue', 'class="mat-move rail-commit rail-solo" data-autofocus') : '' };
   const state = out ? 'is-done' : t.started ? 'is-play' : 'is-intro';
   const intro = !t.started && !out ? t.training
-    ? `<div class="tt-overlay tt-intro"><div class="tt-card mat-paper"><p class="tt-eyebrow">GPU TRAINING · NODE TETRIS</p><h3>Two GPUs, one rack row</h3>${manifest(t)}<p>Fit both GPU shapes around the fixed switch to fill the row. Retries are free.</p><p class="tt-keys">${KEYS}</p></div></div>`
+    ? `<div class="tt-overlay tt-intro"><div class="tt-card mat-paper"><p class="tt-eyebrow">GPU TRAINING · NODE TETRIS</p><h3>${ui.training?.legacySequence ? 'Plan your practice rack' : 'Integrate your nodes'}</h3>${manifest(t)}<p>${ui.training?.legacySequence ? 'Place your reserved GPUs.' : 'Fit your H100 and H200 into Node Tetris.'}</p><p>A full row powers up, contributing to integration efficiency and score.</p><p class="tt-keys">${KEYS}</p></div></div>`
     : `<div class="tt-overlay tt-intro"><div class="tt-card mat-paper"><p class="tt-eyebrow">${g.arcade.workshop ? 'FREE PLAY' : 'THE BELL'} · NODE TETRIS</p><h3>${g.arcade.workshop ? 'Loaner rack' : `Integrate ${recipeText(t.recipe)}`}</h3>${g.arcade.workshop ? workshopIntro(g, 'node') : manifest(t)}<p class="tt-rule-big">${esc(RULE)}</p><p class="tt-keys">${KEYS}</p></div></div>` : '';
-  const result = out ? `<div class="tt-overlay tt-finish">${resultHTML(g, t, out)}</div>` : '';
+  const result = out ? `<div class="tt-overlay tt-finish">${resultHTML(g, t, out, !!ui.training?.legacySequence)}</div>` : '';
   const body = `<div class="tt ${t.training ? 'is-training' : ''} ${state}${out?.perfect ? ' is-perfect' : ''}" data-tt style="--rows:${t.rows};--cols:${t.w}">${stripHTML(t, !!g.arcade.workshop)}` +
     `<div class="tt-field"><div class="tt-stage"><div class="tt-rackframe"><span class="tt-baylabel" aria-hidden="true">LOADING BAY</span><div class="tt-rack" data-tt-board role="img" aria-label="${esc(rackLabel(t))}">${rackRows(t, now)}</div>${result}</div>` +
     `<aside class="tt-side"><div class="tt-next" data-tt-next>${nextHTML(t, !!g.arcade.workshop)}</div><div class="tt-side-more">${stakes(g, t)}<p class="tt-keys">${KEYS}</p></div></aside></div>${intro}</div>` +
@@ -171,8 +172,8 @@ export function tetrisView(g, ui = {}, now = globalThis.performance?.now?.() ?? 
     : !t.started ? button('tetris-skip', `Skip<span class="wide"> · crew baseline</span> · ${pct(TETRIS.skip)}`, `class="mat-exit rail-quiet tt-skip" aria-label="Skip the puzzle: the integration crew brings ${pct(TETRIS.skip)} online now, the rest next bell"`) + button('tetris-start', 'Start <span class="wide">integration </span><span aria-hidden="true">▶</span>', 'class="mat-move rail-commit" data-autofocus aria-label="Start integration"')
     : `<div class="tt-pad" role="group" aria-label="Rack controls">${pad('left', '◀', 'Move left')}${pad('rotate', '⟳', 'Rotate')}${pad('right', '▶', 'Move right')}${pad('soft', '▼', 'Soft drop')}${pad('drop', '<span aria-hidden="true">⤓</span> DROP', 'Hard drop', 'tt-key-drop')}</div>`;
   if (g.arcade.workshop) footer = footer.replace('Continue <span', 'Back to board update <span').replace('Continue to the board update', 'Return to the board update and collect your best-prize improvement').replace('Start integration', 'Start Node Tetris').replace('integration </span>', 'Node Tetris </span>').replace(/Skip<span class="wide"> · crew baseline<\/span> · 75%/, 'Leave practice').replace('Skip the puzzle: the integration crew brings 75% online now, the rest next bell', 'Leave practice without a prize');
-  if (t.training) footer = out ? button(out.perfect && !out.skipped ? 'training-continue' : 'training-retry', out.perfect && !out.skipped ? 'Rack planned · continue →' : 'Try the rack again →', 'class="mat-move rail-commit rail-solo" data-tt-continue data-autofocus') : !t.started ? button('tetris-start','Start placing GPUs →','class="mat-move rail-commit rail-solo" data-autofocus') : footer;
-  return { title: 'Node Tetris', role: 'report', desk: 'tetris', exit: null, body, footer };
+  if (t.training) footer = out ? button(out.perfect && !out.skipped ? 'training-continue' : 'training-retry', out.perfect && !out.skipped ? ui.training?.legacySequence ? 'Rack planned · continue →' : 'Bring model online →' : 'Try the rack again →', 'class="mat-move rail-commit rail-solo" data-tt-continue data-autofocus') : !t.started ? button('tetris-start','Start placing GPUs →','class="mat-move rail-commit rail-solo" data-autofocus') : footer;
+  return { title: t.training ? ui.training?.legacySequence ? 'Plan your practice rack' : 'Integrate your nodes' : 'Node Tetris', role: 'report', desk: 'tetris', exit: null, body, footer };
 }
 // Pad keys carry no data-action: the controller owns them (press-and-hold on touch and mouse,
 // keyboard activation through click).

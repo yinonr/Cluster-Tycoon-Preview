@@ -127,7 +127,7 @@ function supplierReaction(l) {
 function supplierView(g, ui) {
   const a = g.arcade, l = activeLot(g), n = l.negotiation, now = a.time, cost = cents(l.qty, n.price), live = available(g, l) && !n.closed;
   const news = supplierNews(l), [reaction, said] = supplierReaction(l), line = reaction === 'Opening quote' && l.line ? l.line : said;
-  const who = identity(l.firm, 'seller', n.running ? `${l.qty} ${l.gpu}` : l.favor ? 'held for you' : l.label ? l.label.toLowerCase() : n.rapport || n.posture, g.arcade.practice ? 'A practice deal: try Charm, inspect the quote, then sign for your GPU.' : line, reaction, news.mood);
+  const who = identity(l.firm, 'seller', n.running ? `${l.qty} ${l.gpu}` : l.favor ? 'held for you' : l.label ? l.label.toLowerCase() : n.rapport || n.posture, g.arcade.practice ? l.gpu === 'H100' ? 'Review the purchase, then sign your contract.' : 'Use Charm, inspect the quote, then sign your contract.' : line, reaction, news.mood);
   const base = { role: 'seller', tone: 'negotiation', identity: who };
   if (n.running) return { ...base, title: 'Charm meter', desk: 'charm', exit: null, body: charmView(g, l), footer: rail(g.arcade.practice ? 'Practice attempt · a miss costs nothing' : 'Leaving now counts as a severe miss', 'rail-warn') };
   if (!live) {
@@ -139,11 +139,11 @@ function supplierView(g, ui) {
       footer: moveOn('close-focus', 'Back to the floor').replace('rail-commit', 'rail-commit rail-solo') };
   }
   const saved = cents(l.qty, l.ask - n.price), lastMove = news && Number.isFinite(news.before) ? cents(l.qty, news.before - news.after) : 0;
-  const bank = g.arcade.practice && l.gpu === 'H100' && !ui.training?.charmed?.H100
-    ? vault('buy', 'Try Charm first', '', 'disabled aria-label="Try Charm before buying your first practice GPU"')
+  const bank = g.arcade.practice && l.gpu === 'H200' && !ui.training?.charmed?.H200
+    ? vault('buy', 'Use Charm first', '', 'disabled aria-label="Use Charm before reviewing the H200 contract"')
     : cost > cash(g)
     ? vault('buy', `Need ${money(cost - cash(g))} more`, '', `disabled aria-label="Bank locked: need ${money(cost - cash(g))} more cash"`)
-    : vault('buy', saved > 0 ? 'BANK DEAL' : 'BUY NOW', saved > 0 ? `Save ${money(saved)}` : money(cost), `aria-label="Buy for ${money(cost)}; save ${money(saved)}"`);
+    : g.arcade.practice ? vault('buy', 'Review contract', money(cost), `aria-label="Review contract for ${money(cost)}"`) : vault('buy', saved > 0 ? 'BANK DEAL' : 'BUY NOW', saved > 0 ? `Save ${money(saved)}` : money(cost), `aria-label="Buy for ${money(cost)}; save ${money(saved)}"`);
   const exit = { action: 'close-focus', label: 'PASS', aria: 'Pass: return to the market; quote kept, desk cools 5 seconds' };
   const missing = missingOf(g, l.gpu), free = freeOf(g, l.gpu);
   const needLine = `<p class="gap-need gpu-${l.gpu.toLowerCase()}">${missing ? `You're missing <b>${missing}</b> ${esc(l.gpu)}${free ? ` · ${free} free` : ''}` : `No open card misses ${esc(l.gpu)}`}</p>`;
@@ -152,6 +152,7 @@ function supplierView(g, ui) {
       body: `<div class="face-off verdict-face desk-verdict" data-autofocus tabindex="-1" role="group" aria-label="${esc(verdictLabel(l))}">${theirPlate(g, l, news, { delta: false })}<div class="verdict-col">${charmVerdict(l)}</div><div class="leverage"><div class="deal-charm">${charmView(g, l)}</div></div></div>`,
       footer: rail(saved > 0 ? `${money(saved)} saved from ask` : `Charm ${n.attempts.length}/3 used`, 'wide-only') + bank };
   }
+  if (g.arcade.practice && l.gpu === 'H100') return { ...base, title: l.qty === 1 ? 'Your first H100' : 'GPU purchase', desk: 'haggle', exit, body: `<div class="charm-first">${theirPlate(g, l, news)}</div>`, footer: bank };
   const offer = ui.counter ?? ((n.haggles ? n.price : Math.max(1, n.price - 8)) / 100).toFixed(2), preview = supplierCounterPreview(g, parseRate(offer));
   const rival = rivalQuotes(g)[0];
   const rivalCard = rival ? `<div class="rival-slip mat-carbon"><div><span>${wide('Rival', 'quote')}</span><b>${esc(rival.firm)} · ${rate(rival.rate)}/h</b>${l.until <= now + 2 ? '<em>Using it now expires this quote.</em>' : ''}</div>${button('play-rival', `Slap it${'<span class="wide"> down</span>'} ${chip(2)}`, `data-id="${esc(rival.id)}" class="rival-play" aria-label="Tell ${esc(l.firm)} that ${esc(rival.firm)} is quoting ${rate(rival.rate)} per GPU-hour for ${rival.qty} ${esc(l.gpu)}, ${secs(rival.until, now)} seconds left. One play per desk; uses one offer and 2 seconds."`)}</div>`
@@ -219,7 +220,6 @@ function termView(g, ui) {
     (t.institutional === 'sovereign' ? `<p class="ts-delivery"><b>Complete Moonshot by R${t.milestoneDue} bell.</b><br>Miss: exit value −15%.<br>$1.8M capital + GPUs. No cash clawback.</p>` : q.conditions ? `<p class="ts-delivery">${esc(q.conditions)}</p>` : '') +
     (q.tranches ? `<p class="ts-delivery">${esc(deliveryText(q.tranches))}</p><details class="compute-terms"><summary>Expiry & delivery terms</summary><p>Unused units expire at each delivery bell. No cash redemption or equity refund. Future units are unavailable until delivery. Shutdown cancels undelivered service. Value is discounted replacement cost, not added company valuation.</p></details>` : '') +
     `<div class="ts-own"><p><span>You own</span><b>${pctOf(q.founderBefore)}</b><i aria-hidden="true">→</i><b class="is-after">${pctOf(q.founderAfter)}</b></p>${ownBar(q.founderBefore, q.founderAfter)}</div>` +
-    `<p class="ts-tradeoff">To offset this dilution, final company value must be ${((q.founderBefore / q.founderAfter - 1) * 100).toFixed(1)}% higher than if you decline. This is a break-even comparison, not a growth forecast. ${q.funding === 'cash' ? 'The cash belongs to the company.' : ''}</p>` +
     `<details class="compute-terms"><summary>Pricing details</summary><dl class="ts-figs"><div><dt>Pre-money</dt><dd>${short(q.pre)}</dd></div><div><dt>Post-money</dt><dd>${short(q.post)}</dd></div><div><dt>Company value</dt><dd>${short(s.valuation)}</dd></div></dl><p class="ts-fine">${q.shares.toLocaleString('en-US')} new shares. ${q.funding === 'compute' ? 'Replacement value, not cash or a valuation bonus.' : 'Investment goes to the company.'}</p></details>${rivalBlock(g, t)}</section>`;
   const slip = t.patience > 0
     ? `<section class="slip yours mat-paper term-counter" aria-label="Your counter"><header class="plate-head"><span>${wide('YOUR', 'COUNTER')}</span><span>${plural(t.patience, 'try', 'tries')} left</span></header><strong class="slip-total money-hero" data-term-total aria-live="polite">${preview.html}</strong><p class="ts-would" data-term-own>${preview.own}</p>` +
@@ -241,7 +241,7 @@ function contractView(g, d) {
   else { const p = d.total - d.cost; terms = `RESELL ${d.qty} ${esc(d.gpu)} to ${esc(d.counterparty)}`; sub = `you paid ${money(d.cost)} · ${p >= 0 ? signed(p) : money(p)} ${p >= 0 ? 'profit' : 'loss'}`; }
   const role = purchase ? 'seller' : term ? 'investor' : 'buyer';
   if (d.conditions) sub += `<br>${esc(d.conditions)}`;
-  return { title: purchase ? 'Your GPU contract' : 'The contract', desk: 'contract', exit: { action: 'cancel-sign', label: term ? 'Back to the terms' : 'Keep negotiating' }, role, tone: 'signing',
+  return { title: purchase ? 'Your GPU contract' : 'The contract', desk: 'contract', exit: { action: 'cancel-sign', label: g.arcade.practice ? 'Back' : term ? 'Back to the terms' : 'Keep negotiating', ...(g.arcade.practice ? { aria: 'Back to quote' } : {}) }, role, tone: 'signing',
     identity: identity(d.counterparty, role, 'Contract ready', compute ? 'Capacity for equity. The delivery schedule is binding.' : term ? 'Welcome aboard. Sign and the wire goes out.' : 'One signature makes it official.', '', 'pleased'),
     body: `<div class="desk-center"><article class="contract mat-paper" data-fx-contract>${paperHead('HSC · EXECUTION COPY', purchase ? 'PURCHASE' : term ? 'EQUITY ROUND' : 'RESALE')}<p class="contract-terms">${terms}</p><strong class="contract-total money-hero">${money(d.total)}</strong><p class="contract-sub">${sub}</p>${compute ? `<p class="ts-delivery">Compute value, not cash. ${esc(deliveryText(d.tranches))}</p>` : ''}<div class="sign-line">${button('sign-it', `${purchase ? 'Sign contract · Pay' : 'SIGN · ' + (compute ? 'COMPUTE' : term ? 'RAISE' : 'RECEIVE')} ${short(d.total)}`, 'class="mat-stamp is-lit" data-primary')}<span class="sig-rule" aria-hidden="true">x</span></div><p class="contract-fine">Signing rechecks the ${term ? 'terms, window and cap table' : 'quote, deadline, stock and cash'}.</p></article></div>`,
     footer: rail(`Cash after ${money(after)}`) };
@@ -286,7 +286,11 @@ function receiptView(g, d) {
   if (g.arcade.practice && term) {
     payoff = `<div class="payoff payoff-raise training-investment-receipt" data-fx-payoff><span class="payoff-label">Investment signed</span><strong class="payoff-hero money-hero">+${money(d.total)}</strong><p class="training-equity-exchange">Your ownership <b>${pctOf(d.founderBefore)}</b><span aria-hidden="true">→</span><b>${pctOf(d.founderAfter)}</b></p>${ownBar(d.founderBefore,d.founderAfter)}</div>`;
     fine = `<p class="payoff-fine">Practice cash now <b>${money(cash(g))}</b>. The fund owns ${bpsText(d.qty)}.</p>`;
-    footer = moveOn('training-large-source','Review the 48-H100 contract →').replace('rail-commit','rail-commit rail-solo');
+    footer = moveOn('post-receipt','See the cluster opportunity →').replace('rail-commit','rail-commit rail-solo');
+  }
+  if (g.arcade.practice && purchase && d.qty===2 && d.gpu==='H100') {
+    fine = `<p class="payoff-fine">Practice cash now <b>${money(cash(g))}</b></p>`;
+    footer = moveOn('training-network-build','Build network · $5,000 →').replace('rail-commit','rail-commit rail-solo');
   }
   if (g.arcade.practice && purchase && d.qty>=48) {
     const card=g.arcade.objectives.find(c=>c.id==='practice-cluster');

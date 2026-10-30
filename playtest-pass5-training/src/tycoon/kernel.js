@@ -47,11 +47,11 @@ function fleetLayout(recipe) {
 export function startKernel(g, spec) {
   if (!gameLaunchAllowed(g,'kernel',spec?.training===true) || !spec?.builds?.length) return false;
   if (spec.training) {
-    const w=6,h=5;
+    const w=6,h=5,target=spec.target===4?4:2,jobs=target===4?[14,16,28,25]:[14,16];
     g.arcade.kernel={id:spec.id || 'practice-kernel',builds:[...spec.builds],recipe:{...spec.recipe},w,h,
       gpus:Array(w*h).fill('H100'),rk:recipeKey(spec.recipe),training:true,
-      snake:[20,26],dir:'up',turns:[],jobs:[{i:14,gpu:'H100',n:1},{i:16,gpu:'H100',n:2}],hot:[],busy:Array(w*h).fill(0),
-      target:2,ran:0,spawns:2,ms:0,acc:0,seconds:0,started:false,done:false,result:null,reason:null,crash:null,last:null};
+      snake:[20,26],dir:'up',turns:[],jobs:jobs.map((i,n)=>({i,gpu:'H100',n:n+1})),hot:[],busy:Array(w*h).fill(0),
+      target,ran:0,spawns:target,ms:0,acc:0,seconds:0,started:false,done:false,result:null,reason:null,crash:null,last:null};
     return true;
   }
   const target = targetFor(spec.scale || 256), x0 = Math.floor(W / 2);
@@ -211,5 +211,5 @@ export const ADAPTER = Object.freeze({
   outcome: g => kernelOutcome(g),
   autoplay: (g, skill) => autoplayKernel(g, skill),
   valid: t => !!(t && typeof t === 'object' && Array.isArray(t.builds) && t.builds.length && Array.isArray(t.snake) && t.snake.length >= 1 &&
-    Array.isArray(t.gpus) && (t.training===true ? t.w===6 && t.h===5 && t.gpus.length===30 && t.target===2 : t.gpus.length === KERNEL.w * KERNEL.h) && Array.isArray(t.jobs) && Array.isArray(t.hot) && Array.isArray(t.turns) && Number.isSafeInteger(t.target) && t.target > 0),
+    Array.isArray(t.gpus) && (t.training===true ? t.w===6 && t.h===5 && t.gpus.length===30 && [2,4].includes(t.target) : t.gpus.length === KERNEL.w * KERNEL.h) && Array.isArray(t.jobs) && Array.isArray(t.hot) && Array.isArray(t.turns) && Number.isSafeInteger(t.target) && t.target > 0),
 });

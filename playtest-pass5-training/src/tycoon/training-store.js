@@ -15,7 +15,7 @@ export function trainingStore(storage) {
     raw=storage.getItem(TRAINING_KEY);
     if (raw!==null) {
       profile=JSON.parse(raw);
-      if (profile?.session?.version===1) {profile.session=upgradeTraining(profile.session);migrated=true;}
+      if ([1,2].includes(profile?.session?.version)) {profile.session=upgradeTraining(profile.session);migrated=true;}
       if (profile?.session?.practice?.arcade && normalizeReplayAccess(profile.session.practice)) migrated=true;
       if (!valid(profile)) throw Error('Invalid training save');
     }

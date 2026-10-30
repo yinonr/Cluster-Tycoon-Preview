@@ -24,7 +24,8 @@ export function selectBaburExpression(session = null, { context = 'stage', game 
   if (lot) return session || negotiation?.running || negotiation?.attempts?.length ? 'explaining' : 'broker';
   if (session?.step === 'funding' && !session.funded) return 'equity-offer';
   if (session?.step === 'ready' || (session?.step === 'snake' && session.largeBuildId)) return 'celebrating';
-  if (!session || session.step === 'meet') return 'broker';
+  if (!session) return 'broker';
+  if (session.step === 'meet') return 'explaining';
   return 'explaining';
 }
 
