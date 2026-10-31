@@ -1,0 +1,193 @@
+/* The live trading floor leads; one task keeps its place beside it. Training is
+   deliberately outside this stylesheet's scope. */
+#pit:has(.floor-stage) { --hud-h:76px; }
+#pit .floor-stage { grid-template-rows:76px minmax(0,1fr); background:var(--hsc-paper); }
+#pit .floor-hud { height:76px; display:grid; grid-template-columns:minmax(160px,1fr) auto auto auto auto; gap:22px; padding:8px 24px; overflow:visible; }
+#pit .floor-hud .hud-co { min-width:0; margin:0; }
+#pit .floor-hud .hud-name { gap:5px; }
+#pit .floor-hud .hud-name > b { font:600 20px/1.1 var(--hsc-serif); white-space:nowrap; text-overflow:ellipsis; overflow:hidden; }
+#pit .floor-cycle { font:13px/1.2 var(--hsc-sans); color:var(--hsc-grey); white-space:nowrap; }
+#pit .floor-hud .hud-cash strong { font-size:24px; }
+#pit .floor-hud .hud-val strong { color:var(--hsc-ink); }
+#pit .floor-hud .hud-val small { font-size:11px; }
+#pit .hud-inventory, #pit .floor-hud .floor-help { min-height:44px; min-width:44px; padding:5px 12px; border:1px solid var(--hsc-grey-light); border-radius:3px; background:var(--hsc-paper); color:var(--hsc-ink); box-shadow:none; font:700 14px/1.2 var(--hsc-sans); }
+#pit .hud-inventory { display:flex; flex-direction:column; gap:3px; text-align:left; }
+#pit .hud-inventory small { font-size:12px; font-weight:400; color:var(--hsc-grey); }
+#pit .floor-hud .floor-help { width:auto; height:44px; }
+#pit .floor-main { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(330px,1fr); min-height:0; gap:26px; padding:22px 24px; overflow:hidden; }
+#pit .trading-room { display:grid; grid-template-rows:auto minmax(0,1fr) auto; min-height:0; min-width:0; }
+#pit .floor-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:44px; }
+#pit .floor-filter-heading { display:flex; align-items:center; gap:8px; min-width:0; }
+#pit .floor-filter-heading h2 { margin:0; font:600 25px/1.15 var(--hsc-serif); }
+#pit .floor-reset { min-height:44px; padding:5px 9px; border:1px solid var(--hsc-grey-light); border-radius:3px; background:var(--hsc-paper); font:14px var(--hsc-sans); color:var(--hsc-ink); }
+#pit .floor-pagination { display:flex; align-items:center; gap:5px; flex:none; }
+#pit .floor-pagination > span { min-width:65px; text-align:center; font:13px/1.2 var(--hsc-sans); color:var(--hsc-grey); white-space:nowrap; }
+#pit .floor-page-button { display:inline-flex; justify-content:center; align-items:center; min-width:44px; min-height:44px; border:1px solid var(--hsc-grey-light); border-radius:3px; background:var(--hsc-paper); color:var(--hsc-ink); font:22px/1 var(--hsc-sans); }
+#pit .floor-page-button:disabled { opacity:.35; }
+#pit .floor-scene { position:relative; min-height:0; min-width:0; overflow:auto; margin-top:10px; padding:18px 12px; border-block:1px solid var(--hsc-grey-light); background:var(--hsc-paper); }
+#pit .floor-room-mark { position:absolute; top:44%; left:50%; transform:translate(-50%,-50%); opacity:.08; pointer-events:none; }
+#pit .floor-room-mark img { width:200px; height:auto; }
+#pit .visible-brokers { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:26px 24px; min-height:100%; align-content:center; }
+#pit .floor-offer { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; width:100%; min-width:0; min-height:210px; margin:0; padding:0; background:transparent; border:0; color:var(--hsc-ink); touch-action:manipulation; }
+#pit .floor-broker-art { display:block; width:86px; height:103px; pointer-events:none; }
+#pit .floor-broker-art .fig { display:block; width:100%; height:100%; }
+#pit .floor-quote { position:relative; display:block; width:100%; padding:14px 16px; background:var(--hsc-paper); border:1px solid var(--hsc-ink); border-radius:3px; box-shadow:3px 3px 0 var(--hsc-grey-light); }
+#pit .floor-offer:hover .floor-quote { background:var(--hsc-note); }
+#pit .floor-offer .broker-offer { grid-template-columns:auto minmax(0,1fr); gap:5px 10px; }
+#pit .floor-offer .broker-quantity { font-size:21px; }
+#pit .floor-offer .broker-price { font:400 27px/1.1 var(--hsc-term); }
+#pit .floor-offer .broker-state { min-height:14px; font-size:12px; }
+#pit .floor-offer.is-backdrop { opacity:.7; }
+#pit .floor-secondary { display:flex; flex-wrap:wrap; justify-content:flex-start; gap:12px; margin-top:12px; }
+#pit .floor-secondary-button { display:flex; align-items:center; gap:6px; min-height:44px; padding:8px 12px; border:1px solid var(--hsc-grey-light); border-radius:3px; background:var(--hsc-paper); color:var(--hsc-ink); font:14px var(--hsc-sans); }
+#pit .floor-secondary-button span { color:var(--hsc-grey); }
+#pit .floor-empty { grid-column:1/-1; align-self:center; padding:28px 12px; font:16px/1.5 var(--hsc-sans); }
+#pit .floor-empty h3 { margin:0; font:600 23px var(--hsc-serif); }
+#pit .floor-empty-reset { min-height:44px; padding:8px 12px; background:var(--hsc-paper); border:1px solid var(--hsc-grey-light); border-radius:3px; font:700 15px var(--hsc-sans); color:var(--hsc-ink); }
+#pit .floor-main .current-task-panel { display:grid; grid-template-rows:minmax(0,1fr) auto; padding:0; min-width:0; min-height:0; overflow:hidden; border:0; background:transparent; box-shadow:none; }
+#pit .single-task-company { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; min-height:0; min-width:0; padding:0; gap:10px; }
+#pit .single-task-company:focus-visible { outline:3px solid var(--hsc-ink); outline-offset:3px; }
+#pit .task-navigation { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:44px; }
+#pit .task-navigation > button { min-height:44px; min-width:44px; padding:7px 10px; background:var(--hsc-paper); border:1px solid var(--hsc-grey-light); border-radius:3px; color:var(--hsc-ink); font:14px var(--hsc-sans); }
+#pit .task-position { display:flex; flex-direction:column; gap:3px; text-align:center; font:13px/1.15 var(--hsc-sans); }
+#pit .task-position > span { color:var(--hsc-grey); }
+#pit .single-task-company .current-task { container-type:normal; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto auto; min-height:0; margin:0; padding:0; overflow:hidden; border:1px solid var(--hsc-grey-light); background:var(--hsc-paper); border-radius:3px; box-shadow:none; }
+#pit .current-task-content { min-height:0; overflow:auto; padding:18px; }
+#pit .current-task .fc-name { min-height:0; padding:0; margin:0 0 14px; font:600 27px/1.15 var(--hsc-serif); white-space:normal; }
+#pit .current-task .fc-reward { margin:0 0 14px; font:700 17px/1.4 var(--hsc-sans); white-space:normal; }
+#pit .current-task .task-capital { margin:0 0 14px; font:14px/1.4 var(--hsc-sans); }
+#pit .current-task .fc-slots { display:grid; gap:10px; margin:14px 0; padding:0; }
+#pit .current-task .slot-row { min-height:44px; align-items:center; }
+#pit .current-task .slot-label { flex-basis:42px; font:700 13px/1.1 var(--hsc-sans); }
+#pit .current-task .slot-label small { font-size:12px; }
+#pit .current-task .slot { min-width:44px; min-height:44px; width:44px; height:44px; }
+#pit .current-task :is(.slot-bar-btn,.slot-bar-release) { min-width:44px; min-height:44px; }
+#pit .current-task .task-progress { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin:12px 0 0; font:14px/1.4 var(--hsc-sans); color:var(--hsc-grey); }
+#pit .current-task .task-result { margin:12px 0 0; font:14px/1.4 var(--hsc-sans); }
+#pit .current-task .fc-foot { display:flex; justify-content:space-between; gap:10px; margin:0; padding:10px 14px; border-top:1px solid var(--hsc-grey-light); background:var(--hsc-paper); }
+#pit .current-task :is(.task-detail,.fc-fill,.fc-build) { min-height:44px; min-width:44px; }
+#pit .current-task .task-detail { padding:7px 0; border:0; background:none; color:var(--hsc-ink); font:14px var(--hsc-sans); text-decoration:underline; }
+#pit .current-task .fc-build { min-width:92px; }
+#pit .current-task .task-activity { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:3px 14px; border-top:1px solid var(--hsc-grey-light); font:12px var(--hsc-sans); color:var(--hsc-grey); }
+#pit .task-activity button, #pit .context-replay { min-height:44px; padding:6px 0; border:0; background:none; color:var(--hsc-ink); font:14px var(--hsc-sans); text-decoration:underline; }
+#pit .single-task-company .task-end-round { justify-self:end; min-height:44px; margin:0; padding:8px 13px; border:1px solid var(--hsc-grey-light); background:var(--hsc-paper); color:var(--hsc-ink); font:14px var(--hsc-sans); }
+#pit .task-context-status { max-height:96px; overflow:auto; }
+#pit .task-context-status:empty { display:none; }
+#pit .task-empty { padding:20px; font:16px/1.4 var(--hsc-sans); }
+#pit .floor-funding { margin-top:8px; }
+#pit .floor-funding .funding-entry { width:100%; font-size:14px; }
+#pit .inventory-table { border-collapse:collapse; width:100%; }
+#pit .inventory-table caption { text-align:left; font:600 24px var(--hsc-serif); padding-bottom:16px; }
+#pit .inventory-table th, #pit .inventory-table td { text-align:left; padding:12px 8px; border-bottom:1px solid var(--hsc-grey-light); }
+#pit .activity-replay { border-top:1px solid var(--hsc-grey-light); margin-top:22px; padding-top:10px; }
+#pit .activity-replay h3 { font:600 21px var(--hsc-serif); margin:8px 0; }
+@media (max-width:1000px) and (min-width:769px) {
+ #pit .floor-main { grid-template-columns:minmax(0,1.2fr) minmax(300px,1fr); gap:18px; padding:18px; }
+ #pit .floor-hud { padding-inline:18px; gap:15px; }
+ #pit .floor-broker-art { width:70px; height:84px; }
+ #pit .floor-offer .broker-quantity { font-size:18px; }
+ #pit .floor-offer .broker-price { font-size:23px; }
+}
+@media (max-width:768px) {
+ #pit:has(.floor-stage) { --hud-h:110px; }
+ #pit .floor-stage { grid-template-rows:110px minmax(0,1fr); }
+ #pit .floor-hud { height:110px; display:grid; grid-template-columns:minmax(0,1fr) auto auto; grid-template-rows:44px 44px; gap:4px 8px; padding:6px 12px 10px; }
+ #pit .floor-hud .hud-co { grid-column:1; grid-row:1; }
+ #pit .floor-hud .hud-name > b { font-size:18px; }
+ #pit .floor-cycle { font-size:12px; }
+ #pit .floor-hud .hud-cash { grid-column:1; grid-row:2; }
+ #pit .floor-hud .hud-cash strong { font-size:clamp(15px,calc(280px / var(--cash-chars)),21px); }
+ #pit .floor-hud .hud-val { grid-column:2/4; grid-row:2; margin-left:8px; }
+ #pit .floor-hud .hud-val strong { font-size:16px; }
+ #pit .floor-hud .hud-val small { font-size:10px; }
+ #pit .hud-inventory { grid-column:2; grid-row:1; padding:5px 8px; font-size:13px; }
+ #pit .hud-inventory small { font-size:11px; }
+ #pit .floor-hud .floor-help { grid-column:3; grid-row:1; padding:5px 9px; font-size:13px; }
+ #pit .floor-main { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(190px,1fr) minmax(280px,.9fr); gap:14px; padding:12px 16px; overflow:hidden; }
+ #pit .floor-filter-heading h2 { font-size:21px; }
+ #pit .floor-heading { gap:8px; }
+ #pit .floor-pagination { gap:3px; }
+ #pit .floor-pagination > span { min-width:55px; font-size:12px; }
+ #pit .floor-scene { padding:6px 10px; margin-top:5px; }
+ #pit .visible-brokers { gap:12px; align-content:center; }
+ #pit .floor-offer { min-height:145px; }
+ #pit .floor-broker-art { width:52px; height:62px; }
+ #pit .floor-quote { padding:8px; }
+ #pit .floor-offer .broker-quantity { font-size:17px; }
+ #pit .floor-offer .broker-price { font-size:22px; }
+ #pit .floor-offer .broker-offer .offer-piece { --m:9px; }
+ #pit .floor-secondary { gap:8px; margin-top:6px; }
+ #pit .floor-secondary-button { min-height:44px; padding:6px 10px; font-size:13px; }
+ #pit .single-task-company { gap:6px; }
+ #pit .task-navigation { gap:5px; }
+ #pit .task-navigation > button { padding:6px 10px; font-size:13px; }
+ #pit .task-position { font-size:12px; }
+ #pit .current-task-content { padding:12px; }
+ #pit .current-task .fc-name { font-size:22px; margin-bottom:8px; }
+ #pit .current-task .fc-reward { font-size:15px; line-height:1.3; margin-bottom:8px; }
+ #pit .current-task .task-capital { font-size:13px; margin-bottom:8px; }
+ #pit .current-task .fc-slots { margin:8px 0; gap:6px; }
+ #pit .current-task .task-progress { font-size:12px; margin-top:6px; }
+ #pit .current-task .fc-foot { padding:5px 10px; }
+ #pit .current-task .task-activity { padding:0 10px; }
+ #pit .current-task .task-activity button { font-size:13px; }
+ #pit .single-task-company .task-end-round { min-height:44px; padding:6px 12px; font-size:13px; }
+ #pit .floor-funding .funding-entry { min-height:44px; padding:6px; font-size:12px; }
+}
+@media (max-width:600px) {
+ #pit .floor-main { grid-template-rows:minmax(180px,.85fr) minmax(270px,1.15fr); gap:8px; padding:8px 10px; }
+ #pit .floor-filter-heading h2 { font-size:18px; }
+ #pit .floor-pagination > span { min-width:48px; font-size:11px; }
+ #pit .floor-page-button { min-width:44px; width:44px; }
+ #pit .floor-reset { padding:5px 6px; font-size:12px; }
+ #pit .floor-offer { min-height:122px; }
+ #pit .floor-broker-art { width:44px; height:53px; }
+ #pit .floor-quote { padding:7px; }
+ #pit .floor-offer .broker-offer { gap:3px 5px; }
+ #pit .floor-offer .broker-quantity { font-size:16px; }
+ #pit .floor-offer .broker-price { grid-column:1/-1; text-align:center; font-size:20px; }
+ #pit .floor-offer .broker-offer .offer-piece { grid-row:1; --m:8px; justify-self:end; }
+ #pit .floor-offer .broker-state { grid-column:1/-1; text-align:center; font-size:11px; }
+ #pit .floor-secondary { gap:6px; }
+ #pit .floor-secondary-button { padding:5px 10px; }
+ #pit .current-task .fc-name { font-size:20px; }
+ #pit .current-task .fc-reward { font-size:14px; }
+ #pit .current-task .slot-label { flex-basis:36px; font-size:12px; }
+ #pit .current-task .slot-label small { font-size:11px; }
+ #pit .task-context-status { max-height:64px; }
+}
+
+#pit .current-task > * { grid-column:1; }
+#pit .floor-reset { min-width:44px; }
+#pit .cd-binding { padding:12px; border:1px solid var(--hsc-grey-light); font:15px/1.5 var(--hsc-sans); }
+/* Reset the former two-column card rail. The current card is one full-width flow. */
+#pit .single-task-company .current-task > *,
+#pit .single-task-company .current-task .fc-foot { grid-column:1 / -1; }
+@media (max-width:768px) {
+ /* Phones and tablets use one readable scrolling column rather than compressed
+    floor/card subviewports. Filtering keeps this same selected card in the scene. */
+ #pit .floor-main { display:flex; flex-direction:column; gap:16px; overflow:auto; padding:10px 12px 16px; }
+ #pit .trading-room { flex:none; display:grid; grid-template-rows:auto auto auto; }
+ #pit .floor-scene { overflow:visible; min-height:0; padding:8px 8px 12px; }
+ #pit .visible-brokers { min-height:0; align-content:start; }
+ #pit .floor-main .current-task-panel { flex:none; display:block; min-height:0; overflow:visible; width:100%; }
+ #pit .single-task-company { display:flex; flex-direction:column; gap:6px; }
+ #pit .single-task-company .current-task { display:flex; flex-direction:column; overflow:visible; }
+ #pit .current-task-content { overflow:visible; }
+ #pit .current-task .fc-name { overflow:visible; text-overflow:clip; max-height:none; -webkit-line-clamp:unset; }
+ #pit .current-task .task-context-status { max-height:none; overflow:visible; }
+ #pit .single-task-company .task-end-round { align-self:flex-end; }
+}
+@media (max-width:600px) { #pit .floor-main { gap:8px; padding:8px 10px 14px; } }
+#pit .single-task-company .current-task .fc-foot { align-self:stretch; width:100%; }
+#pit .current-task :is(.fc-name,.fc-reward) { display:block; overflow:visible; max-height:none; text-overflow:clip; -webkit-line-clamp:unset; }
+/* Horizontal task swipes stay with the task navigator; vertical page scrolling
+   and native pinch zoom remain available. */
+#pit .single-task-company[data-task-area] { touch-action:pan-y; touch-action:pan-y pinch-zoom; }
+
+/* Earned replay access belongs to the between-round report. */
+#pit .between-round-games { margin:16px 0; padding:12px 0; border-block:1px solid var(--hsc-grey-light); }
+#pit .between-round-games h3 { margin:0 0 6px; font-size:18px; }
+#pit .between-round-games p { margin:0 0 8px; font:14px/1.4 var(--hsc-sans); }
+#pit .between-round-games > div { display:flex; flex-wrap:wrap; gap:8px; }
+#pit .between-round-games button { min-height:44px; padding:8px 12px; border:1px solid currentColor; background:transparent; color:var(--hsc-ink); font:14px/1.3 var(--hsc-sans); cursor:pointer; }
