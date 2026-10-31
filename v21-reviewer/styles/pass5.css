@@ -1,0 +1,327 @@
+/* Pass 5 subtracts the hall and persistent activity row. Tasks, inventory and sourcing
+   keep one location at every stage; the existing paper/ink/GPU palette remains. */
+#pit .simplified-stage { --hud-h:76px; grid-template-rows:76px minmax(0,1fr); }
+#pit .simplified-hud { height:76px; gap:26px; padding:8px 24px; overflow:visible; }
+#pit .simplified-hud .hud-co { flex:1 1 auto; }
+#pit .simplified-hud .hud-name > b { max-width:230px; }
+#pit .simplified-hud .pit-help { flex:none; width:44px; height:44px; min-height:44px; }
+#pit .simplified-hud .hud-cash strong { font-size:24px; }
+#pit .simplified-hud .hud-val strong { color:var(--hsc-ink); font-size:18px; }
+#pit .simplified-hud .pit-clock { min-width:70px; }
+#pit .simplified-main { grid-template-columns:minmax(250px,1fr) minmax(360px,1.1fr); overflow:auto; gap:34px; padding:28px max(22px,calc((100vw - 1160px)/2)); background:var(--hsc-paper); align-items:start; }
+#pit .company-workspace { min-width:0; display:flex; flex-direction:column; gap:22px; }
+#pit .compact-inventory h2, #pit .sourcing-entry h2, #pit .task-heading h2 { margin:0; font:600 23px/1.2 var(--hsc-serif); }
+#pit .compact-inventory > p, #pit .task-instruction { font-size:14px; color:var(--hsc-grey); margin:10px 0 0; line-height:1.4; }
+#pit .compact-inventory .tray { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; border:0; padding:12px 0 0; background:transparent; box-shadow:none; }
+#pit .compact-inventory .stack { position:relative; min-height:80px; height:auto; padding:10px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; border:1px solid var(--hsc-grey-light); border-radius:3px; box-shadow:none; background:var(--hsc-paper); }
+#pit .compact-inventory .stack-pile, #pit .compact-inventory .stack-groups { display:none; }
+#pit .compact-inventory .stack-copy { position:static; display:flex; align-items:baseline; flex-wrap:wrap; gap:5px; white-space:normal; }
+#pit .compact-inventory .stack-name { font:700 15px var(--hsc-sans); }
+#pit .compact-inventory .stack-free { font:700 22px var(--hsc-sans); }
+#pit .compact-inventory .stack-meta { position:static; display:flex; flex-wrap:wrap; font-size:12px; }
+#pit .compact-inventory .stack.is-none { opacity:1; }
+#pit .sourcing-entry { padding:24px 0; border-top:1px solid var(--hsc-grey-light); border-bottom:1px solid var(--hsc-grey-light); }
+#pit .sourcing-entry p { font-size:16px; line-height:1.5; max-width:36ch; margin:12px 0; }
+#pit .sourcing-types { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+#pit :is(.source-needed,.secondary-entry,.all-offers-link,.task-end-round,.detail-action,.funding-entry) { min-height:44px; padding:10px 13px; border:1px solid var(--hsc-grey-light); background:var(--hsc-paper); color:var(--hsc-ink); font:700 15px/1.25 var(--hsc-sans); border-radius:3px; text-align:left; }
+#pit .all-offers-link { display:block; margin-top:12px; border:0; padding-left:0; font-size:14px; text-decoration:underline; }
+#pit .workspace-secondary { display:flex; gap:18px; flex-wrap:wrap; }
+#pit .secondary-entry { border:0; padding:4px 0; text-decoration:underline; font-weight:400; }
+#pit .context-funding { display:grid; gap:8px; }
+#pit .simplified-main .pit-board { min-height:0; overflow:visible; padding:0; background:transparent; border:0; box-shadow:none; }
+#pit .simplified-company { display:block; padding:0; min-height:0; }
+#pit .task-heading { display:flex; gap:12px; justify-content:space-between; align-items:center; }
+#pit .task-end-round { flex:none; font-size:14px; font-weight:400; }
+#pit .simplified-company .cards { display:flex; flex-direction:column; gap:12px; margin-top:18px; }
+#pit .task-card { min-height:0; padding:14px 16px 10px; border:1px solid var(--hsc-grey-light); box-shadow:none; background:var(--hsc-paper); }
+#pit .task-card .fc-head { min-height:0; margin:0 0 6px; background:transparent; font:700 12px var(--hsc-sans); text-transform:uppercase; color:var(--hsc-grey); }
+#pit .task-card .fc-name { font:600 20px/1.15 var(--hsc-serif); margin:0; padding:0; min-height:44px; text-align:left; }
+#pit .task-card .fc-reward { font:700 15px/1.3 var(--hsc-sans); margin:4px 0 9px; }
+#pit .task-card .task-capital { font-size:13px; margin:4px 0; }
+#pit .task-card .fc-slots { margin:8px 0; padding:0; }
+#pit .task-card .slot { width:44px; height:44px; min-width:44px; min-height:44px; }
+#pit .task-card .slot-row { min-height:44px; }
+#pit .task-card .fc-foot { margin:8px -16px -10px; padding:8px 16px; background:transparent; border-top:1px solid var(--hsc-grey-light); display:flex; gap:8px; align-items:center; min-height:0; }
+#pit .task-card .fc-foot > span { flex:1; font-size:13px; }
+#pit .task-card .fc-foot small { display:block; font-size:12px; color:var(--hsc-grey); }
+#pit .task-card :is(.fc-fill,.fc-build) { min-width:44px; min-height:44px; }
+#pit .task-card .fc-build:disabled { background:var(--hsc-paper); color:var(--hsc-grey); border-color:var(--hsc-grey-light); opacity:1; }
+#pit .task-complete { padding:12px; margin:0; border-bottom:1px solid var(--hsc-grey-light); font-size:14px; }
+#pit .utility-sheet { width:min(650px,100%); margin:auto; padding:22px; font:16px/1.5 var(--hsc-sans); }
+#pit .utility-sheet .pit-workshops { display:grid; gap:12px; padding:0; margin:18px 0; border:0; background:none; box-shadow:none; }
+#pit .utility-sheet .workshop-button { width:100%; min-height:70px; padding:14px; display:flex; flex-direction:column; align-items:flex-start; gap:5px; border:1px solid var(--hsc-grey-light); box-shadow:none; background:var(--hsc-paper); }
+#pit .utility-sheet .workshop-button small { font-size:14px; color:var(--hsc-grey); }
+#pit .utility-sheet .detail-action { display:block; width:100%; margin:9px 0; }
+#pit .company-financials { margin:0; }
+#pit .company-financials > div, #pit .training-reset dl > div { display:flex; justify-content:space-between; gap:15px; border-bottom:1px solid var(--hsc-grey-light); padding:9px 0; }
+#pit .company-financials dd, #pit .training-reset dd { margin:0; font-weight:700; }
+#pit .context-market { width:min(700px,100%); margin:auto; padding:20px; }
+#pit .context-market > p { font:16px/1.5 var(--hsc-sans); margin:0 0 12px; }
+#pit .context-offers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; padding:14px 0; }
+#pit .context-offers .broker-station { position:static; width:100%; height:auto; min-height:190px; transform:none; margin:0; display:flex; align-items:center; justify-content:center; background:var(--hsc-paper); border:1px solid var(--hsc-grey-light); box-shadow:none; }
+#pit .context-empty { grid-column:1/-1; padding:18px; border:1px dashed var(--hsc-grey-light); font:16px/1.5 var(--hsc-sans); }
+#pit .context-empty h3 { margin:0; font-size:19px; }
+/* Babur's wardrobe is an intentional reference-specific colour exception. */
+#pit .babur-guide { display:flex; gap:16px; align-items:center; width:100%; max-width:680px; margin:0 auto 22px; color:var(--hsc-ink); }
+#pit .babur-picture { width:104px; flex:none; align-self:flex-end; }
+#pit .babur-portrait { display:block; width:100%; height:auto; }
+#pit .babur-dialogue { position:relative; padding:16px 20px; border:1px solid var(--hsc-ink); border-radius:8px; background:var(--hsc-paper); }
+#pit .babur-dialogue b { font:700 14px var(--hsc-sans); }
+#pit .babur-dialogue p { font:600 21px/1.35 var(--hsc-serif); margin:5px 0 0; }
+#pit .babur-guide.is-small { max-width:760px; gap:12px; margin:0 auto 14px; }
+#pit .babur-guide.is-small .babur-picture { width:65px; }
+#pit .babur-guide.is-small .babur-dialogue { padding:10px 14px; }
+#pit .babur-guide.is-small .babur-dialogue p { font:16px/1.35 var(--hsc-sans); }
+#pit .training-stage { --hud-h:70px; grid-template-rows:70px minmax(0,1fr); }
+#pit .training-header { display:flex; gap:20px; align-items:center; padding:10px 24px; border-bottom:1px solid var(--hsc-grey-light); }
+#pit .training-header > b { font:600 22px var(--hsc-serif); }
+#pit .training-header > span { margin-left:auto; font-size:14px; color:var(--hsc-grey); }
+#pit .training-help { width:44px; min-height:44px; background:none; border:1px solid var(--hsc-grey-light); border-radius:3px; color:var(--hsc-ink); }
+#pit .training-main { display:flex; justify-content:center; align-items:flex-start; gap:32px; padding:35px 24px; overflow:auto; background:var(--hsc-paper); }
+#pit .training-workspace { width:min(680px,100%); min-width:0; }
+#pit .training-task { padding:26px; border:1px solid var(--hsc-grey-light); background:var(--hsc-paper); border-radius:4px; }
+#pit .training-task h1 { font:600 30px/1.15 var(--hsc-serif); margin:0 0 18px; }
+#pit .training-task p { font:17px/1.5 var(--hsc-sans); }
+#pit .training-primary { min-height:48px; width:100%; padding:13px 20px; background:var(--hsc-ink); color:var(--hsc-paper); border:2px solid var(--hsc-ink); border-radius:3px; font:700 17px/1.3 var(--hsc-sans); margin-top:12px; }
+#pit .training-requirements { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+#pit .training-requirement { display:flex; flex-direction:column; gap:14px; padding:20px; min-height:112px; border:1px dashed var(--hsc-grey-light); background:transparent; color:var(--hsc-ink); border-radius:4px; font:16px var(--hsc-sans); text-align:left; }
+#pit .training-requirement.is-next { border:2px solid var(--hsc-ink); box-shadow:3px 3px 0 var(--hsc-ink); }
+#pit .training-requirement.is-complete { border-style:solid; }
+#pit .training-gpu { display:flex; align-items:center; gap:10px; font-size:21px; }
+#pit .training-fine, #pit .training-task .training-fine { font:14px/1.5 var(--hsc-sans); color:var(--hsc-grey); }
+#pit .training-business { width:220px; flex:none; border-left:1px solid var(--hsc-grey-light); padding-left:20px; margin-top:30px; }
+#pit .training-business h2 { font:600 20px var(--hsc-serif); }
+#pit .training-business p { line-height:1.5; }
+#pit .training-business b { display:block; margin-top:3px; }
+#pit .training-reset { border:1px solid var(--hsc-grey-light); padding:16px; }
+#pit .training-reset h2 { margin:0; font:600 23px var(--hsc-serif); }
+#pit .training-reset p { font-size:15px; }
+#pit .training-reset dl { font:16px var(--hsc-sans); margin:8px 0; }
+#pit .training-skip { min-height:44px; margin-top:14px; background:none; border:0; text-decoration:underline; color:var(--hsc-ink); }
+#pit .training-success { font-weight:700; }
+@media (max-width:900px) {
+ #pit .simplified-main { gap:22px; padding:20px; grid-template-columns:minmax(220px,.8fr) minmax(310px,1fr); }
+ #pit .simplified-hud { gap:18px; padding:8px 16px; }
+ #pit .simplified-hud .hud-name > b { max-width:140px; }
+ #pit .training-business { width:180px; }
+}
+@media (max-width:768px) {
+ #pit .simplified-stage { --hud-h:110px; grid-template-rows:110px minmax(0,1fr); }
+ #pit .simplified-hud { display:grid; height:110px; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto; grid-template-rows:44px 45px; gap:5px 12px; padding:6px 12px 10px; }
+ #pit .simplified-hud .hud-co { grid-column:1/3; grid-row:1; margin:0; gap:9px; }
+ #pit .simplified-hud .hud-name > b { max-width:230px; font-size:18px; }
+ #pit .simplified-hud .pit-help { margin:0; width:44px; height:44px; outline-offset:-3px; }
+ #pit .simplified-hud .hud-cash { grid-column:1; grid-row:2; }
+ #pit .simplified-hud .hud-val { grid-column:2; grid-row:2; }
+ #pit .simplified-hud .hud-round { grid-column:3; grid-row:1; align-self:center; }
+ #pit .simplified-hud .pit-clock { grid-column:3; grid-row:2; padding:0; background:none; border:0; min-width:0; }
+ #pit .simplified-hud .hud-cash strong { font-size:21px; }
+ #pit .simplified-hud .hud-val strong { font-size:16px; }
+ #pit .simplified-hud .hud-val small { font-size:10px; }
+ #pit .simplified-hud .pit-clock strong { font-size:17px; }
+ #pit .simplified-main { display:flex; flex-direction:column; padding:18px 16px; gap:24px; }
+ #pit .company-workspace, #pit .simplified-main .pit-board { width:100%; flex:none; overflow:visible; }
+ #pit .company-workspace { display:contents; }
+ #pit .compact-inventory { order:0; }
+ #pit .simplified-main .pit-board { order:1; }
+ #pit .sourcing-entry { order:2; padding:18px 0; }
+ #pit .context-funding { order:3; }
+ #pit .workspace-secondary { order:4; }
+ #pit .pit-hintbar { order:-1; }
+ #pit .compact-inventory .stack { min-height:67px; padding:8px; }
+ #pit .compact-inventory > p { font-size:12px; }
+ #pit .task-card .fc-name { min-height:44px; }
+ #pit .task-heading h2 { font-size:23px; }
+ #pit .task-instruction { font-size:13px; }
+ #pit .context-offers { gap:12px; }
+ #pit .context-offers .broker-station { min-height:150px; }
+ #pit .context-market { padding:14px; }
+ #pit .training-header { padding:8px 12px; gap:10px; }
+ #pit .training-header img { width:84px; height:auto; }
+ #pit .training-header > b { font-size:19px; }
+ #pit .training-header > span { display:none; }
+ #pit .training-help { margin-left:auto; }
+ #pit .training-main { display:flex; flex-direction:column; gap:14px; padding:24px 16px; }
+ #pit .training-business { margin:0; padding:14px 0 0; border:0; border-top:1px solid var(--hsc-grey-light); width:100%; }
+ #pit .training-business h2 { font-size:18px; margin:0; }
+ #pit .training-business p { display:inline-block; vertical-align:top; margin:10px 20px 0 0; font-size:14px; }
+ #pit .babur-picture { width:76px; }
+ #pit .babur-guide { gap:10px; margin-bottom:18px; }
+ #pit .babur-dialogue { padding:12px; }
+ #pit .babur-dialogue p { font-size:20px; }
+ #pit .training-task { padding:19px; }
+ #pit .training-task h1 { font-size:27px; }
+ #pit .training-task p { font-size:16px; }
+ #pit .training-requirements { gap:10px; }
+ #pit .training-requirement { padding:14px 10px; font-size:14px; min-height:108px; }
+ #pit .training-gpu { font-size:18px; gap:7px; }
+ #pit .utility-sheet { padding:16px; }
+}
+@media (max-width:350px) {
+ #pit .simplified-main { padding:16px 10px; }
+ #pit .simplified-hud { column-gap:8px; padding-inline:10px; }
+ #pit .simplified-hud .hud-name > b { max-width:180px; }
+ #pit .simplified-hud .hud-cash strong { font-size:19px; }
+ #pit .simplified-hud .hud-val strong { font-size:15px; }
+ #pit .task-card { padding-inline:12px; }
+ #pit .task-card .fc-foot { margin-inline:-12px; padding-inline:12px; }
+ #pit .context-offers { grid-template-columns:1fr; }
+ #pit .context-offers .broker-station { min-height:120px; }
+ #pit .training-main { padding:20px 12px; }
+ #pit .training-task { padding:16px 12px; }
+ #pit .babur-picture { width:64px; }
+ #pit .babur-dialogue p { font-size:18px; }
+ #pit .training-reset { padding:12px; }
+}
+@media (prefers-reduced-motion:reduce) { #pit .babur-guide, #pit .training-requirement { animation:none; transition:none; } }
+/* Training exposes one board objective and no campaign timer or efficiency stakes. */
+#pit .tt.is-training .tt-clock, #pit .tt.is-training .tt-bar-legend { display:none; }
+#pit .tt.is-training .tt-strip { grid-template-columns:minmax(0,1fr) auto; }
+#pit .tt.is-training .tt-meter .tt-bar-base, #pit .tt.is-training .tt-meter .tt-bar-skip { display:none; }
+#pit .training-board-note { font:14px/1.5 var(--hsc-sans); }
+#pit .training-result .tt-stamp { font-size:24px; }
+#pit .training-result p { font:16px/1.5 var(--hsc-sans); }
+#pit:has(.simplified-stage) { --hud-h:76px; }
+#pit:has(.training-stage) { --hud-h:70px; }
+@media (max-width:768px) { #pit:has(.simplified-stage) { --hud-h:110px; } }
+#pit .pit-focus.desk-tetris .pit-focus-body:has(> .babur-guide) { display:flex; flex-direction:column; overflow:hidden; }
+#pit .pit-focus.desk-tetris .pit-focus-body > .babur-guide { flex:none; }
+#pit .pit-focus.desk-tetris .pit-focus-body:has(> .babur-guide) > .tt { height:auto; flex:1 1 auto; min-height:0; }
+/* Cards now size to their content, rather than the old fixed-height board cells. */
+#pit .simplified-company .cards { flex:none; }
+#pit .simplified-company .cards .task-card { container-type:normal; flex:0 0 auto; overflow:visible; }
+#pit .simplified-main .pit-board { display:block; }
+#pit .simplified-company .cards .task-card { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 10px; padding:10px 14px; }
+#pit .task-card > :is(.fc-head,.fc-name,.fc-reward,.task-capital) { grid-column:1/-1; }
+#pit .task-card .fc-head { margin:0; padding:0; border:0; min-height:17px; }
+#pit .task-card .fc-name { margin:0; padding:0; min-height:44px; }
+#pit .task-card .fc-reward { margin:0 0 3px; white-space:normal; }
+#pit .task-card .task-capital { margin:0 0 4px; }
+#pit .task-card .fc-slots { grid-column:1; margin:3px 0 0; display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+#pit .task-card .slot-row { gap:6px; }
+#pit .task-card .fc-foot { grid-column:2; margin:0; padding:0; border:0; align-self:end; justify-content:flex-end; flex-wrap:wrap; }
+#pit .task-card .fc-foot .fc-fill { font-size:13px; }
+#pit .training-main.is-training-backdrop { visibility:hidden; }
+#pit .pit-bust .babur-portrait { height:100%; width:auto; }
+/* The practice inventory occupies the same left/above relationship as the company inventory. */
+#pit .training-business { border-left:0; border-right:1px solid var(--hsc-grey-light); padding:0 20px 0 0; }
+@media (max-width:768px) {
+ #pit .training-business { border:0; border-bottom:1px solid var(--hsc-grey-light); padding:0 0 10px; }
+ #pit .training-business .training-fine { display:block; margin-top:7px; font-size:12px; }
+ #pit .training-business p { margin-top:5px; }
+ #pit .training-main:has(.training-business) { padding-top:14px; }
+}
+/* The small training network has only five columns; each touch tile can stay 44px. */
+#pit .arc-cable.is-training .arc-stage { --cell:44px; }
+/* Intro instructions stay readable immediately, even on the smallest board viewport. */
+#pit .tt.is-training .tt-overlay.tt-intro { background:var(--hsc-paper); place-items:safe center; }
+#pit .tt.is-training .tt-intro .tt-card { animation:none; opacity:1; transform:none; background:var(--hsc-paper); max-height:100%; overflow:auto; gap:8px; padding:12px; }
+#pit .tt.is-training .tt-intro .tt-card p { margin:0; font:16px/1.4 var(--hsc-sans); }
+#pit .tt.is-training .tt-intro .tt-card .tt-eyebrow { font:700 11px/1.3 var(--hsc-ui); }
+#pit .tt.is-training .tt-intro .tt-card h3 { font:600 22px/1.2 var(--hsc-serif); }
+#pit .tt.is-training .tt-intro .tt-card .training-intro-fine { font-size:14px; }
+@media (max-width:768px) { #pit .training-main { justify-content:flex-start; } }
+#pit .training-requirements.has-one { grid-template-columns:minmax(0,1fr); }
+/* Extended training reveals cash with the first deal, and ownership with funding. */
+#pit .training-stage.has-training-cash { grid-template-rows:76px minmax(0,1fr); }
+#pit:has(.training-stage.has-training-cash) { --hud-h:76px; }
+#pit .training-header > b { margin-right:auto; }
+#pit .training-header :is(.hud-cash,.hud-val) { display:flex; flex-direction:column; gap:2px; }
+#pit .training-header :is(.hud-cash,.hud-val) > span { font:12px/1.2 var(--hsc-sans); color:var(--hsc-grey); }
+#pit .training-header .hud-cash strong { font:600 24px/1.1 var(--hsc-serif); color:var(--hsc-ink); }
+#pit .training-header .hud-val strong { font:700 18px/1.1 var(--hsc-sans); color:var(--hsc-ink); }
+#pit .training-header .hud-val small { font:12px/1.2 var(--hsc-sans); color:var(--hsc-grey); }
+#pit .training-stock { display:flex; flex-wrap:wrap; gap:10px; padding:12px 0; }
+#pit .training-stock > span { display:flex; align-items:center; gap:6px; font:16px/1.3 var(--hsc-sans); }
+#pit .training-fund-name { margin-bottom:12px; font-weight:700; }
+#pit .training-funding-offer { display:flex; align-items:center; justify-content:space-between; gap:20px; border-block:1px solid var(--hsc-grey-light); padding:20px 0; }
+#pit .training-funding-offer > div { display:flex; flex-direction:column; gap:6px; }
+#pit .training-funding-offer span { font:14px/1.3 var(--hsc-sans); }
+#pit .training-funding-offer strong { font:600 32px/1.2 var(--hsc-serif); }
+#pit .training-equity-exchange { display:flex; align-items:center; gap:12px; }
+#pit .training-equity-exchange b { font-size:23px; }
+#pit .training-block-visual { display:flex; flex-wrap:wrap; align-items:center; gap:16px; padding:24px 0; }
+#pit .training-block-visual .gchip { --chip:40px; }
+#pit .training-block-visual strong { font:600 32px var(--hsc-serif); }
+#pit .training-block-visual > span { flex-basis:100%; font:20px var(--hsc-sans); }
+#pit .training-large-summary { display:flex; flex-wrap:wrap; gap:12px; font:18px/1.5 var(--hsc-sans); }
+@media (max-width:768px) {
+ #pit .training-stage.has-training-cash { grid-template-rows:110px minmax(0,1fr); }
+ #pit:has(.training-stage.has-training-cash) { --hud-h:110px; }
+ #pit .training-header.has-cash { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px; grid-template-rows:44px 44px; height:110px; gap:4px 10px; padding:6px 12px 10px; }
+ #pit .training-header.has-cash img { grid-column:1; grid-row:1; }
+ #pit .training-header.has-cash > b { grid-column:2; grid-row:1; font-size:18px; white-space:nowrap; }
+ #pit .training-header.has-cash .training-help { grid-column:3; grid-row:1; margin:0; }
+ #pit .training-header.has-cash .hud-cash { grid-column:1; grid-row:2; }
+ #pit .training-header.has-cash .hud-val { grid-column:2/4; grid-row:2; margin-left:10px; }
+ #pit .training-header .hud-cash strong { font-size:21px; }
+ #pit .training-header .hud-val strong { font-size:16px; }
+ #pit .training-header .hud-val small { font-size:10px; }
+ #pit .training-business h2 { font-size:20px; }
+ #pit .training-stock { padding:8px 0 0; }
+ #pit .training-funding-offer { gap:10px; padding:16px 0; }
+ #pit .training-funding-offer strong { font-size:27px; }
+ #pit .training-funding-offer span { font-size:12px; }
+ #pit .training-task .training-fund-name { font-size:15px; }
+ #pit .training-equity-exchange { gap:8px; font-size:15px; }
+ #pit .training-equity-exchange b { font-size:20px; }
+}
+@media (max-width:350px) {
+ #pit .training-header.has-cash { column-gap:8px; padding-inline:10px; }
+ #pit .training-header .hud-cash strong { font-size:19px; }
+ #pit .training-funding-offer { flex-wrap:wrap; justify-content:flex-start; gap:10px; }
+ #pit .training-funding-offer > div { min-width:100px; }
+ #pit .training-for { display:none; }
+ #pit .training-funding-offer strong { font-size:25px; }
+}
+#pit .arc-kernel.is-training .arc-stage { --cell:clamp(28px,min(calc((100cqh - 26px) / 5),calc((100cqw - var(--side-w) - 42px) / 6)),44px); }
+@media (max-width:768px) { #pit .arc-kernel.is-training .arc-stage { --cell:clamp(28px,min(calc((100cqh - 24px) / 5),calc((100cqw - 26px) / 6)),44px); } }
+#pit .arc-kernel.is-training { grid-template-rows:auto minmax(0,1fr) auto; }
+@media (max-width:768px) {
+ #pit .training-business.is-settled { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; padding:0 0 8px; }
+ #pit .training-business.is-settled h2 { font:700 14px var(--hsc-sans); }
+ #pit .training-business.is-settled .training-stock { padding:0; }
+ #pit .training-business.is-settled .training-stock > span { font-size:14px; }
+ #pit .training-business.is-settled .training-fine { margin:0; font-size:12px; }
+}
+/* The final handoff action stays visible while its reset disclosure scrolls. */
+#pit .training-stage.is-ready { grid-template-rows:70px minmax(0,1fr) auto; }
+#pit .training-stage.is-ready.has-training-cash { grid-template-rows:76px minmax(0,1fr) auto; }
+#pit .training-ready-footer { display:flex; justify-content:center; padding:10px 20px; background:var(--hsc-paper); border-top:1px solid var(--hsc-ink); }
+#pit .training-ready-footer .training-primary { margin:0; max-width:680px; }
+@media (max-width:768px) {
+ #pit .training-stage.is-ready.has-training-cash { grid-template-rows:110px minmax(0,1fr) auto; }
+ #pit .training-ready-footer { padding:8px 12px; }
+}
+/* Dense late-game requirements retain full touch targets on the simplified cards. */
+#pit .task-card :is(.slot-bar-btn,.slot-bar-release) { min-width:44px; min-height:44px; }
+/* The supplied expressions share one uncropped decorative frame. Missing or slow
+   images reserve exactly the same space as a loaded portrait. */
+#pit .babur-portrait { display:block; position:relative; width:100%; height:auto; aspect-ratio:1312 / 1199; overflow:visible; }
+#pit .babur-art-image { display:block; width:100%; height:100%; object-fit:contain; }
+
+/* Training scale and handoff: content reflects real practice and campaign state. */
+#pit .training-cluster { padding:18px 0; }
+#pit .training-racks { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; max-width:500px; }
+#pit .training-rack { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; padding:7px; border:2px solid var(--hsc-ink); background:#ece8de; }
+#pit .training-rack i { display:block; height:12px; border:1px solid var(--hsc-ink); background:repeating-linear-gradient(90deg,#35332f 0 3px,#f2eee5 3px 6px); }
+#pit .training-cluster > div:last-child { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline; margin-top:12px; }
+#pit .training-cluster strong { font:600 30px var(--hsc-serif); }
+#pit .training-cluster span { font:18px var(--hsc-sans); }
+#pit .training-network { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin:10px 0; font:14px/1.2 var(--hsc-sans); }
+#pit .training-network :is(span,b) { border:1px solid var(--hsc-ink); padding:10px; }
+#pit .training-network i { font-size:24px; letter-spacing:2px; font-style:normal; }
+#pit .training-stage.training-handoff { display:grid; grid-template-rows:minmax(0,1fr); place-items:safe center; overflow:auto; padding:24px; }
+#pit .training-handoff-content { width:min(600px,100%); }
+#pit .training-handoff h1 { font:600 30px/1.2 var(--hsc-serif); }
+#pit .training-handoff dl { margin:20px 0; }
+#pit .training-handoff dl div { display:flex; justify-content:space-between; gap:15px; padding:12px 0; border-bottom:1px solid var(--hsc-grey-light); }
+#pit .training-handoff dd { margin:0; font-weight:700; }
+/* Keep the player’s signing action visible below Babur on narrow training screens. */
+#pit:has(.training-stage) .desk-contract .desk-center { min-height:0; align-content:start; }
+
+/* First-time practice can always be left with the same canonical handoff. */
+#pit .training-skip { min-height:44px; margin-top:16px; padding:8px 16px; font:15px/1.3 var(--hsc-sans); }
+
+#pit .campaign-snake-intro { width:min(680px,100%); margin:auto; padding:12px 0; }
+#pit .campaign-snake-intro > p { margin:20px 0 0; font:16px/1.5 var(--hsc-sans); }

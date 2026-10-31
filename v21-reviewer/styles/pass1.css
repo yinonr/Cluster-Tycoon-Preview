@@ -1,0 +1,82 @@
+/* Pass 1: the same paper, ink, sticky notes and colored GPU shapes throughout. */
+#pit .pass1-opening .s1 { background: var(--hsc-paper); color: var(--hsc-ink); }
+#pit .pass1-opening .s1-inner { padding: 28px 22px; border: 2px solid var(--hsc-ink); background: var(--hsc-note); box-shadow: var(--hsc-shadow); }
+#pit .pass1-opening .s1-lockup { display: none; }
+#pit .pass1-opening .s1-game { color: var(--hsc-ink); font-family: var(--hsc-ui); }
+#pit .pass1-opening .s1 label, #pit .pass1-opening .s1-named span { color: var(--hsc-ink); font-family: var(--hsc-ui); }
+#pit .pass1-opening .s1 input { border: 2px solid var(--hsc-ink); border-radius: 0; background: var(--hsc-paper); color: var(--hsc-ink); font-family: var(--hsc-sans); }
+#pit .pass1-opening .s1 input::placeholder { color: var(--hsc-grey); }
+#pit .pass1-opening .s1-error { color: #7a220a; }
+#pit .pass1-opening .s1-start { border-radius: 0; background: var(--hsc-ink); color: var(--hsc-paper); font-family: var(--hsc-ui); }
+#pit .pass1-opening .s1-skip { color: var(--hsc-ink); min-height: 44px; }
+#pit .pass1-opening .op-pill { color: var(--hsc-ink); background: var(--hsc-paper); border-color: var(--hsc-ink); border-radius: 0; }
+#pit .pass1-opening .brief-paper { background: var(--hsc-note); }
+#pit .pass1-opening .proc-status { pointer-events: none; }
+#pit .pass1-opening .slips { pointer-events: none; }
+#pit .pass1-opening .source { min-height: 44px; touch-action: manipulation; }
+#pit .pass1-opening .office-overlay { pointer-events: none; background: var(--hsc-paper); color: var(--hsc-ink); }
+#pit .pass1-opening .world { height: 75%; mask-image: none; -webkit-mask-image: none; }
+#pit .pass1-opening .world p { font-family: var(--hsc-serif); color: var(--hsc-ink); animation-duration: .8s; }
+#pit .pass1-opening.intro-leaving { opacity: 0; transition: opacity .6s ease; }
+#pit .broker-offer { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 8px 12px; width: 100%; color: inherit; text-align: left; }
+#pit .broker-offer .offer-piece { grid-row: 1 / span 2; --m: 12px; filter: none; margin: 0; }
+#pit .broker-quantity { font: 700 clamp(16px,1.6vw,22px)/1.15 var(--hsc-sans); white-space: nowrap; }
+#pit .broker-price { font: 400 clamp(20px,2vw,28px)/1.1 var(--hsc-term); white-space: nowrap; }
+#pit .broker-state { grid-column: 2; font: 400 12px/1.15 var(--hsc-sans); }
+#pit .broker-station { padding: 12px; border: 2px solid var(--hsc-ink); border-radius: 0; background: var(--hsc-paper); color: var(--hsc-ink); box-shadow: var(--hsc-shadow-sm); min-height: 64px; touch-action: manipulation; }
+#pit .broker-station.is-vacated { outline: 3px solid var(--hsc-note); }
+#pit .broker-station.is-cooling { opacity: .7; }
+#pit .broker-station.is-empty { border-style: dashed; box-shadow: none; }
+#pit .broker-station:focus-visible, #pit .broker-row:focus-visible { outline: 3px solid var(--hsc-ink); outline-offset: 3px; }
+#pit .broker-station:hover { background: var(--hsc-note); }
+#pit .broker-row { display: flex; padding: 12px; min-height: 64px; }
+#pit .broker-quote { width: min(100%,24rem); padding: 24px; }
+#pit .broker-quote .broker-offer { color: var(--hsc-ink); }
+#pit .broker-quote .broker-price { font-size: clamp(28px,4vw,44px); }
+#pit .game-maker { font: 400 15px/1.5 var(--hsc-sans); }
+#pit .game-maker a { color: inherit; text-decoration: underline; }
+@media (max-width:600px) {
+  #pit .broker-station { padding: 8px; }
+  #pit .broker-station .offer-piece { --m: 8px; }
+  #pit .broker-station .broker-offer { gap: 4px 6px; }
+  #pit .broker-station .broker-quantity { font-size: 16px; }
+  #pit .broker-station .broker-price { font-size: 20px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  #pit .pass1-opening .world p { animation: none; }
+}
+
+#pit .pass1-opening .office-window { background: var(--hsc-paper); }
+#pit .pass1-opening .office-window .view { filter: grayscale(1); image-rendering: pixelated; }
+#pit .plate.their.broker-quote { display: block; background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-radius: 0; box-shadow: var(--hsc-shadow-sm); cursor: pointer; }
+#pit .plate.their.broker-quote:focus-visible { outline: 3px solid var(--hsc-ink); outline-offset: 4px; }
+#pit .plate.their.broker-quote:disabled { cursor: default; border-style: dashed; opacity: 1; }
+/* Floor activities remain available independently of wealth, hardware and funding. */
+#pit .pit-workshops { display: flex; gap: 6px; flex: 0 0 250px; }
+#pit .workshop-button { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 4px; padding: 6px 8px; border: 2px solid var(--hsc-ink); background: var(--hsc-paper); color: var(--hsc-ink); min-height: 44px; text-align: left; touch-action: manipulation; }
+#pit .workshop-button b { font: 600 16px/1.15 var(--hsc-sans); }
+#pit .workshop-button small { font: 400 11px/1.2 var(--hsc-sans); }
+#pit .workshop-button:hover { background: var(--hsc-note); }
+#pit .workshop-button:focus-visible { outline: 3px solid var(--hsc-ink); outline-offset: 2px; }
+#pit .workshop-note { margin: 8px 0; font: 400 clamp(13px,1.5vw,16px)/1.35 var(--hsc-sans); }
+#pit .workshop-prize { font: 400 28px/1.2 var(--hsc-term); }
+@media (max-width:768px) {
+  #pit .pit-workshops { grid-column: 1 / -1; min-height: 44px; }
+  #pit .workshop-button { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 8px; }
+  #pit .workshop-button small { display: block; }
+}
+/* Three-type late recipes keep their BUILD rail visible on the desktop board. */
+#pit .cards .fc.has-three-gpus .slot { width: 24px; height: 24px; --chip: 16px; }
+#pit .cards .fc.has-three-gpus .slot-chips { gap: 3px; }
+#pit .cards .fc.has-three-gpus .slot-label { padding-top: 1px; }
+/* Long late-project titles/rewards must leave room for all three GPU rows and BUILD. */
+@container (max-height: 280px) {
+  #pit .cards .fc.has-three-gpus .fc-name,
+  #pit .cards .fc.has-three-gpus .fc-reward { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* Workshop meters show prize performance, with the full prize at the right edge. */
+#pit [data-workshop-meter] .tt-bar-legend span:first-child { display: inline; }
+#pit [data-workshop-meter] .tt-bar-legend span:last-child { left: auto; right: 0; transform: none; }
+
+#pit .ts-tradeoff { margin: 8px 0; font: 400 13px/1.4 var(--hsc-sans); color: var(--hsc-ink); }
