@@ -1,0 +1,186 @@
+/* V22.1 floor: the hall is filled by the market. Gallery (investors, buyout) on top only when present,
+   brokers fill the rest as an even grid; the architecture is a faint backdrop that never crosses a booth.
+   Lighter framing: one ink line and a small offset, no double boxes. */
+#pit { --hsc-shadow: 2px 2px 0 var(--hsc-ink); --hsc-shadow-sm: 1px 1px 0 var(--hsc-ink); }
+
+#pit .v22-floor .pit-balustrade, #pit .v22-floor .pit-marble, #pit .v22-floor .pit-column, #pit .v22-floor .pit-center, #pit .v22-floor .pit-frieze { display:none; }
+#pit .v22-floor .pit-hall { background:radial-gradient(var(--hsc-grey-light) .8px, transparent 1.2px) 0 0/9px 9px, var(--hsc-paper); }
+@media (min-width:769px) {
+  #pit .v22-floor .pit-hall { display:flex; flex-direction:column; gap:10px; padding:12px 14px 10px; container-type:size; }
+  #pit .v22-floor .pit-architecture { opacity:.35; }
+  #pit .v22-floor .pit-coffer { top:-140px; }
+  #pit .v22-floor .pit-sign { display:none; }
+
+  /* Gallery: compact horizontal investor cards, sized to their content. */
+  #pit .v22-floor .v22-investors { position:relative; inset:auto; transform:none; flex:none; align-self:center; display:flex; flex-wrap:wrap; justify-content:center; gap:10px; max-width:100%; z-index:4; }
+  #pit .v22-floor .v22-investors .pit-investor { position:relative; inset:auto; transform:none; width:auto; min-width:200px; max-width:300px; display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto 1fr auto; align-items:center; column-gap:10px; padding:6px 10px 6px 6px; font-size:12.5px; background:var(--hsc-paper); border:2px solid var(--hsc-ink); box-shadow:var(--hsc-shadow); text-align:left; }
+  #pit .v22-floor .v22-investors .ib-person { grid-row:1/4; width:52px; height:58px; position:relative; overflow:hidden; display:block; }
+  #pit .v22-floor .v22-investors .ib-person .fig { position:absolute; left:50%; bottom:-14px; width:56px; height:68px; transform:translateX(-50%); }
+  #pit .v22-floor .v22-investors .ib-tag { grid-column:2; justify-self:start; position:static; transform:none; margin:0 0 3px; padding:1px 8px; animation:none; }
+  #pit .v22-floor .v22-investors .ib-sheet { grid-column:2; position:static; padding:0; border:0; box-shadow:none; background:none; min-width:0; }
+  #pit .v22-floor .v22-investors .ib-name { grid-column:2; position:static; transform:none; padding:0; border:0; box-shadow:none; background:none; font-size:.9em; }
+  #pit .v22-floor .v22-investors .ib-check { font-size:1.55em; }
+  #pit .v22-floor .v22-investors .is-teaser { grid-template-columns:1fr; min-width:180px; border-style:dashed; box-shadow:none; }
+  #pit .v22-floor .v22-investors .is-teaser :is(.ib-tag,.ib-sheet) { grid-column:1; }
+
+  /* Brokers: the grid fills the remaining height. Each cell scales the booth to fit. */
+  #pit .v22-floor .v22-booths, #pit .v22-floor.has-term .v22-booths { position:relative; inset:auto; flex:1 1 0; min-height:0; container-type:size; display:grid; grid-template-columns:repeat(var(--cols),minmax(0,1fr)); grid-template-rows:repeat(var(--rows),minmax(0,1fr)); gap:10px 12px; align-content:stretch; align-items:center; justify-items:center; }
+  #pit .v22-floor .v22-booths .pit-station { --bw:min(calc((100cqw - (var(--cols) - 1) * 12px) / var(--cols)), calc((100cqh - (var(--rows) - 1) * 10px) / var(--rows) * .9), 230px); width:var(--bw); font-size:clamp(10px, calc(var(--bw) / 13.5), 16px); }
+  #pit .v22-floor .v22-booths .pit-station-person { flex:0 1 calc(var(--bw) * .3); min-height:0; overflow:visible; }
+  #pit .v22-floor .is-dense .v22-booths .pit-station { --bw:min(calc((100cqw - (var(--cols) - 1) * 12px) / var(--cols)), calc((100cqh - (var(--rows) - 1) * 10px) / var(--rows) * 1.6), 210px); }
+}
+
+/* Reach: full lots are crisp; a partial lot says how many you can take; only a lot you cannot buy one
+   GPU of is subdued. Sold and expired seats read as closed booths, not as weak offers. */
+#pit .v22-booths .is-short-cash .pit-crt { opacity:1; }
+#pit .v22-booths .reach-none { opacity:.5; }
+#pit .v22-booths .reach-none .pit-station-person { filter:grayscale(1); opacity:.6; }
+#pit .v22-booths .reach-none .pit-crt-total { text-decoration:line-through; }
+#pit .v22-booths .pit-part { font-style:normal; margin-right:.4em; padding:0 .3em; background:var(--hsc-paper); color:var(--hsc-ink); font:700 .8em/1.3 var(--hsc-sans); }
+#pit .v22-booths .pit-crt-total.is-short { text-decoration:line-through; }
+#pit .v22-booths .is-retired { opacity:1; }
+#pit .v22-booths .is-retired .pit-crt { background:var(--hsc-paper); color:var(--hsc-grey); border-style:dashed; box-shadow:none; }
+#pit .v22-booths .is-retired .pit-crt-away { font:700 1.1em/1.4 var(--hsc-sans); letter-spacing:.12em; }
+#pit .v22-booths .is-retired .pit-station-person, #pit .v22-booths .is-retired .pit-station-plaque { opacity:.35; }
+#pit .v22-booths .is-retired.is-sold .pit-crt-away::before { content:'✓ '; }
+
+/* Targeting lights matches; it never dims the rest. */
+#pit .v22-booths:has(.is-match) .pit-station:not(.is-match):not(.is-empty):not(.reach-none) { opacity:1; }
+#pit .v22-booths .pit-need { white-space:nowrap; }
+#pit .v22-booths .pit-crt-head { flex-wrap:wrap; row-gap:2px; }
+
+/* A booth is the broker, the screen and the plaque: no extra outer box around them. */
+#pit .v22-floor .v22-booths .broker-station { padding:0; border:0; background:none; box-shadow:none; min-height:0; }
+#pit .v22-floor .v22-booths .is-relevant:not(.is-match) .pit-crt { box-shadow:0 0 0 2px var(--hsc-ink), 3px 3px 0 2px var(--hsc-ink); }
+/* A bid you can fill right now is the loudest ticket on the desk, never a pale one. */
+#pit .v22-floor .resale-ticket.is-match { opacity:1; border:2px solid var(--hsc-ink); outline:3px solid var(--gc); outline-offset:-1px; background:var(--hsc-paper); box-shadow:var(--hsc-shadow); }
+#pit .v22-floor .resale-ticket.is-match :is(.rt-who,.rt-want,.rt-own) { color:var(--hsc-ink); opacity:1; }
+
+/* V22.1 projects: each lane has its own ink-printed colour (not a GPU colour), ready tiles stand out,
+   missing capacity stays dashed. Flat fills, one line, no gradients. */
+#pit .proj { --lane:#ece8df; --lane-ink:var(--hsc-ink); border-width:2px; box-shadow:var(--hsc-shadow-sm); padding-top:0; }
+#pit .proj.lane-product { --lane:#f4b9a3; }
+#pit .proj.lane-research { --lane:#c9bdf0; }
+#pit .proj.lane-infra { --lane:#a9d6cf; }
+#pit .proj.lane-opportunity { --lane:#f3dd8a; }
+#pit .proj .proj-head { margin:0 -11px 2px; padding:5px 11px; background:var(--lane); color:var(--hsc-ink); border-bottom:2px solid var(--hsc-ink); }
+#pit .proj .proj-pin { border-color:var(--hsc-ink); background:var(--hsc-paper); }
+#pit .proj.is-ready { background:var(--hsc-paper); box-shadow:0 0 0 3px var(--hsc-note), var(--hsc-shadow); }
+#pit .proj.is-ready .proj-head::after { content:'READY'; margin-left:6px; padding:1px 5px; background:var(--hsc-ink); color:var(--hsc-note); letter-spacing:.1em; }
+#pit .proj.is-pinned { outline:3px solid var(--hsc-ink); outline-offset:1px; }
+#pit .proj-k { display:inline-block; min-width:44px; margin-right:6px; font:700 9.5px/1.4 var(--hsc-ui); letter-spacing:.1em; color:var(--hsc-grey); vertical-align:1px; }
+#pit .proj-capital { color:var(--hsc-ink); }
+#pit .proj-capital.is-short em { font-style:normal; color:#b3261e; font-weight:700; }
+#pit .proj .need-piece:not(.is-missing) .tt-mini i { box-shadow:none; }
+
+/* ---- V22.1 intro on the real floor ------------------------------------------------------------------ */
+#pit .v221-training .hud-round, #pit .v221-training .pit-clock, #pit .v221-training .hud-val { display:none; }
+#pit .v221-training .v22-main.v221-no-projects { grid-template-columns:minmax(0,1fr); }
+#pit .v221-lesson-line { flex-direction:row !important; align-items:flex-start; justify-content:space-between; gap:12px; padding:12px 14px 0; }
+#pit .v221-lesson-line .babur-guide, #pit .v221-lesson-line .evan-guide { max-width:640px; }
+#pit .v221-lesson-line .training-skip { flex:none; margin-left:auto; min-height:34px; padding:6px 12px; border:1px solid var(--hsc-ink); background:var(--hsc-paper); font:700 12px var(--hsc-ui); cursor:pointer; }
+#pit .v221-lesson-hall { justify-content:center; }
+@media (min-width:769px) {
+  #pit .v221-lesson-hall .v22-booths { flex:0 1 auto; height:min(62cqh,340px); grid-template-columns:repeat(var(--cols),minmax(0,240px)); justify-content:center; }
+}
+#pit .v221-lesson-go { display:flex; justify-content:center; padding:24px; }
+#pit .v221-training .training-primary { min-height:46px; padding:10px 20px; border:2px solid var(--hsc-ink); background:var(--hsc-ink); color:var(--hsc-paper); font:700 15px/1 var(--hsc-ui); letter-spacing:.04em; box-shadow:var(--hsc-shadow); cursor:pointer; }
+
+/* Evan: a name plate until his art is approved. Same note-card voice as Babur. */
+#pit .evan-guide { display:flex; align-items:flex-end; gap:10px; }
+#pit .evan-picture { flex:none; display:grid; place-items:center; width:64px; height:64px; border:2px solid var(--hsc-ink); background:var(--hsc-paper); box-shadow:var(--hsc-shadow-sm); }
+#pit .evan-plate { font:700 13px/1 var(--hsc-ui); letter-spacing:.14em; color:var(--hsc-ink); }
+#pit .evan-art { width:100%; height:100%; object-fit:contain; }
+#pit .evan-dialogue { position:relative; padding:9px 13px; border:2px solid var(--hsc-ink); background:#e6f1ee; box-shadow:var(--hsc-shadow-sm); }
+#pit .evan-dialogue b { display:block; font:700 12px/1.2 var(--hsc-ui); letter-spacing:.08em; text-transform:uppercase; }
+#pit .evan-dialogue b small { margin-left:4px; color:var(--hsc-grey); font-size:10px; }
+#pit .evan-dialogue p { margin:3px 0 0; font:600 16px/1.3 var(--hsc-serif); }
+#pit .evan-guide.is-small .evan-picture { width:48px; height:48px; }
+#pit .evan-guide.is-small .evan-dialogue p { font-size:14px; }
+#pit .v221-double-down { margin:12px auto 0; max-width:560px; }
+#pit .v221-dd { min-height:44px; padding:8px 16px; border:2px dashed var(--hsc-ink); background:#e6f1ee; color:var(--hsc-ink); font:700 14px/1 var(--hsc-ui); letter-spacing:.06em; cursor:pointer; }
+
+/* The lesson's project glows in the real panel. */
+#pit .proj.is-lesson { box-shadow:0 0 0 4px var(--hsc-note), var(--hsc-shadow); }
+@media (prefers-reduced-motion:no-preference) { #pit .proj.is-lesson .proj-go { animation:v22-nudge 1.4s ease-in-out infinite; } }
+
+/* Real HUD changes flash once: GPUs in, cash out. */
+@keyframes v221-bump { 0% { background:var(--hsc-note); transform:scale(1.08); } 100% { background:transparent; transform:none; } }
+#pit .hud-gpu.is-bump, #pit .hud-cash.is-bump { animation:v221-bump 1.4s ease-out 1; }
+@media (prefers-reduced-motion:reduce) { #pit .hud-gpu.is-bump, #pit .hud-cash.is-bump { animation:none; outline:3px solid var(--hsc-note); } }
+
+/* Farewell: Babur and the company you are about to run, one compact card, one button. */
+#pit .v221-ready { display:grid !important; grid-template-rows:minmax(0,1fr) !important; place-items:center; height:100%; min-height:100dvh; overflow:auto; padding:24px 16px; background:radial-gradient(var(--hsc-grey-light) .8px, transparent 1.2px) 0 0/9px 9px, var(--hsc-paper); }
+#pit .v221-farewell { display:grid; gap:16px; justify-items:center; width:min(560px,100%); }
+#pit .v221-company { display:grid; gap:12px; justify-items:center; width:100%; padding:16px 18px; border:2px solid var(--hsc-ink); background:var(--hsc-paper); box-shadow:var(--hsc-shadow); }
+#pit .v221-company-name { font:600 24px/1.15 var(--hsc-serif); text-align:center; overflow-wrap:anywhere; }
+#pit .v221-company dl { display:grid; grid-template-columns:repeat(4,auto); gap:6px 22px; margin:0; }
+#pit .v221-company dl div { display:grid; gap:2px; text-align:center; }
+#pit .v221-company dt { font:700 10px/1.2 var(--hsc-ui); letter-spacing:.1em; text-transform:uppercase; color:var(--hsc-grey); }
+#pit .v221-company dd { margin:0; font:400 20px/1.1 var(--hsc-term); }
+@media (max-width:480px) { #pit .v221-company dl { grid-template-columns:repeat(2,auto); } }
+@media (max-width:768px) {
+  #pit .v221-lesson-line { flex-direction:column !important; }
+  #pit .v221-lesson-hall .v22-booths { grid-template-columns:repeat(min(var(--cols),2),minmax(0,1fr)) !important; }
+}
+#pit .v221-net-diagram { display:block; width:min(320px,100%); margin:8px auto; color:var(--hsc-ink); }
+@media (max-width:768px) { #pit .v221-training .v22-floor .pit-board, #pit .v221-training .pit-board { order:2; } #pit .v221-training .v22-main { display:flex; flex-direction:column; } }
+
+/* V22.1 Node Tetris: at the bell the finished rack powers up from the bottom, one row at a time. Full
+   rows surge and light their LED; a row with a gap flickers and stays dark. The result card follows. */
+#pit .tt.is-done .tt-row.is-rack { position:relative; }
+@media (prefers-reduced-motion:no-preference) {
+  #pit .tt.is-done .tt-row.is-powered { animation:v221-surge .55s calc(var(--i) * 170ms) ease-out both; }
+  #pit .tt.is-done .tt-row.is-powered::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg,transparent,rgba(255,255,255,.75) 50%,transparent); animation:v221-sweep .5s calc(var(--i) * 170ms) ease-out both; }
+  #pit .tt.is-done .tt-row.is-rack:not(.is-powered) { animation:v221-fail .7s calc(var(--i) * 170ms) steps(1,end) both; }
+  #pit .tt.is-done .tt-finish { animation:v221-result .35s calc(var(--rows) * 150ms + 150ms) ease-out both; }
+}
+@keyframes v221-surge { 0% { filter:brightness(.45); } 45% { filter:brightness(1.9); box-shadow:0 0 0 2px var(--hsc-note), 0 0 18px var(--hsc-note); } 100% { filter:none; } }
+@keyframes v221-sweep { 0% { transform:translateX(-100%); opacity:1; } 100% { transform:translateX(100%); opacity:0; } }
+@keyframes v221-fail { 0% { opacity:1; } 15% { opacity:.35; } 30% { opacity:1; } 45% { opacity:.35; } 60%,100% { opacity:.7; } }
+@keyframes v221-result { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* V22.1 Network Mania: the persistent network. Earlier sections are intact and online, a little grey; the
+   expansion is full ink and outlined; spine uplinks join them. The viewport opens on the expansion. */
+#pit .net-wrap { position:relative; display:grid; gap:6px; min-width:0; }
+#pit .net-head { margin:0; font:12px/1.3 var(--hsc-ui); letter-spacing:.06em; color:var(--hsc-grey); }
+#pit .net-head b { color:var(--hsc-ink); margin-right:6px; }
+#pit .net-tools { position:relative; z-index:3; display:flex; gap:4px; justify-self:end; }
+#pit .net-tool { min-width:32px; height:30px; padding:0 8px; border:2px solid var(--hsc-ink); background:var(--hsc-paper); font:700 14px/1 var(--hsc-ui); cursor:pointer; }
+#pit .net-home { font-size:12px; letter-spacing:.04em; }
+#pit .net-viewport { overflow:auto; max-width:100%; max-height:min(68vh,620px); overscroll-behavior:contain; border:1px solid var(--hsc-grey-light); background:radial-gradient(var(--hsc-grey-light) .8px, transparent 1.2px) 0 0/9px 9px, var(--hsc-paper); }
+#pit .net-map { zoom:var(--net-zoom,1); display:flex; align-items:center; gap:0; width:max-content; padding:18px; }
+#pit .net-section { margin:0; display:grid; gap:4px; opacity:.8; filter:grayscale(.35); }
+#pit .net-section figcaption { font:700 10px/1.2 var(--hsc-ui); letter-spacing:.08em; color:var(--hsc-grey); }
+#pit .net-board { display:grid; grid-template-columns:repeat(var(--cols),var(--net-cell,46px)); grid-auto-rows:var(--net-cell,46px); border:2px solid var(--hsc-grey); background:var(--hsc-paper); }
+#pit .net-board .ch-cell { width:auto; height:auto; padding:0; border:0; pointer-events:none; }
+#pit .net-board .ch-cell svg { width:100%; height:100%; display:block; }
+#pit .net-uplink { flex:none; width:44px; height:0; border-top:4px dashed var(--hsc-grey); }
+#pit .net-uplink.is-new { border-top-color:var(--hsc-ink); }
+#pit .net-expansion { position:relative; padding:6px; outline:4px solid var(--hsc-note); outline-offset:2px; background:var(--hsc-paper); }
+#pit .net-tag { position:absolute; top:-14px; left:8px; z-index:2; padding:1px 6px; background:var(--hsc-ink); color:var(--hsc-note); font:700 10px/1.4 var(--hsc-ui); letter-spacing:.12em; }
+/* Payoff: on a finished expansion of a big network, the camera pulls back once to show the whole thing. */
+@media (prefers-reduced-motion:no-preference) {
+  #pit .arc-cable.is-done .net-wrap.is-big .net-map { animation:v221-pullback 2.2s ease-in-out 1; transform-origin:right center; }
+}
+@keyframes v221-pullback { 0%,100% { transform:none; } 35%,70% { transform:scale(.55); } }
+@media (max-width:768px) { #pit .net-viewport { max-height:60vh; } #pit .net-board { --net-cell:34px; } }
+/* Evan's approved portrait: same crop logic as Babur's guide picture. */
+#pit .evan-picture { width:104px; height:95px; border:0; background:none; box-shadow:none; overflow:hidden; place-items:end center; }
+#pit .evan-guide.is-small .evan-picture { width:76px; height:70px; }
+#pit .evan-art { width:100%; height:100%; object-fit:contain; object-position:bottom center; }
+/* Phones: a minigame takes the whole screen. (V22's auto-height HUD left the integration sheet sized to its
+   header, so the board area collapsed to 0px.) Other desks stay bottom sheets under the HUD. */
+@media (max-width:768px) {
+  #pit .pit-focus-scrim:has(.tt) { top:0; height:100dvh; }
+  #pit .pit-focus-scrim:has(.tt) .pit-focus { height:100%; max-height:100dvh; }
+}
+#pit .net-tool { color:var(--hsc-ink) !important; background:var(--hsc-paper) !important; opacity:1; }
+#pit .net-head, #pit .net-head b { color:var(--hsc-paper); }
+@media (max-width:768px) { #pit .net-map { zoom:calc(var(--net-zoom,1) * .84); padding:10px; } }
+/* Term sheet: the Charm bar sits with the terms it changes, compact. */
+#pit .term-charm { margin:10px 0 6px; }
+#pit .term-charm .pit-charm { padding:8px; gap:8px; }
+#pit .term-charm .deal-stakes { grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; }
+#pit .term-charm .stake { padding:4px 6px; }
+#pit .term-sheet .ts-hero strong { font-size:clamp(28px,6vw,46px); }
