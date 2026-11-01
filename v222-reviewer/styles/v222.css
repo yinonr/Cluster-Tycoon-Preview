@@ -1,0 +1,102 @@
+/* V22.2 core UX: shared GPU pool cards, steady states, compact trading floor, scannable term sheets. */
+
+/* ---- Project cards: requirement rows against the shared pool, one primary action ---- */
+#pit .need-count em { font-style:normal; font-weight:700; }
+#pit .need-count .need-short { color:var(--hsc-ink); }
+#pit .need-count .need-ok { color:#1d7a3a; }
+#pit .proj-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+#pit .proj-find { min-height:36px; padding:6px 12px; border:2px solid var(--hsc-ink); background:var(--hsc-note); color:var(--hsc-ink); font:700 13px/1 var(--hsc-ui); letter-spacing:.04em; cursor:pointer; box-shadow:2px 2px 0 var(--hsc-ink); }
+#pit .proj-cash-short { font:700 12px/1.2 var(--hsc-ui); color:var(--hsc-ink); }
+/* A disabled Launch is a real gameplay state (pool or cash short): outlined, readable, not ghosted. */
+#pit .proj-go:disabled { opacity:1; background:var(--hsc-paper); color:var(--hsc-grey); border:2px dashed var(--hsc-grey); box-shadow:none; }
+#pit .proj-go.is-lit:not(:disabled) { background:var(--hsc-ink); color:var(--hsc-paper); }
+@media (pointer:coarse) { #pit .proj-go, #pit .proj-find { min-height:44px; } }
+
+/* ---- Steady, honest states ---- */
+/* Selected: the project the player chose (Find, or opening it) keeps a strong outline until they choose again. */
+#pit .proj.is-selected { outline:3px solid var(--hsc-ink); outline-offset:2px; box-shadow:5px 5px 0 var(--hsc-note), 5px 5px 0 2px var(--hsc-ink); }
+/* Available never looks disabled: other brokers stay full strength while a GPU focus is active. */
+#pit .v22-booths:has(.is-match) .pit-station:not(.is-match):not(.is-empty) { opacity:1; }
+/* Can't afford one GPU: still tappable (negotiate, watch the price), so it is labelled, not ghosted. */
+#pit .v22-booths .reach-none, #pit .v22-booths .reach-none .pit-station-person, #pit .v22-booths .is-short-cash .pit-crt { opacity:1; filter:none; }
+/* An empty GPU tile is a count of zero, not a disabled control. */
+#pit .hud-gpu:not(.has-free) { opacity:1; }
+#pit .hud-gpu:not(.has-free) .hud-gpu-count, #pit .hud-gpu:not(.has-free) b { color:var(--hsc-grey); }
+/* One attention cue at a time: no perpetual pulsing on ordinary project buttons or the ready badge. */
+@media (prefers-reduced-motion:no-preference) { #pit .proj-go.is-lit, #pit .proj-go.is-stock, #pit .proj-badge { animation:none; } }
+
+/* ---- Compact trading floor: brokers at fixed desks ---- */
+/* The hall is a fixed set of desks (4 across on desktop, 3 on phones); it never re-flows for traffic. */
+#pit .v22-floor .v22-booths.v222-floor { position:relative; inset:auto; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-auto-rows:minmax(0,1fr); gap:14px 12px; align-items:stretch; justify-items:stretch; padding:10px 6px 14px; container-type:normal; }
+#pit .v22-floor .v222-floor .v222-desk { --desk:var(--hsc-paper); position:relative; inset:auto; width:auto; min-width:0; min-height:64px; margin:0; padding:6px 6px 0; display:grid; grid-template-columns:36px minmax(0,1fr); grid-template-rows:1fr auto; gap:4px 6px; align-items:end; font:400 12px/1.15 var(--hsc-sans); color:var(--hsc-ink); text-align:left; background:none; border:0; box-shadow:none; scale:none; cursor:pointer; opacity:1; filter:none; }
+/* The desk counter: a wood-and-ink bar the broker stands behind; alternate desks sit half a step back. */
+#pit .v222-floor .v222-desk::after { content:''; position:absolute; left:0; right:0; bottom:0; height:22px; z-index:0; background:repeating-linear-gradient(90deg, #d9c9a8 0 10px, #cfbd98 10px 11px); border:2px solid var(--hsc-ink); box-shadow:2px 2px 0 var(--hsc-ink); pointer-events:none; }
+#pit .v222-floor .v222-desk:nth-child(even) { translate:0 7px; }
+#pit .v222-floor .desk-who { grid-row:1; grid-column:1; position:relative; z-index:1; width:36px; height:48px; overflow:hidden; align-self:end; margin-bottom:-2px; }
+#pit .v222-floor .desk-who .fig { position:absolute; left:50%; bottom:-10px; width:44px; height:58px; transform:translateX(-50%); }
+#pit .v222-floor .desk-who .babur-portrait, #pit .v222-floor .desk-who img { width:36px; height:48px; object-fit:cover; object-position:top; display:block; }
+#pit .v222-floor .desk-screen { grid-row:1; grid-column:2; position:relative; z-index:1; display:grid; gap:1px; min-width:0; padding:4px 6px 5px; background:var(--hsc-ink); color:var(--hsc-paper); border:2px solid var(--hsc-ink); box-shadow:2px 2px 0 var(--hsc-ink); margin-bottom:6px; }
+#pit .v222-floor .desk-gpu { display:flex; align-items:center; gap:4px; font:700 11px/1 var(--hsc-ui); white-space:nowrap; }
+#pit .v222-floor .desk-gpu .tt-mini { --m:4px; gap:0; flex:none; }
+#pit .v222-floor .desk-rate { font:400 16px/1 var(--hsc-term); white-space:nowrap; }
+#pit .v222-floor .desk-rate s { font-size:11px; margin-right:3px; opacity:.8; }
+#pit .v222-floor .desk-rate small { font-size:10px; }
+#pit .v222-floor .desk-total { font:400 10px/1.1 var(--hsc-ui); opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#pit .v222-floor .desk-tag { justify-self:start; font:700 9px/1.3 var(--hsc-ui); font-style:normal; letter-spacing:.06em; padding:0 4px; background:var(--hsc-paper); color:var(--hsc-ink); }
+#pit .v222-floor .desk-tag.is-need { background:var(--hsc-note); }
+#pit .v222-floor .desk-tag.is-cash { background:none; color:var(--hsc-paper); border:1px dashed var(--hsc-paper); }
+#pit .v222-floor .desk-screen .pit-fuse { height:3px; margin-top:2px; }
+#pit .v222-floor .desk-screen .pit-fuse b { display:none; }
+#pit .v222-floor .desk-plate { grid-row:2; grid-column:1/3; position:relative; z-index:1; height:20px; padding:3px 6px 0; font:700 10px/1.2 var(--hsc-ui); letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* GPU colour on the screen edge so H100 / H200 / B200 are told apart at a glance. */
+#pit .v222-floor .gpu-h100 .desk-screen { border-left:6px solid var(--gpu-h100, #4caf72); }
+#pit .v222-floor .gpu-h200 .desk-screen { border-left:6px solid var(--gpu-h200, #4a7fd6); }
+#pit .v222-floor .gpu-b200 .desk-screen { border-left:6px solid var(--gpu-b200, #d9894a); }
+/* Relevant (a project needs it) is the NEEDED tag; the active search (Find H100) adds a ring and a quest marker. */
+#pit .v222-floor .v222-desk.is-match .desk-screen { box-shadow:0 0 0 3px var(--hsc-note), 3px 3px 0 3px var(--hsc-ink); }
+#pit .v222-floor .desk-quest { position:absolute; z-index:3; top:-10px; right:2px; width:22px; height:22px; display:grid; place-items:center; font:900 15px/1 var(--hsc-ui); font-style:normal; color:var(--hsc-ink); background:var(--hsc-note); border:2px solid var(--hsc-ink); border-radius:50%; box-shadow:1px 1px 0 var(--hsc-ink); }
+@media (prefers-reduced-motion:no-preference) { #pit .v222-floor .desk-quest { animation:v222-quest .5s ease-out 1; } }
+@keyframes v222-quest { from { transform:translateY(-6px) scale(.6); } }
+#pit .v222-floor .v222-desk:is(:hover,:focus-visible) .desk-screen { background:#2a2826; }
+#pit .v222-floor .v222-desk.is-cooling .desk-screen { background:var(--hsc-paper); color:var(--hsc-ink); border-style:dashed; }
+/* Idle desks keep their place: a sold-out firm shows SOLD until the round ends; never-used desks are a faint counter. */
+#pit .v222-floor .v222-desk.is-idle { cursor:default; }
+#pit .v222-floor .v222-desk.is-idle .desk-screen { background:var(--hsc-paper); color:var(--hsc-grey); border:2px dashed var(--hsc-grey); box-shadow:none; place-items:center; min-height:34px; }
+#pit .v222-floor .v222-desk.is-idle .desk-who { filter:grayscale(1); opacity:.5; }
+#pit .v222-floor .v222-desk.is-idle .desk-plate { color:var(--hsc-grey); }
+#pit .v222-floor .v222-desk.is-vacant::after { border-style:dashed; border-color:var(--hsc-grey-light); background:none; box-shadow:none; }
+#pit .v222-floor .desk-away { font:700 11px/1 var(--hsc-ui); letter-spacing:.1em; }
+@media (max-width:768px) {
+  #pit .v22-floor .v22-booths.v222-floor { grid-template-columns:repeat(3,minmax(0,1fr)); grid-auto-rows:auto; gap:14px 6px; padding:8px 2px 12px; }
+  #pit .v222-floor .v222-desk:nth-child(even) { translate:none; }
+  #pit .v222-floor .v222-desk:nth-child(3n+2) { translate:0 6px; }
+  #pit .v22-floor .v222-floor .v222-desk { min-height:72px; grid-template-columns:24px minmax(0,1fr); gap:3px 3px; padding:4px 3px 0; }
+  #pit .v222-floor .desk-who { width:24px; height:34px; }
+  #pit .v222-floor .desk-who .fig { width:32px; height:42px; bottom:-8px; }
+  #pit .v222-floor .desk-who .babur-portrait, #pit .v222-floor .desk-who img { width:24px; height:34px; }
+  #pit .v222-floor .desk-screen { padding:3px 4px 4px; border-left-width:4px !important; }
+  #pit .v222-floor .desk-plate { font-size:9px; padding:4px 3px 0; }
+  #pit .v222-floor .desk-rate { font-size:14px; }
+  #pit .v222-floor .desk-gpu { font-size:10px; gap:2px; }
+  #pit .v222-floor .desk-gpu .tt-mini { display:none; }
+  #pit .v222-floor .v222-desk.is-vacant { min-height:0; }
+}
+@media (max-width:360px) { #pit .v222-floor .desk-rate { font-size:13px; } #pit .v222-floor .desk-gpu { font-size:10px; } }
+
+/* ---- Term sheets: delivery tiles and obligation chips instead of paragraphs ---- */
+#pit .ts-deliveries { list-style:none; margin:10px 0 6px; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+#pit .ts-drop { display:grid; grid-template-columns:auto auto; grid-template-rows:auto auto; align-items:center; column-gap:6px; padding:5px 8px; border:2px solid var(--hsc-ink); background:var(--hsc-paper); box-shadow:2px 2px 0 var(--hsc-ink); min-width:84px; }
+#pit .ts-drop .ts-round { grid-row:1/3; font:400 20px/1 var(--hsc-term); }
+#pit .ts-drop .ts-piece { --m:6px; }
+#pit .ts-drop .ts-qty { font:700 13px/1.1 var(--hsc-sans); white-space:nowrap; }
+#pit .ts-drop small { grid-column:2; font:700 11px/1.1 var(--hsc-sans); color:var(--hsc-ink); background:var(--hsc-note); padding:0 3px; }
+#pit .ts-drop.gpu-h100 { border-left:6px solid var(--gpu-h100, #4caf72); }
+#pit .ts-drop.gpu-h200 { border-left:6px solid var(--gpu-h200, #4a7fd6); }
+#pit .ts-drop.gpu-b200 { border-left:6px solid var(--gpu-b200, #d9894a); }
+#pit .ts-rules { list-style:none; margin:4px 0 10px; padding:0; display:flex; flex-wrap:wrap; gap:4px; }
+#pit .ts-rules li { font:600 12px/1.3 var(--hsc-sans); padding:2px 6px; border:1px solid var(--hsc-ink); background:var(--hsc-paper); }
+/* Deal Charm stakes on phones: two short rows instead of four squeezed columns that wrapped "5 %" per line. */
+@media (max-width:480px) {
+  #pit .term-charm .deal-stakes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 8px; }
+  #pit .term-charm .deal-stakes .stake { display:flex; justify-content:space-between; gap:6px; white-space:nowrap; }
+}
