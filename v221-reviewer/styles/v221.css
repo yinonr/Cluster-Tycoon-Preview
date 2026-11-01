@@ -123,6 +123,25 @@
   #pit .v221-lesson-line { flex-direction:column !important; }
   #pit .v221-lesson-hall .v22-booths { grid-template-columns:repeat(min(var(--cols),2),minmax(0,1fr)) !important; }
 }
+@media (max-width:360px) {
+  #pit .v221-training .pit-focus .pit-focus-heading { gap:6px; padding-inline:8px; }
+  #pit .v221-training .pit-focus .pit-focus-heading h2 { font-size:16px; flex:1 1 0; min-width:0; }
+  #pit .v221-training .pit-focus .pit-focus-close { flex:none; padding-inline:8px; }
+  #pit .v221-training .pit-focus .pit-focus-close .exit-label { white-space:nowrap; }
+}
+/* Phones: one guidance surface at a time. While a broker/contract sheet is open it carries its own Babur line
+   and Skip, so the top lesson banner (the same line, and a second Skip) steps aside; otherwise it is compact. */
+@media (max-width:480px) {
+  #pit:has(.pit-focus-scrim) .v221-lesson-line { display:none !important; }
+  #pit .v221-lesson-line { gap:4px; padding:8px 12px 0; }
+  #pit .v221-lesson-line .training-skip { min-height:32px; padding:4px 10px; }
+  #pit .v221-training .pit-focus .pit-focus-heading h2 { font-size:20px; line-height:1.1; }
+  /* Network step: the project card is the action, so it sits right under Evan's line; the broker it needs follows. */
+  #pit .v221-training.step-network .pit-room { display:contents; }
+  #pit .v221-training.step-network .v221-lesson-line { order:0; }
+  #pit .v221-training.step-network .projects-board { order:1; }
+  #pit .v221-training.step-network .v221-lesson-hall { order:2; }
+}
 #pit .v221-net-diagram { display:block; width:min(320px,100%); margin:8px auto; color:var(--hsc-ink); }
 @media (max-width:768px) { #pit .v221-training .v22-floor .pit-board, #pit .v221-training .pit-board { order:2; } #pit .v221-training .v22-main { display:flex; flex-direction:column; } }
 

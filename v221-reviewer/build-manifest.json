@@ -1,7 +1,7 @@
 {
   "version": "HSC V22.1 playtest reviewer",
   "baseline_commit": "da8ab2e5da86b1fbbe79af700998d9ccfa04cebd",
-  "source_commit": "663b60b0aa8900731d0806de48cdb2821e991d17",
+  "source_commit": "c6c091018b81bf3c3562f5f1c1d7d932e9d3e128",
   "source_path": "v21/",
   "babur_art": {
     "status": "ready",
@@ -31,7 +31,7 @@
     "hsc-tycoon-preview-v221-best-7",
     "hsc-tycoon-preview-v221-pin"
   ],
-  "source_date": "2026-10-31T17:14:14-07:00",
+  "source_date": "2026-10-31T18:18:21-07:00",
   "transforms": {
     "preview_storage": "Only the V21 save/sound key strings may change to the isolated save_namespace; no gameplay values change.",
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
@@ -183,7 +183,7 @@
     "styles/tokens.css": "4be447e292e16164969718b29ca90df3414c18732158e3f25c72eb0dc3922ac6",
     "styles/v21.css": "325e3da57dfc527bbcfb1c39b9106174a9d2701662fded0f9c02832ff3fbbc0f",
     "styles/v22.css": "9a92c1c99bfdd357c8c3c59acf9e6cc510d4cf3fc7bf8845df2a569edf179472",
-    "styles/v221.css": "a7e512c6956f26af22a11e63718f07b9a005de6377446d7baa5d504600bce796",
+    "styles/v221.css": "4a38189cbe6891bc4d68ea087718d539050c01559a9a578b38d6c121d1053082",
     "styles/world.css": "f2ba10196461bd06e4012a92a6ce05fded047a4cb34958a83ae78801047a1378"
   },
   "files": {
@@ -332,7 +332,7 @@
     "styles/tokens.css": "4be447e292e16164969718b29ca90df3414c18732158e3f25c72eb0dc3922ac6",
     "styles/v21.css": "325e3da57dfc527bbcfb1c39b9106174a9d2701662fded0f9c02832ff3fbbc0f",
     "styles/v22.css": "9a92c1c99bfdd357c8c3c59acf9e6cc510d4cf3fc7bf8845df2a569edf179472",
-    "styles/v221.css": "a7e512c6956f26af22a11e63718f07b9a005de6377446d7baa5d504600bce796",
+    "styles/v221.css": "4a38189cbe6891bc4d68ea087718d539050c01559a9a578b38d6c121d1053082",
     "styles/world.css": "f2ba10196461bd06e4012a92a6ce05fded047a4cb34958a83ae78801047a1378"
   }
 }
