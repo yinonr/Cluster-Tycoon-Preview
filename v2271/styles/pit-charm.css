@@ -1,0 +1,132 @@
+/* V10.3 Charm on the desk: a red-lacquer risk card, a takeover meter, a frozen verdict.
+   Bands are drawn from the attempt's parameters (pit-ledger meterBands), never decoration. */
+#pit .charm-first { width:min(760px,100%); margin:auto; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; align-items:center; }
+#pit .charm-first > .gap-need, #pit .manual-offer { grid-column:1/-1; }
+#pit .manual-offer summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--pit-gold); font:13px var(--money); text-decoration:underline; }
+#pit .manual-offer summary:focus-visible { outline:2px solid var(--pit-gold); }
+#pit .manual-offer .face-off { grid-template-columns:1fr 2fr; }
+#pit .manual-offer .leverage { grid-column:1/-1; }
+#pit .resale-bid { display:grid; gap:8px; min-width:0; }
+#pit .resale-quantity { margin:0; font:12px var(--money); }
+#pit .resale-manual { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); gap:12px; }
+#pit .resale-manual > * { grid-area:auto; min-width:0; }
+#pit [data-buyer-charm] { min-width:0; }
+#pit [data-buyer-charm] .charm-stop { grid-column:1/-1; width:100%; }
+#pit [data-buyer-charm] .charm-lever { display:flex; gap:8px; flex-wrap:wrap; }
+#pit [data-buyer-charm] .verdict-block { margin-bottom:8px; }
+@media(max-width:768px) {
+  #pit .resale-manual { grid-template-columns:minmax(0,1fr); }
+  #pit .resale-manual .gap-col { display:none; }
+  #pit .resale-bid .plate.their { grid-template-areas:"head head" "total total" "sub sub" "note note"; gap:3px; }
+  #pit .resale-bid .plate.their .plate-total { text-align:left; font-size:28px; }
+  #pit .resale-bid .plate.their .plate-note { text-align:left; }
+}
+#pit .pit-charm.tier-3 { border:2px solid #dba843; background:linear-gradient(#442419,#201014); }
+#pit .tier-3 .charm-stop { border-color:#f8cd5c; background:radial-gradient(ellipse at center,#453021,#160c10); }
+#pit .is-jackpot { border:2px solid #ffd46e; box-shadow:0 0 18px #f5b84a66; }
+#pit .is-jackpot .verdict-stamp { color:#ffe69c; }
+@media(max-width:768px) {
+  #pit .pit-focus-footer .mat-vault[data-action="buy"] { width:100%; max-width:100%; gap:6px; }
+  #pit .pit-focus-footer .mat-vault[data-action="buy"] :is(b,.vault-amt) { white-space:nowrap; font-size:12px; }
+  #pit .charm-first { grid-template-columns:minmax(0,1fr); gap:8px; }
+  #pit .charm-first .plate.their { padding:8px 12px; }
+  #pit .charm-first > .gap-need { margin:0; }
+  #pit .manual-offer .face-off { grid-template-columns:minmax(0,1fr); }
+}
+#pit .pit-charm{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"stakes stakes" "lever rel" "warn warn";align-items:center;gap:7px 10px;min-width:0;
+ padding:9px 10px 10px;border-radius:4px;background:linear-gradient(#2a1714,#1d100e);border:1px solid #7c3328;box-shadow:inset 0 0 0 1px #00000080,0 6px 12px #0006;color:#f6e6d0}
+#pit .pit-charm .charm-stakes{grid-area:stakes}
+#pit .pit-charm .charm-lever{grid-area:lever;justify-self:start;max-width:100%}
+#pit .pit-charm .charm-risk{grid-area:rel;margin:0;font:700 12px/1.25 var(--money);color:#ffbfae;text-align:right}
+#pit .pit-charm .charm-expiry{grid-column:1/-1;margin:0;font:700 12px/1.2 var(--money);color:#ffd27a}
+#pit .charm-stakes{display:grid;gap:2px;margin:0}
+#pit .charm-risk span+span:before{content:'·';margin:0 4px 0 0;opacity:.7}
+#pit .verdict-line span+span:before{content:'·';margin:0 6px 0 -8px;opacity:.7}
+#pit .stake{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:baseline;gap:8px;margin:0;padding:1px 6px;font:600 13px/1.3 var(--money)}
+#pit .stake>span{font-weight:800;font-size:11px;letter-spacing:.08em;white-space:nowrap}#pit .stake>span i{font-style:normal}
+#pit .stake b{font-weight:700;overflow-wrap:anywhere}
+#pit .stake em{grid-column:2;font-style:normal;font-size:11px;color:#ff9b88}
+#pit .stake-hit{color:#a9f0b3;border-left:3px solid #3fae63}
+#pit .stake-now{color:#f3e2bf;border-left:3px solid #c9a861}
+#pit .stake-miss{color:#ffb3a3;border-left:3px dashed #d0503f}
+#pit .charm-locked,#pit .charm-finished{margin:0;padding:8px 10px;border:1px dashed #c9a86177;border-radius:3px;font:13px/1.3 var(--money);color:#d8c69c}
+#pit .charm-locked b,#pit .charm-finished b{margin-right:8px;color:#f0d9a0;letter-spacing:.06em;text-transform:uppercase}
+
+/* Running: the whole desk is the STOP surface, the stake strip above it. */
+#pit .pit-charm.charm-playing{display:flex;flex-direction:column;align-items:stretch;gap:10px;height:100%;box-sizing:border-box;padding:8px;background:linear-gradient(#170d0b,#0f0a08);border-color:#b8975a}
+#pit .charm-playing .charm-stakes{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#pit .charm-playing .stake{grid-template-columns:auto minmax(0,1fr);border-left-width:4px;justify-self:stretch}
+#pit .charm-stop{flex:1 1 auto;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:12px;width:100%;min-height:200px;padding:18px 16px;
+ border:2px solid #c9a861;border-radius:6px;background:radial-gradient(ellipse at 50% 40%,#22412e,#0d1a12 70%);color:#fff3d2;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+#pit .charm-stop>strong{font:800 clamp(30px,4vw,44px)/1 var(--money);letter-spacing:.3em;text-align:center;text-shadow:0 0 14px #ffd77a77}
+#pit .charm-stop>small{font:600 13px/1.2 var(--money);letter-spacing:.08em;text-align:center;color:#d9c08a}
+#pit .charm-stop:focus-visible{outline:4px solid #fff1c2;outline-offset:-6px}
+
+/* The meter: dark felt between brass rails; red MISS flanks, amber NEAR, bright target, cores. */
+#pit .meter{position:relative;display:block;height:132px;border-block:6px solid #b8975a;border-radius:3px;background:#140c0a;box-shadow:inset 0 0 14px #000;overflow:visible}
+#pit .meter>span{position:absolute;top:0;bottom:0;display:block}
+#pit .meter .band-miss{background:#5c1d16}
+#pit .meter .band-near{background:#8a5a1a}
+#pit .meter .target{background:#9fd27a;box-shadow:0 0 12px #c6ff9a66}
+#pit .meter .band-strong{background:#cbeb86;top:14%;bottom:14%}
+#pit .meter .band-perfect{background:#fff6b8;top:26%;bottom:26%;box-shadow:0 0 10px #fff6b8aa}
+#pit .meter .marker{top:-14px;bottom:-14px;width:10px;margin-left:-5px;border-radius:3px;background:linear-gradient(90deg,#fff6d6,#e2c06b);box-shadow:0 0 10px #fff3c2,0 0 2px #000;z-index:2}
+#pit .meter.is-frozen .marker{box-shadow:0 0 0 2px #1a0f0b,0 0 14px #fff3c2}
+
+/* Verdict: the needle frozen where it landed, a stamp, the recorded delta. */
+#pit .verdict-block{position:relative;display:grid;gap:8px;min-width:0;padding:10px 12px;border-radius:4px;background:#120a08cc;border:1px solid #7c5a2c}
+#pit .desk-verdict:focus{outline:none}
+#pit .desk-verdict:focus-visible .verdict-block{outline:3px solid #fff1c2;outline-offset:2px}
+#pit .verdict-meter{position:relative;padding:14px 0 4px}
+#pit .verdict-meter .meter{height:clamp(96px,16vh,132px)}
+#pit .verdict-stamp{position:absolute;left:var(--at,50%);top:50%;padding:3px 12px;border:4px double currentColor;background:#140c0ad9;font:800 28px/1 var(--money);letter-spacing:.1em;white-space:nowrap;transform:translate(-50%,-50%) rotate(-7deg);z-index:3}
+#pit .verdict-block:not(:has(.meter)) .verdict-stamp{position:static;justify-self:center;transform:rotate(-5deg)}
+#pit .tone-hit .verdict-stamp{color:#b9ffc3}#pit .tone-near .verdict-stamp{color:#ffc56d}#pit .tone-miss .verdict-stamp{color:#ff8a75}
+#pit .verdict-line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 14px;margin:0;font:700 15px/1.2 var(--money)}
+#pit .verdict-line b.down{color:#a9f0b3;font-size:22px}#pit .verdict-line b.up{color:#ffb3a3;font-size:17px}
+#pit .verdict-line span{font-size:13px;color:#ffbfae}
+#pit .closed-ledger .verdict-meter .meter{height:64px;opacity:.75}
+
+/* Anti-mash: a Push lever under a stop press must not take a trailing click. Kept under reduced motion. */
+@keyframes charm-arm{0%,99%{pointer-events:none}100%{pointer-events:auto}}
+#pit .verdict-face .charm-lever{animation:charm-arm .45s linear both!important}
+
+@media (max-width:768px){
+ #pit .pit-charm{padding:7px 8px 8px;gap:5px 8px}
+ #pit .stake{grid-template-columns:84px minmax(0,1fr);gap:6px;padding:0 5px;font-size:12px}
+ #pit .stake>span{font-size:10px}
+ #pit .pit-charm .charm-risk{font-size:11px}
+ #pit .charm-playing .charm-stakes{grid-template-columns:minmax(0,1fr);gap:1px}
+ #pit .pit-charm:not(.charm-playing) .stake-now{display:none}
+ #pit .charm-stop{min-height:160px;gap:10px;padding:12px 10px}
+ #pit .meter{height:104px;border-block-width:5px}
+ #pit .verdict-meter{padding:10px 0 2px}
+ #pit .verdict-meter .meter{height:clamp(54px,10vh,92px)}
+ #pit .verdict-stamp{font-size:20px;border-width:3px;padding:2px 8px}
+ #pit .verdict-line{font-size:13px}#pit .verdict-line b.down{font-size:18px}#pit .verdict-line b.up{font-size:14px}
+ #pit .verdict-block{padding:6px 8px;gap:4px}
+ #pit .closed-ledger .verdict-meter .meter{height:44px}
+}
+@media (max-width:360px){
+ #pit .pit-charm:not(.charm-playing){grid-template-columns:minmax(0,1fr);grid-template-areas:"stakes" "lever" "rel" "warn"}
+ #pit .pit-charm .charm-risk{text-align:left;padding-left:2px}
+}
+@media (prefers-reduced-motion:reduce){#pit .pit-charm *:not(.charm-lever){animation:none!important;transition:none!important}}
+
+/* One lit control (V10.3 review): while the OFFER strip is lit, Bank recedes to brass outline. */
+#pit .pit-focus:has(.manual-offer[open] .mat-strip.is-lit:not(:disabled)) .pit-focus-footer .mat-vault[data-action="buy"]:not(:disabled){background:linear-gradient(#3a2a18,#2a1d10);color:#ecd297;border-color:#c9a861;text-shadow:none;box-shadow:inset 0 0 0 1px #00000080,0 2px 0 #1c110a}
+#pit .pit-focus:has(.manual-offer[open] .mat-strip.is-lit:not(:disabled)) .pit-focus-footer .mat-vault[data-action="buy"]:not(:disabled):hover{filter:none;background:linear-gradient(#4a3620,#33240f)}
+/* Short desktop windows (e.g. 1024×600): the verdict desk keeps the next Push above the rail. */
+@media (max-height:640px) and (min-width:769px){
+ #pit{--hero:clamp(26px,3vw,34px)}
+ #pit .pit-focus-body{padding-top:10px;padding-bottom:8px}
+ #pit .verdict-face{gap:8px 14px}
+ #pit .verdict-face .plate.their{padding:6px 12px 8px}
+ #pit .verdict-face .plate-news{min-height:0;font-size:11px}
+ #pit .pit-charm{padding:6px 8px 7px;gap:4px 8px}
+ #pit .pit-charm:not(.charm-playing) .stake-now{display:none}
+ #pit .stake{padding:0 5px;font-size:12px;line-height:1.25}
+ #pit .stake em{font-size:10.5px}
+ #pit .verdict-meter .meter{height:clamp(70px,14vh,96px)}
+ #pit .charm-lever{min-height:44px;padding-block:4px}
+}
