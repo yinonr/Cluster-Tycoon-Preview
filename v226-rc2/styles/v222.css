@@ -1,0 +1,168 @@
+/* V22.2 core UX: shared GPU pool cards, steady states, compact trading floor, scannable term sheets. */
+
+/* ---- Project cards: requirement rows against the shared pool, one primary action ---- */
+#pit .need-count em { font-style:normal; font-weight:700; }
+#pit .need-count .need-short { color:var(--hsc-ink); }
+#pit .need-count .need-ok { color:#1d7a3a; }
+#pit .proj-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+#pit .proj-find { min-height:36px; padding:6px 12px; border:2px solid var(--hsc-ink); background:var(--hsc-note); color:var(--hsc-ink); font:700 13px/1 var(--hsc-ui); letter-spacing:.04em; cursor:pointer; box-shadow:2px 2px 0 var(--hsc-ink); }
+#pit .proj-cash-short { font:700 12px/1.2 var(--hsc-ui); color:var(--hsc-ink); }
+/* A disabled Launch is a real gameplay state (pool or cash short): outlined, readable, not ghosted. */
+#pit .proj-go:disabled { opacity:1; background:var(--hsc-paper); color:var(--hsc-grey); border:2px dashed var(--hsc-grey); box-shadow:none; }
+#pit .proj-go.is-lit:not(:disabled) { background:var(--hsc-ink); color:var(--hsc-paper); }
+@media (pointer:coarse) { #pit .proj-go, #pit .proj-find { min-height:44px; } }
+
+/* ---- Steady, honest states ---- */
+/* Selected: the project the player chose (Find, or opening it) keeps a strong outline until they choose again. */
+#pit .proj.is-selected { outline:3px solid var(--hsc-ink); outline-offset:2px; box-shadow:5px 5px 0 var(--hsc-note), 5px 5px 0 2px var(--hsc-ink); }
+/* Available never looks disabled: other brokers stay full strength while a GPU focus is active. */
+#pit .v22-booths:has(.is-match) .pit-station:not(.is-match):not(.is-empty) { opacity:1; }
+/* Can't afford one GPU: still tappable (negotiate, watch the price), so it is labelled, not ghosted. */
+#pit .v22-booths .reach-none, #pit .v22-booths .reach-none .pit-station-person, #pit .v22-booths .is-short-cash .pit-crt { opacity:1; filter:none; }
+/* An empty GPU tile is a count of zero, not a disabled control. */
+#pit .hud-gpu:not(.has-free) { opacity:1; }
+#pit .hud-gpu:not(.has-free) .hud-gpu-count, #pit .hud-gpu:not(.has-free) b { color:var(--hsc-grey); }
+/* One attention cue at a time: no perpetual pulsing on ordinary project buttons or the ready badge. */
+@media (prefers-reduced-motion:no-preference) { #pit .proj-go.is-lit, #pit .proj-go.is-stock, #pit .proj-badge { animation:none; } }
+
+/* ---- Compact trading floor: brokers at fixed desks (V22.3: faces above the screen, lot drawn as chips) ---- */
+#pit .v22-floor .v22-booths.v222-floor { position:relative; inset:auto; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-auto-rows:auto; gap:12px 10px; align-items:start; justify-items:stretch; padding:10px 6px 14px; container-type:normal; }
+#pit .v22-floor .v222-floor .v222-desk { position:relative; inset:auto; width:auto; min-width:0; margin:0; padding:0; display:flex; flex-direction:column; gap:0; font:400 12px/1.15 var(--hsc-sans); color:var(--hsc-ink); text-align:left; background:none; border:0; box-shadow:none; scale:none; cursor:pointer; opacity:1; filter:none; }
+#pit .v222-floor .desk-head { display:flex; align-items:flex-end; gap:6px; min-width:0; height:38px; padding:0 2px; }
+#pit .v222-floor .desk-who { flex:none; position:relative; width:32px; height:38px; overflow:hidden; }
+#pit .v222-floor .desk-who .fig { position:absolute; left:50%; bottom:-8px; width:40px; height:52px; transform:translateX(-50%); }
+#pit .v222-floor .desk-who .babur-portrait, #pit .v222-floor .desk-who img { width:32px; height:38px; object-fit:cover; object-position:top; display:block; }
+#pit .v222-floor .desk-plate { flex:1 1 0; min-width:0; padding-bottom:3px; font:700 10px/1.2 var(--hsc-ui); letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#pit .v222-floor .desk-screen { position:relative; display:grid; gap:3px; min-width:0; padding:5px 6px 6px; background:var(--hsc-ink); color:var(--hsc-paper); border:2px solid var(--hsc-ink); border-bottom:6px solid #cfbd98; box-shadow:2px 2px 0 var(--hsc-ink); }
+#pit .v222-floor .desk-gpu { display:flex; align-items:center; flex-wrap:wrap; gap:3px 5px; font:700 12px/1 var(--hsc-sans); white-space:nowrap; }
+#pit .v222-floor .desk-gpu b { font:400 15px/1 var(--hsc-term); }
+#pit .v222-floor .desk-rate { display:flex; align-items:baseline; flex-wrap:wrap; gap:0 4px; font:400 15px/1.1 var(--hsc-term); white-space:nowrap; }
+#pit .v222-floor .desk-rate s { font-size:11px; opacity:.8; }
+#pit .v222-floor .desk-rate small { font-size:10px; }
+#pit .v222-floor .desk-total { margin-left:auto; font:400 11px/1.1 var(--hsc-sans); opacity:.9; }
+#pit .v222-floor .desk-tag { font:700 9px/1.3 var(--hsc-sans); font-style:normal; letter-spacing:.05em; padding:0 4px; background:var(--hsc-paper); color:var(--hsc-ink); }
+#pit .v222-floor .desk-tag.is-need { background:var(--hsc-note); }
+#pit .v222-floor .desk-tag.is-cash { background:none; color:var(--hsc-paper); border:1px dashed var(--hsc-paper); }
+#pit .v222-floor .desk-screen .pit-fuse { height:3px; margin-top:1px; }
+#pit .v222-floor .desk-screen .pit-fuse b { display:none; }
+/* The lot, drawn: one chip per GPU up to 16; racks of 8 (and blocks of 32 beyond ~100) above that. */
+#pit .v222-floor .desk-chips { --gc:#4caf72; display:flex; flex-wrap:wrap; align-content:flex-start; gap:2px; min-height:12px; }
+#pit .v222-floor .desk-chips.gpu-h100 { --gc:var(--gpu-h100,#4caf72); }
+#pit .v222-floor .desk-chips.gpu-h200 { --gc:var(--gpu-h200,#4a7fd6); }
+#pit .v222-floor .desk-chips.gpu-b200 { --gc:var(--gpu-b200,#d9894a); }
+#pit .v222-floor .desk-chips i { display:block; background:var(--gc); border:1px solid var(--hsc-paper); }
+#pit .v222-floor .desk-chips .qc { width:9px; height:6px; }
+#pit .v222-floor .desk-chips .qr { width:20px; height:12px; background:repeating-linear-gradient(90deg,var(--gc) 0 4px,transparent 4px 5px),var(--gc); background-blend-mode:normal; box-shadow:inset 0 -3px 0 #0006; }
+#pit .v222-floor .desk-chips .qb { width:28px; height:16px; background:var(--gc); box-shadow:inset 0 -4px 0 #0006, inset 0 4px 0 #fff4; outline:1px solid var(--hsc-paper); outline-offset:1px; }
+#pit .v222-floor .gpu-h100 .desk-screen { border-left:6px solid var(--gpu-h100, #4caf72); }
+#pit .v222-floor .gpu-h200 .desk-screen { border-left:6px solid var(--gpu-h200, #4a7fd6); }
+#pit .v222-floor .gpu-b200 .desk-screen { border-left:6px solid var(--gpu-b200, #d9894a); }
+#pit .v222-floor .v222-desk.is-match .desk-screen { box-shadow:0 0 0 3px var(--hsc-note), 3px 3px 0 3px var(--hsc-ink); }
+#pit .v222-floor .desk-quest { position:absolute; z-index:3; top:2px; right:2px; width:22px; height:22px; display:grid; place-items:center; font:900 15px/1 var(--hsc-ui); font-style:normal; color:var(--hsc-ink); background:var(--hsc-note); border:2px solid var(--hsc-ink); border-radius:50%; box-shadow:1px 1px 0 var(--hsc-ink); }
+@media (prefers-reduced-motion:no-preference) { #pit .v222-floor .desk-quest { animation:v222-quest .5s ease-out 1; } }
+@keyframes v222-quest { from { transform:translateY(-6px) scale(.6); } }
+#pit .v222-floor .v222-desk:is(:hover,:focus-visible) .desk-screen { background:#2a2826; }
+#pit .v222-floor .v222-desk.is-cooling .desk-screen { background:var(--hsc-paper); color:var(--hsc-ink); border-style:dashed; }
+#pit .v222-floor .v222-desk.is-idle { cursor:default; }
+#pit .v222-floor .v222-desk.is-idle .desk-screen { background:var(--hsc-paper); color:var(--hsc-grey); border:2px dashed var(--hsc-grey); box-shadow:none; place-items:center; min-height:38px; }
+#pit .v222-floor .v222-desk.is-idle .desk-who { filter:grayscale(1); opacity:.5; }
+#pit .v222-floor .v222-desk.is-idle .desk-plate { color:var(--hsc-grey); }
+#pit .v222-floor .v222-desk.is-vacant { min-height:0; border:2px dashed var(--hsc-grey-light); height:48px; }
+#pit .v222-floor .desk-away { font:700 11px/1 var(--hsc-ui); letter-spacing:.1em; }
+@media (max-width:768px) {
+  #pit .v22-floor .v22-booths.v222-floor { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px 6px; padding:8px 2px 12px; }
+  #pit .v222-floor .desk-plate { font-size:9px; }
+  #pit .v222-floor .desk-screen { padding:4px 4px 5px; border-left-width:4px !important; }
+  #pit .v222-floor .desk-gpu b, #pit .v222-floor .desk-rate { font-size:14px; }
+  #pit .v222-floor .desk-chips .qc { width:7px; height:5px; }
+  #pit .v222-floor .desk-chips .qr { width:15px; height:10px; }
+  #pit .v222-floor .desk-chips .qb { width:22px; height:14px; }
+}
+@media (max-width:360px) { #pit .v222-floor .desk-rate { font-size:12px; } #pit .v222-floor .desk-gpu { font-size:10px; } #pit .v222-floor .desk-gpu b { font-size:13px; } }
+
+/* ---- Term sheets: delivery tiles and obligation chips instead of paragraphs ---- */
+#pit .ts-deliveries { list-style:none; margin:10px 0 6px; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+#pit .ts-drop { display:grid; grid-template-columns:auto auto; grid-template-rows:auto auto; align-items:center; column-gap:6px; padding:5px 8px; border:2px solid var(--hsc-ink); background:var(--hsc-paper); box-shadow:2px 2px 0 var(--hsc-ink); min-width:84px; }
+#pit .ts-drop .ts-round { grid-row:1/3; font:400 20px/1 var(--hsc-term); }
+#pit .ts-drop .ts-piece { --m:6px; }
+#pit .ts-drop .ts-qty { font:700 13px/1.1 var(--hsc-sans); white-space:nowrap; }
+#pit .ts-drop small { grid-column:2; font:700 11px/1.1 var(--hsc-sans); color:var(--hsc-ink); background:var(--hsc-note); padding:0 3px; }
+#pit .ts-drop.gpu-h100 { border-left:6px solid var(--gpu-h100, #4caf72); }
+#pit .ts-drop.gpu-h200 { border-left:6px solid var(--gpu-h200, #4a7fd6); }
+#pit .ts-drop.gpu-b200 { border-left:6px solid var(--gpu-b200, #d9894a); }
+#pit .ts-rules { list-style:none; margin:4px 0 10px; padding:0; display:flex; flex-wrap:wrap; gap:4px; }
+#pit .ts-rules li { font:600 12px/1.3 var(--hsc-sans); padding:2px 6px; border:1px solid var(--hsc-ink); background:var(--hsc-paper); }
+/* Deal Charm stakes on phones: two short rows instead of four squeezed columns that wrapped "5 %" per line. */
+@media (max-width:480px) {
+  #pit .term-charm .deal-stakes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 8px; }
+  #pit .term-charm .deal-stakes .stake { display:flex; justify-content:space-between; gap:6px; white-space:nowrap; }
+}
+
+/* ---- V22.3: Charm pauses the round; the clock says so and the room goes quiet ---- */
+#pit .pit-clock.is-paused:not(.is-closed) { background:var(--hsc-note); box-shadow:inset 0 0 0 2px var(--hsc-ink); }
+#pit .pit-clock.is-paused:not(.is-closed) > span, #pit .pit-hud .pit-clock.is-paused:not(.is-closed) > span { color:var(--hsc-ink); font-weight:700; }
+#pit .pit-clock.is-paused:not(.is-closed) strong { color:var(--hsc-ink); }
+#pit .v22-floor.is-backdrop .v222-floor { filter:saturate(.6); }
+#pit .charm-odds { margin-top:6px; font:600 12px/1.3 var(--hsc-sans); }
+#pit .charm-odds summary { cursor:pointer; color:var(--hsc-grey); }
+#pit .charm-odds[open] .deal-stakes { margin-top:6px; }
+
+/* V22.3 lesson floor: three fixed H100 lots on desks (investor lesson → model project). */
+#pit .v221-lesson-hall .v22-booths.is-lesson-floor { flex:0 0 auto; height:auto; grid-template-columns:repeat(3,minmax(0,250px)); justify-content:center; align-items:start; gap:22px 18px; padding:28px 6px; }
+@media (max-width:768px) { #pit .v221-lesson-hall .v22-booths.is-lesson-floor { grid-template-columns:repeat(3,minmax(0,1fr)) !important; } }
+#pit .pit-clock.is-paused > span::before { content:none; }
+@media (max-width:768px) { #pit .pit-hud .pit-clock.is-paused:not(.is-closed) > span { display:block; font-size:10px; line-height:1.1; white-space:nowrap; } }
+
+/* ---- V22.4 Quick Sell panel and compact footer (Market + End round only) ---- */
+#pit .pit-desk-rest { justify-content:flex-end; }
+#pit .pit-desk-rest .pit-ledger { flex:1 1 auto; }
+#pit .qs-instant { display:grid; gap:12px; justify-items:center; padding:12px 8px; }
+#pit .qs-avail { margin:0; font:600 15px/1.2 var(--hsc-sans); }
+#pit .qs-qty { display:flex; align-items:center; gap:10px; }
+#pit .qs-qty .qs-step { min-width:48px; min-height:48px; font:700 20px/1 var(--hsc-ui); border:2px solid var(--hsc-ink); background:var(--hsc-paper); color:var(--hsc-ink); cursor:pointer; box-shadow:2px 2px 0 var(--hsc-ink); }
+#pit .qs-qty .qs-all { font-size:13px; padding:0 12px; }
+#pit .qs-n { min-width:64px; text-align:center; font:400 40px/1 var(--hsc-term); }
+#pit .qs-proceeds { margin:0; display:grid; gap:2px; text-align:center; }
+#pit .qs-proceeds span { font:700 11px/1 var(--hsc-ui); letter-spacing:.1em; color:var(--hsc-grey); }
+#pit .qs-proceeds strong { font:400 34px/1 var(--hsc-term); }
+
+/* ---- V22.4 broker screen: quantity and lot price lead; no hourly rate ---- */
+#pit .v222-floor .desk-gpu { gap:3px 6px; }
+#pit .v222-floor .desk-gpu .desk-qty { font:400 26px/1 var(--hsc-term); letter-spacing:.01em; }
+#pit .v222-floor .desk-gpu .pit-gpu { font:700 13px/1 var(--hsc-sans); }
+#pit .v222-floor .desk-chips { gap:3px; min-height:16px; padding:3px 0; }
+#pit .v222-floor .desk-chips i { border:1.5px solid #fff; }
+#pit .v222-floor .desk-chips .qc { width:13px; height:9px; }
+#pit .v222-floor .desk-chips .qr { width:30px; height:17px; background:repeating-linear-gradient(90deg,var(--gc) 0 6px,transparent 6px 8px),var(--gc); }
+#pit .v222-floor .desk-chips .qb { width:38px; height:22px; }
+#pit .v222-floor .desk-total { display:flex; align-items:baseline; flex-wrap:wrap; gap:0 6px; margin:0; padding-top:3px; border-top:1px solid #fff5; opacity:1; }
+#pit .v222-floor .desk-total small { font:700 10px/1 var(--hsc-ui); letter-spacing:.1em; opacity:.8; }
+#pit .v222-floor .desk-total strong { font:400 23px/1 var(--hsc-term); }
+#pit .v222-floor .desk-total s { font:400 12px/1 var(--hsc-sans); opacity:.75; }
+#pit .v222-floor .desk-total.is-short strong { opacity:.85; }
+@media (max-width:768px) {
+  #pit .v222-floor .desk-gpu .desk-qty { font-size:22px; }
+  #pit .v222-floor .desk-chips .qc { width:10px; height:7px; }
+  #pit .v222-floor .desk-chips .qr { width:23px; height:13px; }
+  #pit .v222-floor .desk-chips .qb { width:30px; height:18px; }
+  #pit .v222-floor .desk-total strong { font-size:19px; }
+}
+@media (max-width:360px) { #pit .v222-floor .desk-gpu .desk-qty { font-size:19px; } #pit .v222-floor .desk-total strong { font-size:16px; } #pit .v222-floor .desk-chips .qc { width:8px; height:6px; } }
+
+/* V22.4 fixed desk height: a desk going live, selling or cooling never changes its row, so nothing below it moves. */
+#pit .v22-floor .v222-floor { grid-auto-rows:minmax(158px,auto); }
+#pit .v22-floor .v222-floor .v222-desk { min-height:158px; justify-content:flex-start; }
+#pit .v22-floor .v222-floor .v222-desk.is-vacant { min-height:158px; height:auto; border:0; }
+#pit .v222-floor .v222-desk.is-vacant::before { content:''; display:block; margin-top:38px; height:62px; border:2px dashed var(--hsc-grey-light); }
+#pit .v221-lesson-hall .v22-booths.is-lesson-floor { grid-auto-rows:minmax(150px,auto); }
+/* V22.5.1: the Board Update fits its content; the next-round action sits right under the summary. */
+#pit .pit-focus-scrim:has(.pit-focus.desk-news) { align-items:center; justify-content:center; padding:12px; box-sizing:border-box; }
+#pit .pit-focus.desk-news { height:auto; max-height:100%; width:min(880px,100%); grid-template-rows:auto minmax(0,1fr) auto; align-self:center; }
+#pit .pit-focus.desk-news .pit-focus-body { height:auto; min-height:0; overflow-y:auto; }
+#pit .pit-focus.desk-news .desk-center { min-height:0; }
+/* V22.5.1: the broker pit has depth. A railing and a pit floor sit behind the broker desks (the investor row stays above). */
+#pit .v22-floor .v222-floor { position:relative; isolation:isolate; background:conic-gradient(#fff 25%, transparent 0 50%, #fff 0 75%, transparent 0) 0 0/48px 48px, var(--hsc-paper); box-shadow:inset 0 0 0 1px var(--hsc-grey-light); }
+#pit .v22-floor .v222-floor::before { content:''; position:absolute; z-index:-1; left:0; right:0; top:-14px; height:14px; border-block:3px solid var(--hsc-ink); background:repeating-linear-gradient(90deg, var(--hsc-paper) 0 9px, var(--hsc-ink) 9px 13px), var(--hsc-paper); pointer-events:none; }
+/* V22.6: Network Mania's result stamp used the 230 px board width and was clipped on phones; let it use the field width. */
+#pit .ch-frame > .tt-overlay.tt-finish { left:50%; right:auto; width:min(360px, calc(100vw - 24px)); transform:translateX(-50%); box-sizing:border-box; }
+#pit .ch-frame .tt-stamp { white-space:normal; max-width:100%; box-sizing:border-box; font-size:clamp(20px,6.4vw,30px); text-align:center; }
