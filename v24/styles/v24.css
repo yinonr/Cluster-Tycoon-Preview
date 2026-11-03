@@ -159,3 +159,10 @@
   #pit .v221-training.step-large .pit-board { order: 1; }
   #pit .v221-training.step-large .pit-hall { order: 2; }
 }
+/* Completion screens: a quiet hint that the whole screen continues (the yellow button still works). */
+#pit .pit-focus-footer .tap-hint { margin-right: auto; font: 700 13px/1.2 var(--hsc-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--hsc-ink); opacity: .75; white-space: nowrap; }
+@media (max-width: 360px) { #pit .pit-focus-footer .tap-hint { font-size: 11px; letter-spacing: 0; } }
+@media (max-width: 768px) {
+  #pit .pit-focus-footer:has(.tap-hint) { flex-wrap: wrap; row-gap: 6px; }
+  #pit .pit-focus-footer .tap-hint { flex: 1 0 100%; order: -1; margin: 0; text-align: center; }
+}

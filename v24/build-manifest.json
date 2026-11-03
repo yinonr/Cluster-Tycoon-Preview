@@ -1,7 +1,7 @@
 {
   "version": "HSC V24 usability, CTA hierarchy and Board Update badges",
   "baseline_commit": "da8ab2e5da86b1fbbe79af700998d9ccfa04cebd",
-  "source_commit": "2611b4f2d5ab0c001ba46f659a5095e4dc1e6646",
+  "source_commit": "d5318c508d871ef7e24524e72b72a75e7e798e4b",
   "source_path": "v21/",
   "babur_art": {
     "status": "ready",
@@ -31,7 +31,7 @@
     "hsc-tycoon-preview-v24-best-7",
     "hsc-tycoon-preview-v24-pin"
   ],
-  "source_date": "2026-11-02T17:47:51-08:00",
+  "source_date": "2026-11-02T18:00:04-08:00",
   "transforms": {
     "preview_storage": "Only the V21 save/sound key strings may change to the isolated save_namespace; no gameplay values change.",
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
@@ -95,7 +95,7 @@
     "src/media.js": "44d3f646e5d9e0c971c5b0a005d767ed9ed3d08e20da761442ee816858dff719",
     "src/screens/arcade-input.js": "9e5ffa8b5040bd491f70fa0a6e26664be6e7410adb61f2356b9d631b8fdec75a",
     "src/screens/office.js": "9d93946c4bfeb79dbb256380f45c159ec6ae807bfe5937093643471064e44bd9",
-    "src/screens/pit.js": "9bd68887e3f3b66b8805d901e3041c873f0173351f0b591a8214ddfdbbf9388e",
+    "src/screens/pit.js": "cfeeea24a1cec74550edc83177a1e32c8292001f129edbde62769877c5f3df12",
     "src/screens/tetris-input.js": "944af0e2c39aee9bc7f104d96b2cbdc087eb618dbe16e2c96cb72bfa85d87b57",
     "src/tycoon/arcade-buyers.js": "e7891ee851240249cf224c1f03cc6bc0f6ccc010fa72b2d876dd19f408602750",
     "src/tycoon/arcade-negotiation.js": "4db4be5d130f39e8369d4345a5bf3fb4eb0579cded1745cc335888a04bca2d5e",
@@ -191,7 +191,7 @@
     "styles/v22.css": "9a92c1c99bfdd357c8c3c59acf9e6cc510d4cf3fc7bf8845df2a569edf179472",
     "styles/v221.css": "4a38189cbe6891bc4d68ea087718d539050c01559a9a578b38d6c121d1053082",
     "styles/v222.css": "63a4cce7c4b63bd149a59b750d00e529993ff2e43b4a483e87a37a238afe7a1e",
-    "styles/v24.css": "f50c93782366b4c8bfe1ac89707701430024ef74f6b791b9956173bc56516152",
+    "styles/v24.css": "ee743eb6166c186d4cd391067a6e20701814852e17fa224e00896949817d5673",
     "styles/world.css": "f2ba10196461bd06e4012a92a6ce05fded047a4cb34958a83ae78801047a1378"
   },
   "files": {
@@ -252,7 +252,7 @@
     "src/media.js": "44d3f646e5d9e0c971c5b0a005d767ed9ed3d08e20da761442ee816858dff719",
     "src/screens/arcade-input.js": "9e5ffa8b5040bd491f70fa0a6e26664be6e7410adb61f2356b9d631b8fdec75a",
     "src/screens/office.js": "9d93946c4bfeb79dbb256380f45c159ec6ae807bfe5937093643471064e44bd9",
-    "src/screens/pit.js": "9bd68887e3f3b66b8805d901e3041c873f0173351f0b591a8214ddfdbbf9388e",
+    "src/screens/pit.js": "cfeeea24a1cec74550edc83177a1e32c8292001f129edbde62769877c5f3df12",
     "src/screens/tetris-input.js": "944af0e2c39aee9bc7f104d96b2cbdc087eb618dbe16e2c96cb72bfa85d87b57",
     "src/tycoon/arcade-buyers.js": "e7891ee851240249cf224c1f03cc6bc0f6ccc010fa72b2d876dd19f408602750",
     "src/tycoon/arcade-negotiation.js": "4db4be5d130f39e8369d4345a5bf3fb4eb0579cded1745cc335888a04bca2d5e",
@@ -348,7 +348,7 @@
     "styles/v22.css": "9a92c1c99bfdd357c8c3c59acf9e6cc510d4cf3fc7bf8845df2a569edf179472",
     "styles/v221.css": "4a38189cbe6891bc4d68ea087718d539050c01559a9a578b38d6c121d1053082",
     "styles/v222.css": "63a4cce7c4b63bd149a59b750d00e529993ff2e43b4a483e87a37a238afe7a1e",
-    "styles/v24.css": "f50c93782366b4c8bfe1ac89707701430024ef74f6b791b9956173bc56516152",
+    "styles/v24.css": "ee743eb6166c186d4cd391067a6e20701814852e17fa224e00896949817d5673",
     "styles/world.css": "f2ba10196461bd06e4012a92a6ce05fded047a4cb34958a83ae78801047a1378"
   }
 }

@@ -208,6 +208,10 @@ function render() {
   // clicks on actions are ignored for a moment, so a fast second tap on Continue never lands on the next yellow button.
   const screenSig = [!!view, view?.title, view?.desk, training.state?.step, ui.founderIntro, g.phase, g.q, ui.panel, ui.lessonProjectsOpen].join('|');
   if (screenSig !== lastScreenSig) { lastScreenSig = screenSig; screenChangedAt = performance.now(); }
+  // V24: non-decision completion screens (a project launched, a minigame's result) close with a tap anywhere.
+  ui.tapContinue = !training.state && view && !g.arcade.signing ? (g.phase === 'floor' && g.arcade.confirm?.built && /data-action="post-receipt"/.test(view.footer || '') ? 'built'
+    : g.phase === 'integration' && /data-(arc|tt)-continue/.test(view.footer || '') ? 'result' : null) : null;
+  if (ui.tapContinue) view.footer = `<span class="rail-fact tap-hint" aria-hidden="true">Tap anywhere to continue →</span>${view.footer}`;
   if (view && ui.pinId && !training.state) view.pinned = pinnedBar(g, ui.pinId);
   ui.focusOpen = !!view; if (view) ui.memo = null;
   const challenge = !training.state && new URLSearchParams(location.search).get('challenge') === '1' && urlSeed() !== null && !ui.challengeDismissed && ui.entry !== 'found';
@@ -392,6 +396,17 @@ function closeGuide() {
   if (ui.guideReturnFocus) { returnFocus = ui.guideReturnFocus; delete ui.guideReturnFocus; }
   render();
 }
+// Tap anywhere on a completion screen = its own continue button (after the screen-change guard). A launched project
+// returns to the floor with Projects open, ready for the next launch. Controls keep their own meaning.
+root.addEventListener('click', e => {
+  const kind = ui.tapContinue;
+  if (!kind || performance.now() - screenChangedAt < SCREEN_GUARD_MS) return;
+  if (e.target.closest?.('button,a,input,textarea,select,summary,details,label,[role="slider"]')) return;
+  const go = root.querySelector(kind === 'built' ? '.pit-focus [data-action="post-receipt"]' : '.pit-focus [data-arc-continue], .pit-focus [data-tt-continue]');
+  if (!go || go.disabled) return;
+  if (kind === 'built' && pins.collapsed) pins.toggle();
+  go.click();
+});
 root.addEventListener('submit', e => {
   if (e.target.id !== 'startup-form') return;
   e.preventDefault();
