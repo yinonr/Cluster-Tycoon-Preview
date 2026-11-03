@@ -153,6 +153,15 @@ function restoreScroll(kept) {
 // V24.1: a focused interaction (Charm, contract, minigame, any desk) owns the screen. The floor behind it is parked at the top
 // so the broker band lines up, the document cannot be scrolled, and the floor's scroll position returns when it closes.
 // (overflow lock, not position:fixed, so the sticky HUD stays where the desk's top edge expects it.)
+// V24.1: a save that cannot be loaded gets a readable screen. Nothing is deleted until the player confirms; the
+// unreadable data is copied aside first, so even then it is not destroyed.
+const unreadableKey = () => /^Cannot (read|safely)/.test(campaign.error) ? V7.key : /^Cannot read this training/.test(training.error) ? TRAINING_KEY : null;
+function recoveryView() {
+  const key = unreadableKey(), btn = (a, cls, label) => `<button type="button" data-action="${a}" class="${cls}">${label}</button>`;
+  if (!key) return `<section class="pit-error"><h1>Trading paused</h1><p role="alert">${esc(store.error)}</p><div class="rec-actions">${btn('recover-reload', 'rec-primary', 'RELOAD')}</div></section>`;
+  if (ui.recoverConfirm) return `<section class="pit-error"><h1>Start a new game?</h1><p role="alert">This replaces the saved run that could not be loaded. A copy of it stays in this browser's storage, but it will no longer open in the game.</p><div class="rec-actions">${btn('recover-confirm', 'rec-primary', 'YES, START NEW GAME')}${btn('recover-cancel', 'rec-secondary', 'Keep my saved run')}</div></section>`;
+  return `<section class="pit-error"><h1>We couldn't load your saved run</h1><p role="alert">${esc(store.error)} Trading is paused and nothing has been deleted.</p><p>Reloading the page may fix it. If it doesn't, you can start a new game.</p><div class="rec-actions">${btn('recover-ask', 'rec-primary', 'START NEW GAME')}${btn('recover-reload', 'rec-secondary', 'Reload and try again')}</div></section>`;
+}
 let lockedFrom = null;
 function syncScrollLock(on) {
   const de = document.documentElement, body = document.body;
@@ -196,7 +205,7 @@ function render() {
     }
     return;
   }
-  if (store.error) { root.innerHTML = `<section class="pit-error"><h1>Trading paused</h1><p role="alert">${esc(store.error)}</p><p>Your saved run is preserved. Reload to resume from the latest valid state.</p></section>`; return; }
+  if (store.error) { root.innerHTML = recoveryView(); return; }
   if (!g) {
     ui.entry = 'found'; ui.guidanceOpen = true;
     root.innerHTML = `<div class="pit-background" inert>${stage(createArcade(seed()), ui)}</div>${foundingView(ui, prefs, null)}`;
@@ -532,6 +541,14 @@ root.addEventListener('click', e => {
   if (a === 'training-skip' && training.state) { delete ui.founderIntro; completeTraining(true); return; }
   if (a === 'founder-intro-next' && training.state && ui.founderIntro) { ui.founderIntro = ui.founderIntro < FOUNDER_INTRO.length ? ui.founderIntro + 1 : 0; render(); return; }
   if (ui.guidanceOpen) return;
+  if (a === 'recover-reload') { location.reload(); return; }
+  if (a === 'recover-ask') { ui.recoverConfirm = true; render(); return; }
+  if (a === 'recover-cancel') { ui.recoverConfirm = false; render(); return; }
+  if (a === 'recover-confirm') {
+    const key = unreadableKey();
+    if (key) { try { const raw = storage.getItem(key); if (raw !== null) storage.setItem(`${key}-unreadable-${Date.now()}`, raw); storage.removeItem(key); } catch { /* storage blocked: reload shows the same screen */ } }
+    location.reload(); return;
+  }
   if (a === 'start') { fresh(seed()); return; }
   if (a === 'sound') { setSound(!sound); render(); return; }
   if (!g || store.error) return;

@@ -646,7 +646,8 @@ export function applyReward(g, b, fraction) {
   if (R.rack && b.online >= 1 && !c.starterRackDelivered) {
     c.starterRackDelivered = b.id;
     const qty=R.rack.qty;
-    g.arcade.inventory.push({id:`${b.id}-commission`,gpu:R.rack.gpu,qty,left:qty,unitCost:0,cost:0,firm:'Your racks',q:g.q,produced:true});
+    // Held on the company and delivered when the next round opens: the bell's inventory sweep would erase it now.
+    c.rackBonus={id:`${b.id}-commission`,gpu:R.rack.gpu,qty};
   }
   // V10.15: a fleet's lease income is contract revenue (valued at the contract multiple).
   if (R.lease) {

@@ -216,3 +216,16 @@
 /* ---- V24.1: a focused desk owns the screen (no background scroll; the desk scrolls inside itself when it is taller) ---- */
 html.is-desk-open, body.is-desk-open { overflow: hidden; overscroll-behavior: none; }
 #pit .pit-focus-scrim { overscroll-behavior: contain; touch-action: none; }
+
+/* V24.1: unreadable-save recovery screen (legible, one yellow primary action). */
+#pit .pit-error { max-width: 520px; padding: 32px 20px; margin: 0 auto; color: var(--hsc-ink, #1a1a1a); }
+#pit .pit-error h1 { font-size: 28px; line-height: 1.15; margin: 0 0 14px; color: var(--hsc-ink, #1a1a1a); }
+#pit .pit-error p { font-size: 17px; line-height: 1.45; margin: 0 0 12px; color: var(--hsc-ink, #1a1a1a); }
+#pit .rec-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 22px; }
+#pit .rec-actions button { min-height: 52px; padding: 12px 18px; border: 2px solid var(--hsc-ink, #1a1a1a); border-radius: 0; font: 700 17px/1.2 'News Cycle', sans-serif; letter-spacing: .02em; color: var(--hsc-ink, #1a1a1a); cursor: pointer; }
+#pit .rec-actions .rec-primary { background: var(--hsc-note); box-shadow: 3px 3px 0 var(--hsc-ink, #1a1a1a); }
+#pit .rec-actions .rec-secondary { background: var(--v24-secondary); }
+
+/* V24.1: broker desks taller than the equal-height rows from v221.css overlapped the row below (dense floors on short
+   desktop windows). Rows follow their desks and the grid scrolls inside its own box when they do not all fit. */
+#pit .v22-floor .v22-booths.v222-floor { grid-template-rows: none; overflow-y: auto; overscroll-behavior: contain; }

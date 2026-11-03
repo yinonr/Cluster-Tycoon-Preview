@@ -70,6 +70,8 @@ export function openQuarter(g) {
   a.event = marketEvent(g);
   // Owned racks deliver their GPUs at the open: free capacity, cost 0, same expiry as any.
   for (const [gpu, qty] of rackOutput(c)) a.inventory.push({ id: `q${g.q}-rack-${gpu}`, gpu, qty, left: qty, unitCost: 0, firm: 'Your racks', cost: 0, q: g.q, produced: true });
+  // The first rack's commissioning bonus (set at the bell it came online) arrives once, at the next open.
+  if (c.rackBonus) { const r = c.rackBonus; a.inventory.push({ id: r.id, gpu: r.gpu, qty: r.qty, left: r.qty, unitCost: 0, firm: 'Your racks', cost: 0, q: g.q, produced: true }); delete c.rackBonus; }
   if (hailMaryPending(g)) { openHailMary(g); return true; } // V22.5: a clean Hail Mary floor; no cards, world or scenarios
   dealCards(g);
   // Some rounds open with a rush: traffic you can serve at once, for cash, before second 26.

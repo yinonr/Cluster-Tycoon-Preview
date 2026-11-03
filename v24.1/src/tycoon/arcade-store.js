@@ -109,7 +109,7 @@ export function arcadeStore(storage) {
       state = JSON.parse(raw);
       if (!validSave(state,{legacyMinigames:true})) throw Error('Unsupported or damaged V7 save');
     }
-  } catch { state = null; error = 'Cannot read this V21 save. It has been preserved. Restore a valid save or clear only hsc-tycoon-preview-v24-1 in browser storage. Earlier ten-round saves are unchanged.'; }
+  } catch { state = null; error = 'Cannot read this saved run. It has been preserved on this device.'; }
   function commit(next) {
     if (error) return false;
     try {
@@ -124,9 +124,9 @@ export function arcadeStore(storage) {
     const next=structuredClone(state),oldFinal=state.phase==='over' && state.arcade.ending!=='acquired'?state.arcade.exit?.payout:null;
     const continuationChanged=normalizeExtension(next),snakeChanged=normalizeSnakeIntro(next),retiredChanged=normalizeLanternSave(next),accessChanged=normalizeReplayAccess(next),gameChanged=normalizeMinigameSave(next),progressChanged=normalizeOrdinaryProgress(next),memoChanged=retireBoardMemo(next);
     if (continuationChanged || snakeChanged || retiredChanged || accessChanged || gameChanged || progressChanged || memoChanged) {
-      if (!validSave(next)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';
+      if (!validSave(next)) error='Cannot safely resume this saved run. It has been preserved on this device.';
       else if(commit(next) && retiredChanged && Number.isSafeInteger(oldFinal) && oldFinal!==next.arcade.exit?.payout)retiredFinal=Object.freeze({seed:next.seed,oldPayout:oldFinal,newPayout:next.arcade.exit.payout});
-    } else if (!validSave(state)) error='Cannot safely resume this minigame save. It has been preserved; trading is paused.';
+    } else if (!validSave(state)) error='Cannot safely resume this saved run. It has been preserved on this device.';
   }
   return {
     get state() { return state; }, get error() { return error; }, get retiredFinal() {return retiredFinal;},

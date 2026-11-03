@@ -78,12 +78,13 @@ const fastClose = g => g.phase === 'floor' && g.company.builds.some(b => b.q ===
 export function hud(g,ui,open) {
   const s=companyStats(g),a=g.arcade,clock=Math.max(0,Math.ceil(V7.seconds-a.time)),cashC=cash(g),limit=campaignLimit(g);
   const runway=s.runway===Infinity?'Profitable':`${s.prepaid?'Cash runway':'Runway'} ${plural(s.runway,'rd')}`,red=s.runway!==Infinity&&s.runway<2;
+  const final=g.phase==='over'&&Number.isFinite(a.exit?.payout),stake=final?a.exit.payout:s.founderValue; // the settled result, not the pre-exit paper mark
   const busy=g.phase!=='floor'||a.active||a.confirm||a.signing;
   const inventory=GPUS.map(type=>{const free=freeOf(g,type),held=reservedOf(g,type);return button('quick-sell',`${mini({gpu:type,cells:BROKER_SHAPES[type]},'hud-piece')}<span class="hud-gpu-name">${type}</span><strong data-free-gpu="${type}">${free.toLocaleString('en-US')}</strong>${held?`<small>+${held} held</small>`:''}`,`class="hud-gpu gpu-${type.toLowerCase()} ${free?'has-free':''} ${ui.bump?.[type]?'is-bump':''}" data-filter="buyers" data-context="all" data-gpu="${type}" aria-label="${free} available ${type}${held?`, ${held} committed`:''}; sell to interested buyers" ${busy?'disabled':''}`);}).join('');
   return `<header class="pit-hud v22-hud ${cashC>=10000000?'has-large-cash':''} ${cashC>=100000000?'has-huge-cash':''} ${open?'is-paused':''}">
     <div class="hud-co">${button('help','?',`class="pit-help" aria-label="Help" title="How to play" ${activeLot(g)?.negotiation.running?'disabled':''}`)}<span class="hud-name"><b title="${esc(s.name)}">${esc(s.name)}</b><span class="hud-chips"><i class="hud-stage ${s.scale>=2?`is-scale-${s.scale}`:''}">${esc((s.scale>=2?s.scaleName:s.stage).toUpperCase())}</i><i class="hud-model-inline">${esc(s.model)}</i></span></span></div>
     <div class="hud-cash ${ui.bump?.cash?'is-bump':''}"><span>CASH</span><strong data-fx-cash>${money(cashC)}</strong></div>
-    <div class="hud-val" title="Estimated paper stake, not final payout"><span>YOUR STAKE</span><strong data-paper-stake="${s.founderValue}">${short(s.founderValue)}</strong><small>est. · <b>${pctOf(s.founderPct)}</b></small></div>
+    <div class="hud-val" title="${final?'Final result':'Estimated paper stake, not final payout'}"><span>YOUR STAKE</span><strong data-paper-stake="${stake}">${short(stake)}</strong><small>${final?'final':'est.'} · <b>${pctOf(s.founderPct)}</b></small></div>
     <div class="hud-flow ${red?'is-red':''}" aria-label="Revenue ${sum(s.revenue)} a round, burn ${sum(s.burn)} a round. ${runway}"><span>REVENUE · BURN</span><strong><i class="rev">+${short(s.revenue)}</i><i class="sep">·</i><i class="burn">−${short(s.burn)}</i></strong><small>${runway}</small></div>
     <nav class="hud-stock" aria-label="Available uncommitted GPUs">${inventory}</nav>
     <div class="hud-round" aria-label="Round ${g.q} of ${limit}"><span>ROUND</span><strong>${g.q}<small>/${limit}</small></strong></div>
