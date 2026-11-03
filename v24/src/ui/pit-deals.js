@@ -15,7 +15,6 @@ import { buyerLive, saleQuote } from '../tycoon/arcade-buyers.js';
 import { termLive, termQuote, rivalTerm } from '../tycoon/investors.js';
 import { deliveryText } from '../tycoon/strategic.js';
 import { HIRES } from '../tycoon/commerce.js';
-import { rivalQuotes } from '../tycoon/arcade-negotiation.js';
 import { marketEvent } from '../tycoon/founder-market.js';
 import { MODEL_NAMES, FOUNDER, executionOf, expansionCapital, openCards, cardState, heldFor, freeOf, companyStats, pendingIntegration, revenueNow, cashRevenueNow, burnOf, totalShares, focusOf, rackOutput } from '../tycoon/founder.js';
 import { charmView, charmVerdict, frozenMeter, verdictLabel } from './pit-charm.js';
@@ -161,12 +160,9 @@ function supplierView(g, ui) {
       footer: rail(saved > 0 ? `${money(saved)} saved from ask` : `Charm ${n.attempts.length}/3 used`, 'wide-only') + bank };
   }
   if (g.arcade.practice && l.gpu === 'H100') return { ...base, title: l.qty === 1 ? 'Your first H100' : 'GPU purchase', desk: 'haggle', exit, body: `<div class="charm-first">${theirPlate(g, l, news)}</div>`, footer: bank };
-  // V24: the old manual "Your offer" haggle slip is retired; Charm is the negotiation. A rival quote stays playable.
-  const rival = rivalQuotes(g)[0];
-  const rivalCard = rival ? `<div class="rival-slip mat-carbon"><div><span>${wide('Rival', 'quote')}</span><b>${esc(rival.firm)} · ${rate(rival.rate)}/h</b>${l.until <= now + 2 ? '<em>Using it now expires this quote.</em>' : ''}</div>${button('play-rival', `Slap it${'<span class="wide"> down</span>'} ${chip(2)}`, `data-id="${esc(rival.id)}" class="rival-play" aria-label="Tell ${esc(l.firm)} that ${esc(rival.firm)} is quoting ${rate(rival.rate)} per GPU-hour for ${rival.qty} ${esc(l.gpu)}, ${secs(rival.until, now)} seconds left. One play per desk; uses one offer and 2 seconds."`)}</div>`
-    : n.leverage ? `<p class="rival-played mat-carbon"><span>Played</span><b>${esc(n.leverage.firm)} ${rate(n.leverage.rate)}</b></p>` : '';
+  // V24: the old manual "Your offer" haggle slip and the rival-quote play are retired; Charm is the negotiation.
   return { ...base, title: l.favor ? 'Held for you' : 'Supply desk', desk: 'haggle', exit,
-    body: `<div class="charm-first">${theirPlate(g, l, news)}<div class="deal-charm">${charmView(g, l)}</div>${needLine}${rivalCard ? `<div class="leverage v24-rival">${rivalCard}</div>` : ''}</div>`,
+    body: `<div class="charm-first">${theirPlate(g, l, news)}<div class="deal-charm">${charmView(g, l)}</div>${needLine}</div>`,
     footer: rail(l.liquidation ? 'Liquidation book' : `${n.posture} supplier`, 'wide-only') + bank };
 }
 
@@ -266,7 +262,7 @@ function receiptView(g, d) {
     payoff = `<div class="payoff payoff-stock" data-fx-payoff>${tokens}<strong class="payoff-hero">${p.qty} ${esc(p.gpu)} in your stock</strong><p class="payoff-sub">Paid ${money(p.paid)} · ${p.savings > 0 ? `${money(p.savings)} under their opening ask` : 'at their opening ask'}</p></div>` +
       (g.arcade.practice ? '<p class="payoff-fine">GPU contract signed. Your practice inventory and cash have been updated.</p>' : launchable.length ? `<p class="payoff-fine pool-ready"><b>Ready to launch:</b> ${launchable.slice(0, 3).map(esc).join(' · ')}</p>` : '<p class="payoff-fine">Added to your GPU pool.</p>');
     fine = g.arcade.practice ? `<p class="payoff-fine">Practice cash remaining: ${money(cash(g))}</p>` : '<p class="payoff-fine">Unbuilt GPUs expire at the bell</p>';
-    footer = g.arcade.practice ? moveOn('post-receipt',d.gpu==='H100'?'H100 secured · find H200':'Both GPUs secured · plan the rack').replace('rail-commit','rail-commit rail-solo') : moveOn('post-receipt', 'Back to the floor').replace('rail-commit', 'rail-commit rail-solo');
+    footer = g.arcade.practice ? moveOn('post-receipt',d.gpu==='H100'?'H100 secured · find H200':'Build model').replace('rail-commit','rail-commit rail-solo') : moveOn('post-receipt', 'Back to the floor').replace('rail-commit', 'rail-commit rail-solo');
   } else if (term) {
     payoff = `<div class="payoff payoff-raise" data-fx-payoff><span class="payoff-label">${d.funding === 'compute' ? 'Compute secured · no cash raised' : 'Raised'}</span><strong class="payoff-hero money-hero win">${money(d.total)}</strong><p class="payoff-sub">for ${bpsText(d.qty)} · you now own <b>${pctOf(d.founderAfter)}</b></p>${ownBar(d.founderBefore, d.founderAfter)}</div>`;
     fine = d.tranches ? `${deliveryStrip(d.tranches)}${ruleChips(['Unused units expire at their delivery bell', 'Equity remains issued'])}` : '<p class="payoff-fine">Company cash, not founder income. Your stake is what pays at the exit.</p>';

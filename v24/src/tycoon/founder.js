@@ -687,6 +687,8 @@ export function applyReward(g, b, fraction) {
   // Exit catch-up values the buyer's hardware; an expired delivery cannot earn a new cash prize.
   if (R.cash && g.phase !== 'over' && b.online >= 1 && !b.paid) { b.paid = R.cash; g.cash = (Math.round(g.cash * 100) + R.cash) / 100; g.arcade.ledger.contracts += R.cash; }
   commerceReward(g, b);
+  // V24: the round whose bell first brought this project online (partly, after an imperfect integration, counts).
+  if (b.online > 0 && g.phase !== 'over') b.liveQ ??= g.q;
   if (b.online >= 1) { b.status = 'online'; b.onlineQ ??= g.q; if (b.event) g.world.flags[`delivered.${b.event}`] = true; }
 }
 

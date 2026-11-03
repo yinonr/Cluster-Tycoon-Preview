@@ -30,7 +30,6 @@ import { decideScenario, sourceBlock, continueAfterAcquisition } from '../tycoon
 import { heldFor, freeOf, openCards } from '../tycoon/founder.js';
 import { startRizz, resolveRizz, recoverRizz, markerAt, charmActor } from '../tycoon/desk-charm.js';
 import { buyerCharmView } from '../ui/buyer-charm.js';
-import { playRival } from '../tycoon/arcade-negotiation.js';
 import { short } from '../ui/pit-ledger.js';
 import { challengeUrl, shareCopy, scorecardDataUrl, scorecardFile, scorecardReady } from '../ui/scorecard.js';
 import { createAudio } from '../audio.js';
@@ -72,7 +71,12 @@ if (training.state && !training.state.replay && training.state.step === 'meet' &
 ui.nameDraft = 'My AI Startup';
 // HSC design pass: the scorecard draws with self-hosted fonts and the original lockup; redraw once they are ready.
 scorecardReady.then(() => { if (store.state?.phase === 'over' && !officeCleanup) render(); });
-let officeCleanup = null, introReturn = null, introInputUntil = 0;
+let officeCleanup = null, introReturn = null, introInputUntil = 0, lastScreenSig = '', screenChangedAt = 0;
+const SCREEN_GUARD_MS = 350;
+root.addEventListener('click', e => {
+  const b = e.target.closest?.('button[data-action]');
+  if (b && (e.detail > 0 || e.pointerType) && performance.now() - screenChangedAt < SCREEN_GUARD_MS) { e.preventDefault(); e.stopImmediatePropagation(); }
+}, true);
 for (const type of ['pointerdown', 'click', 'keydown', 'keyup']) root.addEventListener(type, e => {
   if (performance.now() < introInputUntil && !e.target.closest?.('[data-action="training-skip"]')) { e.preventDefault(); e.stopImmediatePropagation(); }
 }, true);
@@ -200,6 +204,10 @@ function render() {
       view.footer = (view.footer || '') + `<button type="button" data-action="training-double-down" class="mat-move v221-dd">${n.attempts.length >= 2 ? 'OVER-RIZZ' : 'DOUBLE DOWN'}</button>`;
     }
   }
+  // V24: a pointer tap cannot carry across a screen change. When the screen (not a floor tick) changes, pointer
+  // clicks on actions are ignored for a moment, so a fast second tap on Continue never lands on the next yellow button.
+  const screenSig = [!!view, view?.title, view?.desk, training.state?.step, ui.founderIntro, g.phase, g.q, ui.panel, ui.lessonProjectsOpen].join('|');
+  if (screenSig !== lastScreenSig) { lastScreenSig = screenSig; screenChangedAt = performance.now(); }
   if (view && ui.pinId && !training.state) view.pinned = pinnedBar(g, ui.pinId);
   ui.focusOpen = !!view; if (view) ui.memo = null;
   const challenge = !training.state && new URLSearchParams(location.search).get('challenge') === '1' && urlSeed() !== null && !ui.challengeDismissed && ui.entry !== 'found';
@@ -575,7 +583,6 @@ root.addEventListener('click', e => {
   }
   else if (a === 'cure-stage') { if (act(g => cureStage(g, d.card))) { ui.panel = 'floor'; render(); } }
   else if (a === 'haggle') { const value = parseRate(root.querySelector('[data-counter]')?.value); if (!deals.supplierCounterPreview(g, value).valid) return; act(g => { if (!haggle(g, value)) return false; ui.counter = formatRate(activeLot(g).negotiation.price); return true; }); }
-  else if (a === 'play-rival') act(g => { if (!playRival(g, d.id)) return false; ui.counter = formatRate(activeLot(g).negotiation.price); return true; });
   else if (a === 'explain-charm') { root.querySelector('[data-counter]')?.focus(); root.querySelector('[data-counter]')?.select(); }
   else if (a === 'start-rizz') act(g => startRizz(g, Number(root.querySelector('[data-sale-qty]')?.value)));
   else if (a === 'stop-rizz') { if (e.detail === 0) stopMeter(); } // keyboard activation only; pointers stop on press

@@ -42,6 +42,7 @@ export function counteroffer(g, offer) {
 const quoteRate = x => x.negotiation?.price ?? x.ask;
 const RIVAL_BEAT = Object.freeze({firm:0,patient:1,flexible:2});
 export function rivalQuotes(g) {
+  return []; // V24: the rival-quote play ("Slap it down") is retired; ordinary quotes are unchanged.
   const l=activeLot(g), n=l?.negotiation;
   if(g.phase!=='floor'||!n||n.closed||n.running||n.attempts.length||n.leverage||n.patience<=0||g.arcade.signing||l.status!=='open'||l.until<=g.arcade.time)return [];
   // A rival's quote stays live while you cool off with that desk; only its own window counts.

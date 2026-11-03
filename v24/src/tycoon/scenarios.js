@@ -184,6 +184,11 @@ const ORDER = ['buyout-return', 'crisis', 'buyout-forced', 'anchor', 'buyout', '
 
 export function scenarioPlan(g) {
   const s = S(g); s.quietQ = 0; s.pending = null;
+  // V24: Deal Room incidents and side offers (customer crisis, Checkpoint Takedown, anchor, capacity, talent,
+  // provider, later buyouts) no longer open. The Round 5 acquisition opens through openAcquisition, not here.
+  // Commitments already signed in an older save still settle through scenarioOpen and the bell.
+  return;
+  // eslint-disable-next-line no-unreachable
   if (!s.enabled || !SCENARIOS_ENABLED || g.arcade.practice) return;
   // V22: R4 carries the core shock; R5 is a building round that ends in the acquisition (openAcquisition,
   // after its bell settles); earned rounds 6–9 draw from the original Deal Room order (each handler keeps

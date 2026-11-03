@@ -20,7 +20,7 @@
 @media (hover: hover) {
   #pit .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice):hover, #pit .training-primary:hover, #pit .proj-go.is-lit:not(:disabled):hover,
   #pit .proj-go.is-stock:not(:disabled):hover, #pit .ch-send:not(:disabled):hover, #pit.is-lesson .charm-lever:not(:disabled):hover, #pit .mat-stamp.is-lit:hover {
-    background: var(--hsc-ink); color: var(--v24-primary); border-color: var(--hsc-ink);
+    background: #F2C744; color: var(--hsc-ink); border-color: var(--hsc-ink);
   }
 }
 #pit :is(.pit-focus-footer .rail-commit, .training-primary, .proj-go, .ch-send, .charm-lever, .mat-stamp):active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--hsc-ink); }
@@ -97,7 +97,7 @@
 #pit .badge-art { width: 48px; height: 48px; fill: var(--hsc-ink); display: block; }
 #pit .bu-badge-name { width: 100%; font: 700 11px/1.15 var(--hsc-sans); color: var(--hsc-ink); text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: no-preference) {
-  #pit .bu-badge-plate { animation: v24-stamp .26s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+  #pit .bu-badge-plate { animation: v24-stamp .2s cubic-bezier(.2, 1.4, .4, 1) backwards; animation-delay: calc(var(--i, 0) * 35ms); }
 }
 @keyframes v24-stamp { from { transform: scale(1.4) rotate(-10deg); opacity: 0; } to { transform: none; opacity: 1; } }
 
@@ -133,3 +133,29 @@
 /* The lesson term sheet: once Charm has moved the terms, accepting is the next move. */
 #pit.is-lesson.lesson-term-charmed .pit-focus [data-action="accept-term"] { background: var(--v24-primary); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: 3px 3px 0 var(--hsc-ink); }
 #pit.is-lesson.lesson-term-charmed .pit-focus .charm-lever:not(:disabled) { background: var(--v24-secondary); box-shadow: 2px 2px 0 var(--hsc-ink); animation: none; }
+
+/* ---- Cleanup pass: primary labels in a text face (the pixel face compressed "Start Round 5"), hover stays yellow -- */
+#pit .pit-focus .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice),
+#pit .pit-stage .training-primary.training-primary, #pit .founding-dialog .founding-primary:not(:disabled),
+#pit .projects-panel .proj-go.is-lit:not(:disabled), #pit .projects-panel .proj-go.is-stock:not(:disabled),
+#pit .pit-focus .tt-key.ch-send:not(:disabled), #pit.is-lesson .pit-focus .charm-lever:not(:disabled),
+#pit .pit-focus .mat-stamp.is-lit.is-lit, #pit .projects-panel .proj.is-lesson .proj-find:not(:disabled) {
+  font-family: var(--hsc-sans); font-weight: 700; font-size: 17px; line-height: 1.15; letter-spacing: .01em;
+}
+#pit .pit-focus .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) :is(b, span) { font: inherit; letter-spacing: inherit; }
+#pit .projects-panel .proj-go.is-lit:not(:disabled), #pit .projects-panel .proj-go.is-stock:not(:disabled), #pit .projects-panel .proj.is-lesson .proj-find:not(:disabled) { font-size: 15px; }
+#pit.is-lesson .pit-focus .charm-lever:not(:disabled) small { font: 700 11px/1.2 var(--hsc-sans); }
+/* Board update footer at phone widths: "New run" never truncates; the round counter wraps instead. */
+@media (max-width: 420px) {
+  #pit .desk-news .pit-focus-footer .rail-quiet { flex: 0 0 auto; max-width: none; white-space: nowrap; overflow: visible; padding: 6px 8px; }
+  #pit .desk-news .pit-focus-footer .round-progress { flex: 1 1 0; min-width: 0; font-size: 12px; line-height: 1.15; text-align: center; white-space: normal; }
+  #pit .desk-news .pit-focus-footer .rail-commit { flex: 0 0 auto; max-width: none; white-space: nowrap; padding: 8px 10px; font-size: 15px; }
+}
+/* The 48 H100 lesson on phones: Evan's line, then the project with its yellow Find, then the brokers, so the
+   primary action is on the first screen at 320–390 px instead of below the broker grid. */
+@media (max-width: 768px) {
+  #pit .v221-training.step-large .pit-room { display: contents; }
+  #pit .v221-training.step-large .pit-hintbar { order: 0; }
+  #pit .v221-training.step-large .pit-board { order: 1; }
+  #pit .v221-training.step-large .pit-hall { order: 2; }
+}

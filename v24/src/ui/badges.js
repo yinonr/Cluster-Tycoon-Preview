@@ -60,8 +60,9 @@ export function badgeArt(b) {
   return 'gear';
 }
 
-// Every project that came fully online at this bell. Partly online (delayed) work earns its badge later.
-export const completedThisRound = (g, q) => g.company.builds.filter(b => b.onlineQ === q && b.online >= 1);
+// Every project this bell brought online, once: a partly online project (an imperfect integration) earns its badge
+// now, and the remainder arriving at a later bell earns nothing new. Builds saved before liveQ fall back to onlineQ.
+export const completedThisRound = (g, q) => g.company.builds.filter(b => b.online > 0 && (b.liveQ ?? b.onlineQ) === q);
 
 const svgCache = new Map();
 export function spriteSVG(key) {
@@ -76,5 +77,5 @@ export function spriteSVG(key) {
 export const SPRITE_KEYS = Object.freeze(Object.keys(SPRITES));
 
 export function badgeList(builds) {
-  return builds.map((b, i) => `<li class="bu-badge art-${badgeArt(b)}" style="--i:${Math.min(i, 12)}" title="${esc(b.name)}"><span class="bu-badge-plate">${spriteSVG(badgeArt(b))}</span><span class="bu-badge-name">${esc(b.name)}</span></li>`).join('');
+  return builds.map((b, i) => `<li class="bu-badge art-${badgeArt(b)}" style="--i:${Math.min(i, 8)}" title="${esc(b.name)}"><span class="bu-badge-plate">${spriteSVG(badgeArt(b))}</span><span class="bu-badge-name">${esc(b.name)}</span></li>`).join('');
 }
