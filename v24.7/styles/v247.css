@@ -1,0 +1,207 @@
+/* V24.7 Macintosh windows. Every focused interaction (a desk, a contract, Charm, a receipt, a minigame, the board) opens
+   as a compact application window over the trading floor instead of a full-height panel.
+   - Geometry only. Scroll lock, Projects anchoring, focus, input guards and every engine number are unchanged (pit.js).
+   - The window is top-anchored and sized by its content, so the commits sit right under what they act on; a window may
+     grow while it stays open but never shrinks (pit.js sets --win-hold), so nothing moves up under the pointer.
+   - The counterparty band has a fixed height and the speech bubble is clamped, so a new line never moves the desk below.
+   - Minigames keep a fixed-height window: their boards measure the space they are given (no transforms are added).
+   - Pix Chicago sets the words inside a window (titles, labels, CTA words). Money, counts and dense text keep their legible
+     faces. It is scoped to the window, so the floor and the Projects cards keep their V24.6 metrics. */
+:root { --win-gap: clamp(10px, 3vh, 32px); }
+
+/* The floor stays visible behind a light 1-bit dither and cannot be used. */
+#pit .pit-focus-scrim, #pit .pit-focus-scrim.is-paper, #pit .pit-focus-scrim.has-band {
+  top: var(--hud-live, var(--hud-h)); bottom: 0;
+  align-items: flex-start; justify-content: center;
+  padding: var(--win-gap) var(--win-gap) calc(var(--win-gap) + env(safe-area-inset-bottom, 0px));
+  background: var(--pat-25);
+}
+#pit .pit-focus-scrim.has-band::before { content: none; }
+/* Babur's floor line is already inside the window; the copy behind it is hidden, not removed (no reflow). */
+#pit:has(.pit-focus-scrim) .v221-lesson-line { visibility: hidden; }
+
+/* The window. */
+#pit .pit-focus.mac-window {
+  --win-w: 760px; --band-h: 150px;
+  width: min(var(--win-w), 100%); height: auto; max-height: 100%;
+  min-height: min(var(--win-hold, 0px), 100%);
+  display: flex; flex-direction: column; padding: 0;
+  background: var(--hsc-paper); color: var(--hsc-ink);
+  border: 2px solid var(--hsc-ink); border-radius: 0; box-shadow: 4px 4px 0 var(--hsc-ink);
+}
+#pit .mac-window:is(.desk-ledger, .desk-deal-room, .desk-final) { --win-w: 1060px; }
+#pit .mac-window.desk-news { --win-w: 880px; }
+/* One width for a whole trade (desk, Charm, verdict, contract, receipt), so moving between them never shifts the window
+   sideways. An offer with no instrument beside it (the first H100) is centred under Babur. */
+#pit .mac-window .charm-first:has(> :only-child) { grid-template-columns: minmax(0, 420px); justify-content: center; }
+
+/* Pix Chicago: --hsc-ui is the game's words-only face, so re-pointing it here reaches window labels and nothing outside. */
+#pit .mac-window { --hsc-ui: "Pix Chicago", "Pixelify Sans", Geneva, Verdana, sans-serif; }
+#pit .pit-focus.mac-window :is(.rail-commit, .term-choice, .mat-stamp, .charm-lever, .mat-exit, .tt-key, .qs-sell),
+#pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice),
+#pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) b { font-family: var(--hsc-ui); font-size: 16px; font-weight: 400; letter-spacing: 0; }
+#pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) :is(.cta-num, .vault-amt),
+#pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit .cta-num { font-family: var(--hsc-sans); }
+/* The face is drawn on an 8-pixel em: 16 px is its crisp size. */
+#pit .pit-focus.mac-window .charm-lever { padding-left: 12px; padding-right: 8px; }
+#pit .pit-focus.mac-window .charm-lever > span { white-space: nowrap; }
+#pit .pit-focus.mac-window :is(.term-choice, .mat-stamp, .charm-lever, .mat-exit, .qs-sell) { font-size: 16px; font-weight: 400; letter-spacing: 0; }
+/* GPU names and counts keep the face they had. */
+#pit .mac-window :is(.qs-tab, .qs-n, .qs-step) { --hsc-ui: "Pixelify Sans", Geneva, Verdana, sans-serif; }
+
+/* Title bar: striped, with the exit as the window's close button and the title on a paper plate. */
+#pit .mac-window > .pit-focus-heading {
+  flex: none; position: relative; z-index: 2; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  min-height: 38px; margin: 0; padding: 3px 6px;
+  background: linear-gradient(var(--hsc-paper), var(--hsc-paper)) 0 0 / 100% 6px no-repeat,
+              linear-gradient(var(--hsc-paper), var(--hsc-paper)) 0 100% / 100% 6px no-repeat, var(--pat-lines), var(--hsc-paper);
+  border: 0; border-bottom: 2px solid var(--hsc-ink);
+}
+#pit .mac-window .pit-focus-heading .pit-focus-close {
+  grid-column: 1; justify-self: start; position: static; z-index: auto;
+  min-height: 30px; min-width: 30px; padding: 4px 10px; gap: 6px;
+  background: var(--hsc-paper); border: 2px solid var(--hsc-ink); border-radius: 4px; box-shadow: none; font: 400 16px/1 var(--hsc-ui);
+}
+#pit .mac-window .pit-focus-heading .pit-focus-close .exit-label { display: inline; white-space: nowrap; }
+#pit .mac-window #focus-title {
+  grid-column: 2; justify-self: center; position: static; transform: none; z-index: auto; max-width: 100%; width: auto; height: auto; clip-path: none;
+  margin: 0; padding: 2px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  background: var(--hsc-paper); border: 0; box-shadow: none; color: var(--hsc-ink);
+  font: 400 16px/1.25 var(--hsc-ui); letter-spacing: 0; font-variant-caps: normal; text-transform: none;
+}
+#pit .mac-window .pit-focus-heading .focus-training-skip { grid-column: 3; justify-self: end; }
+
+/* The counterparty stands inside the window: a fixed-height band, so dialogue never moves the desk below it. */
+#pit .mac-window > .pit-counterparty {
+  flex: none; position: relative; z-index: 0; height: var(--band-h); min-height: 0;
+  grid-template-columns: 150px minmax(0, 1fr); column-gap: 14px; padding: 8px 18px 8px 12px;
+  background: var(--hsc-paper); overflow: visible;
+}
+#pit .mac-window .pit-bust { height: calc(var(--band-h) - 12px); margin-bottom: -8px; }
+#pit .mac-window .pit-bubble { max-width: 560px; padding: 8px 14px 9px; }
+#pit .mac-window .pit-bubble .pit-reaction { font-size: 10px; margin-bottom: 2px; }
+#pit .mac-window .pit-bubble blockquote { font-size: 19px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+#pit .mac-window .pit-nameplate { padding: 2px 10px 3px; }
+#pit .mac-window .pit-nameplate h3 { font-size: 16px; }
+#pit .mac-window .pit-nameplate p { font-size: 13px; }
+
+/* The instrument and its commits, together. The body scrolls only if the window reaches the viewport. */
+#pit .mac-window > .pit-focus-body { flex: 1 1 auto; min-height: 0; margin: 0; padding: 14px 18px 12px; overflow: auto; overscroll-behavior: contain; }
+#pit .mac-window.is-paper > .pit-focus-body { border: 0; box-shadow: none; }
+#pit .mac-window .desk-center { min-height: 0; align-content: start; }
+#pit .mac-window > .pit-focus-footer { flex: none; min-height: 58px; padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px)); }
+
+/* Minigames: a large fixed-height window with the V24.6 board layout inside (grid rows, no transforms). */
+#pit .pit-focus.mac-window.desk-tetris { --win-w: 1180px; height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+#pit .pit-focus-scrim:has(.desk-tetris) { padding: 12px 16px; }
+
+/* The Board Update keeps its centred, readable sheet (v222.css); it only gains the window chrome. */
+#pit .pit-focus.mac-window.desk-news { display: flex; }
+
+/* A Charm desk reserves its tallest state (the meter or the verdict) from the start, so the commit row stays put through offer,
+   meter and verdict. The offer is centred in that space. The viewport still caps it; the first H100 has no Charm and stays small. */
+#pit .pit-focus.mac-window:is(.desk-haggle, .desk-charm, .desk-verdict):has([data-action="start-rizz"], [data-action="stop-rizz"]),
+#pit .pit-focus.mac-window.desk-verdict { --win-reserve: 632px; min-height: min(max(var(--win-hold, 0px), var(--win-reserve)), 100%); }
+#pit .mac-window.desk-haggle > .pit-focus-body { display: flex; flex-direction: column; justify-content: safe center; }
+
+/* The Deal Room's decision is the point of the window: on a desktop the letter runs wide and its options sit side by side, on screen. */
+@media (min-width: 769px) {
+  #pit .pit-focus.mac-window.desk-deal-room { --band-h: 104px; }
+  #pit .mac-window.desk-deal-room > .pit-counterparty { grid-template-columns: 120px minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr); align-items: center; padding-block: 4px; }
+  #pit .mac-window.desk-deal-room .pit-bust { grid-row: 1; margin-bottom: -4px; }
+  #pit .mac-window.desk-deal-room .pit-bubble { grid-row: 1; grid-column: 2; }
+  #pit .mac-window.desk-deal-room .pit-nameplate { grid-row: 1; grid-column: 3; }
+  #pit .mac-window.desk-deal-room .pit-bubble blockquote { font-size: 17px; }
+  #pit .mac-window .deal-room { max-width: none; width: 100%; }
+  #pit .mac-window .dr-options { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 10px; }
+}
+
+/* A term sheet's Charm result adds lines: the window takes the full height from the start, so Accept and Decline never move. */
+#pit .pit-focus.mac-window.desk-term { height: 100%; }
+
+@media (pointer: coarse) {
+  #pit .mac-window .pit-focus-heading .pit-focus-close { min-height: 40px; min-width: 40px; }
+  #pit .mac-window > .pit-focus-heading { min-height: 46px; }
+}
+@media (max-height: 640px) and (min-width: 769px) {
+  #pit .pit-focus.mac-window { --band-h: 124px; }
+  #pit .mac-window .pit-bubble blockquote { font-size: 17px; }
+}
+/* Short desktop windows: a contract or receipt drops the decorative counterparty band and tightens, so Sign stays on screen. */
+@media (max-height: 600px) and (min-width: 769px) {
+  #pit .mac-window:is(.desk-contract, .desk-receipt) > .pit-counterparty { display: none; }
+  #pit .mac-window .contract { padding: 12px 20px 12px; }
+  #pit .mac-window .contract .money-hero { font-size: 44px; }
+  #pit .mac-window > .pit-focus-footer { min-height: 50px; padding-block: 6px; }
+  /* Sell GPUs: the same controls, tighter, so SELL and CHARM are on screen without scrolling. */
+  #pit .mac-window .quick-sell { gap: 8px; }
+  #pit .mac-window .qs-tab { padding-block: 4px; }
+  #pit .mac-window .qs-deal { padding: 6px 8px; gap: 8px; }
+  #pit .mac-window .qs-step { min-height: 40px; height: 40px; }
+  #pit .mac-window .qs-option { padding: 8px 10px; }
+}
+@media (max-height: 600px) and (min-width: 769px) and (pointer: fine) {
+  #pit .mac-window > .pit-focus-heading { min-height: 32px; padding-block: 2px; }
+  #pit .mac-window .pit-focus-heading .pit-focus-close { min-height: 26px; padding-block: 2px; }
+}
+@media (max-height: 560px) and (min-width: 769px) {
+  #pit .pit-focus.mac-window { --band-h: 104px; }
+  #pit .mac-window .pit-bubble blockquote { font-size: 16px; -webkit-line-clamp: 2; }
+  #pit .mac-window > .pit-focus-body { padding-block: 10px 8px; }
+}
+
+/* Phones: nearly the full width, still top-anchored and content-sized; the HUD stays live above. */
+@media (max-width: 768px) {
+  :root { --win-gap: 6px; }
+  #pit .pit-focus.mac-window { --band-h: 124px; width: 100%; box-shadow: 3px 3px 0 var(--hsc-ink); }
+  /* The Deal Room's letter already names the buyer; the three figures share a row, so the options come sooner. */
+  #pit .mac-window.desk-deal-room > .pit-counterparty { display: none; }
+  #pit .mac-window .dr-price { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #pit .pit-focus.mac-window:is(.desk-haggle, .desk-charm, .desk-verdict):has([data-action="start-rizz"], [data-action="stop-rizz"]),
+  #pit .pit-focus.mac-window.desk-verdict { --win-reserve: 640px; }
+  #pit .mac-window > .pit-focus-heading { min-height: 46px; padding: 3px 4px; gap: 6px; }
+  #pit .mac-window .pit-focus-heading .pit-focus-close { padding: 4px 8px; }
+  #pit .mac-window #focus-title { padding: 2px 8px; }
+  #pit .mac-window > .pit-counterparty { grid-template-columns: 96px minmax(0, 1fr); column-gap: 10px; padding: 6px 8px; }
+  #pit .mac-window .pit-bust { margin-bottom: -6px; }
+  #pit .mac-window .pit-bubble blockquote { font-size: 15px; line-height: 1.22; }
+  #pit .mac-window > .pit-focus-body { padding: 10px 10px 8px; }
+  #pit .mac-window > .pit-focus-footer { min-height: 56px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  /* A minigame still takes the whole phone screen (v221.css), now inside the window frame. */
+  #pit .pit-focus-scrim:has(.tt), #pit .pit-focus-scrim:has(.desk-tetris) { top: 0; height: 100dvh; padding: 0; }
+  #pit .pit-focus.mac-window.desk-tetris { width: 100%; height: 100%; border-width: 0; box-shadow: none; }
+}
+@media (max-width: 360px), (max-width: 768px) and (max-height: 640px) {
+  #pit .pit-focus.mac-window { --band-h: 96px; }
+  #pit .mac-window > .pit-counterparty { grid-template-columns: 82px minmax(0, 1fr); }
+  #pit .mac-window .pit-bubble blockquote { font-size: 13px; }
+  #pit .mac-window .pit-nameplate p { display: none; }
+  #pit .mac-window .pit-bubble .pit-reaction { display: none; }
+}
+/* Phones: the exit is an arrow (as on V24.6's phone desks), so a window's title is never cut. Its aria-label keeps the name. */
+@media (max-width: 480px) {
+  #pit .mac-window .pit-focus-heading .pit-focus-close .exit-label { display: none; }
+}
+@media (max-width: 360px) {
+  #pit .mac-window #focus-title { font-size: 14px; padding-inline: 4px; }
+}
+/* Short phones: as on short desktops, the commit outranks the decoration. A contract or receipt drops the band; Sell GPUs puts its two
+   options side by side, so SELL and CHARM are on screen without scrolling. */
+@media (max-width: 768px) and (max-height: 700px) {
+  #pit .mac-window:is(.desk-contract, .desk-receipt) > .pit-counterparty { display: none; }
+  #pit .mac-window .contract { padding: 10px 12px; }
+  #pit .mac-window .contract .money-hero { font-size: 40px; }
+  #pit .mac-window > .pit-focus-footer { min-height: 50px; padding-block: 5px; }
+  #pit .mac-window .quick-sell { gap: 6px; }
+  #pit .mac-window .qs-tab { padding-block: 3px; min-height: 36px; }
+  #pit .mac-window .qs-avail { display: none; }
+  #pit .mac-window .qs-deal { padding: 6px; gap: 6px; }
+  #pit .mac-window .qs-step { min-height: 40px; height: 40px; }
+  #pit .mac-window .qs-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; width: 100%; }
+  #pit .mac-window .qs-option { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; justify-items: stretch; padding: 6px; min-width: 0; row-gap: 2px; }
+  #pit .mac-window .qs-option > * { grid-column: 1; grid-row: auto; justify-self: stretch; }
+  #pit .mac-window .qs-opt-vs, #pit .mac-window .qs-opt-line { display: none; }
+  #pit .mac-window .qs-opt-num { font-size: 22px; white-space: nowrap; }
+  #pit .mac-window .qs-opt-num small { display: block; }
+  #pit .mac-window .qs-option :is(.qs-sell, .qs-charm-go) { min-height: 44px; padding-inline: 4px; }
+}
