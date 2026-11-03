@@ -407,12 +407,10 @@ export const roundsLeft = g => campaignLimit(g) - g.q;
 // ---- V22 Projects panel: every open project at once, GPU needs as Node Tetris shapes ----------------
 // Filled = GPUs this project holds or could take from free stock; outlined = still missing. A missing
 // row lights the matching brokers on the floor. Pinning is a view aid, never required to build.
-const SHAPES_SHOWN = 5;
 export function needRow(g, card, r, live = true) {
-  const have = Math.min(r.need, r.held + r.free), missing = r.need - have, n = Math.min(r.need, SHAPES_SHOWN);
-  const filled = Math.round(n * have / r.need) - (have < r.need && Math.round(n * have / r.need) === n ? 1 : 0);
-  const pieces = Array.from({ length: n }, (_, i) => `<span class="need-piece ${i < filled ? 'is-have' : 'is-missing'}">${mini({ gpu: r.gpu, cells: BROKER_SHAPES[r.gpu] })}</span>`).join('');
-  const inner = `<span class="need-pieces">${pieces}${r.need > n ? '<i class="need-more">…</i>' : ''}</span><span class="need-count">${esc(r.gpu)} <b>${have}</b>/${r.need}${missing ? `<em class="need-short"> · need ${missing}</em>` : '<em class="need-ok"> ✓</em>'}</span>`;
+  const have = Math.min(r.need, r.held + r.free), missing = r.need - have;
+  // V24: one Node Tetris chip per GPU type (solid when covered, faded colour when short), the model, and owned/needed.
+  const inner = `<span class="need-chip ${missing ? 'is-missing' : 'is-have'}">${mini({ gpu: r.gpu, cells: BROKER_SHAPES[r.gpu] })}</span><span class="need-gpu">${esc(r.gpu)}</span><span class="need-count"><b>${have}</b>/${r.need}${missing ? `<em class="need-short"> · need ${missing}</em>` : '<em class="need-ok"> ✓</em>'}</span>`;
   const cls = `need-row ${gcls(r.gpu)} ${missing ? 'is-short' : 'is-covered'}`;
   if (live && missing && card.status === 'open') return button('task-source', inner, `class="${cls}" data-gpu="${r.gpu}" data-card="${esc(card.id)}" data-need="${missing}" aria-label="${have} of ${r.need} ${r.gpu}. Light up brokers selling ${r.gpu}"`);
   return `<span class="${cls}" role="img" aria-label="${have} of ${r.need} ${r.gpu}">${inner}</span>`;

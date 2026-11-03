@@ -240,9 +240,9 @@ function contractView(g, d) {
   const purchase = d.kind === 'purchase', term = d.kind === 'term';
   const compute = d.funding === 'compute';
   let terms, sub, after = cash(g) + (compute ? 0 : purchase ? -d.total : d.total);
-  if (purchase) { terms = `BUY ${d.qty} ${esc(d.gpu)} from ${esc(d.counterparty)}`; sub = `${rate(d.rate)}/h · ${d.savings > 0 ? `${money(d.savings)} under their opening ask` : 'at their opening ask'}`; }
+  if (purchase) { terms = `BUY ${d.qty} ${mini({ gpu: d.gpu, cells: BROKER_SHAPES[d.gpu] }, 'contract-chip')} ${esc(d.gpu)} from ${esc(d.counterparty)}`; sub = `${rate(d.rate)}/h · ${d.savings > 0 ? `${money(d.savings)} under their opening ask` : 'at their opening ask'}`; }
   else if (term) { terms = `ISSUE ${d.shares.toLocaleString('en-US')} NEW SHARES TO ${esc(d.counterparty.toUpperCase())}`; sub = `${bpsText(d.qty)} of the company · you own ${pctOf(d.founderBefore)} → ${pctOf(d.founderAfter)}`; }
-  else { const p = d.total - d.cost; terms = `RESELL ${d.qty} ${esc(d.gpu)} to ${esc(d.counterparty)}`; sub = `you paid ${money(d.cost)} · ${p >= 0 ? signed(p) : money(p)} ${p >= 0 ? 'profit' : 'loss'}`; }
+  else { const p = d.total - d.cost; terms = `RESELL ${d.qty} ${mini({ gpu: d.gpu, cells: BROKER_SHAPES[d.gpu] }, 'contract-chip')} ${esc(d.gpu)} to ${esc(d.counterparty)}`; sub = `you paid ${money(d.cost)} · ${p >= 0 ? signed(p) : money(p)} ${p >= 0 ? 'profit' : 'loss'}`; }
   const role = purchase ? 'seller' : term ? 'investor' : 'buyer';
   if (d.conditions) sub += `<br>${esc(d.conditions)}`;
   return { title: purchase ? 'Your GPU contract' : 'The contract', desk: 'contract', exit: { action: 'cancel-sign', label: g.arcade.practice ? 'Back' : term ? 'Back to the terms' : 'Keep negotiating', ...(g.arcade.practice ? { aria: 'Back to quote' } : {}) }, role, tone: 'signing',

@@ -166,3 +166,20 @@
   #pit .pit-focus-footer:has(.tap-hint) { flex-wrap: wrap; row-gap: 6px; }
   #pit .pit-focus-footer .tap-hint { flex: 1 0 100%; order: -1; margin: 0; text-align: center; }
 }
+
+/* ---- GPU quantities: the Node Tetris chip, the model, and a legible owned/needed count ----------------------- */
+#pit .need-row { gap: 6px; padding: 4px 6px; }
+#pit .need-chip { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 30px; }
+#pit .need-chip .tt-mini { --m: 12px; }
+#pit .need-chip.is-missing .tt-mini { opacity: .6; filter: saturate(.7); }
+#pit .need-gpu { font: 700 13px/1 var(--hsc-sans); letter-spacing: .02em; color: var(--hsc-ink); background: var(--hsc-paper); border: 1.5px solid var(--hsc-ink); padding: 2px 5px; border-radius: 2px; }
+#pit .need-count { font: 400 14px/1.1 var(--hsc-sans); font-variant-numeric: tabular-nums lining-nums; color: var(--hsc-ink); }
+#pit .need-count b { font: 700 18px/1 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .need-row.is-short .need-count b { color: #A3221B; }
+#pit .need-count .need-short { font-size: 13px; }
+#pit .contract-chip { --m: 11px; margin: 0 2px; }
+@media (max-width: 360px) { #pit .need-count .need-short { display: none; } #pit .need-count b { font-size: 16px; } }
+/* HUD stock: the chip was already there; the model and count now read as clearly as the Projects rows. */
+#pit .hud-gpu strong { font: 700 19px/1 var(--hsc-sans); font-variant-numeric: tabular-nums lining-nums; color: var(--hsc-ink); }
+#pit .hud-gpu-name { font: 700 11px/1.1 var(--hsc-sans); letter-spacing: .03em; }
+#pit .hud-gpu small { font: 400 10px/1.1 var(--hsc-sans); }
