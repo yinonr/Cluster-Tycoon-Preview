@@ -42,6 +42,7 @@
 #pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) b { font-family: var(--hsc-ui); font-size: 16px; font-weight: 400; letter-spacing: 0; }
 #pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) :is(.cta-num, .vault-amt),
 #pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit .cta-num { font-family: var(--hsc-sans); }
+#pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit { font-family: var(--hsc-ui); font-weight: 400; letter-spacing: 0; white-space: normal; }
 /* The face is drawn on an 8-pixel em: 16 px is its crisp size. */
 #pit .pit-focus.mac-window .charm-lever { padding-left: 12px; padding-right: 8px; }
 #pit .pit-focus.mac-window .charm-lever > span { white-space: nowrap; }
