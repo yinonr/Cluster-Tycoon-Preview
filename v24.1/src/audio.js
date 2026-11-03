@@ -133,6 +133,7 @@ function buildAudio() {
   });
 
   const api = {
+    unlock, // an explicit user action (the sound switch) counts as the gesture even if the engine was built after its pointerdown
     // Quiet ambient loop. Waits for a user gesture; safe to call repeatedly (never a second loop).
     startMusic() {
       musicWanted = true;

@@ -85,7 +85,7 @@ ui.sound = !!sound;
 if (sound && prefs.music) sound.startMusic(); // remembered choice; waits for the first gesture
 function setSound(on) { // the HUD / details toggle: one switch for effects and ambient music
   sound = on ? createAudio() : null; ui.sound = !!sound; prefs.sound = !!sound; prefs.music = !!sound; prefs.save();
-  if (on) sound.startMusic(); else createAudio().stopMusic();
+  if (on) { sound.unlock(); sound.startMusic(); } else createAudio().stopMusic();
 }
 
 // The local best lives under its own versioned key; storage may be blocked, so every access is guarded.
@@ -173,13 +173,12 @@ function render() {
   if (!store.error && (ui.entry === 'intro' || ui.entry === 'found')) {
     ui.guidanceOpen = true;
     if (!officeCleanup) {
-      if (prefs.sound !== false && !sound) { sound = createAudio(); ui.sound = true; } // the site's default: SOUND ON
       root.innerHTML = '<div class="original-opening"></div>';
       officeCleanup = office(root.firstElementChild, {
         audio: new Proxy({}, { get: (_, key) => (...args) => sound?.[key]?.(...args) }),
         name: () => ui.entry === 'found' ? training.state?.name || null : g?.company.name || null,
         story: false, training: true, // V22.1: name the company, then straight to Babur (no Week 0 procurement desk)
-        sound: { get on() { return !!sound; }, set(on) { if (on && !sound) sound = createAudio(); if (!on) { sound?.cutChorus?.(); sound?.stopMusic?.(); sound = null; } ui.sound = !!sound; prefs.sound = !!sound; prefs.save(); } },
+        sound: { get on() { return !!sound; }, set(on) { if (!on) sound?.cutChorus?.(); setSound(!!on); } },
         motion: { get on() { return prefs.motion ?? !matchMedia('(prefers-reduced-motion: reduce)').matches; }, set(on) { prefs.motion = !!on; prefs.save(); } },
         found(name) {
           const error = nameError(name); if (error) return error;
