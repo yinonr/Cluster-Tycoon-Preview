@@ -42,7 +42,7 @@
 #pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) b { font-family: var(--hsc-ui); font-size: 16px; font-weight: 400; letter-spacing: 0; }
 #pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) :is(.cta-num, .vault-amt),
 #pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit .cta-num { font-family: var(--hsc-sans); }
-#pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit { font-family: var(--hsc-ui); font-weight: 400; letter-spacing: 0; white-space: normal; }
+#pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit { font-family: var(--hsc-ui); font-weight: 400; letter-spacing: 0; line-height: 1.15; white-space: normal; }
 #pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) { line-height: 1.15; }
 /* The face is drawn on an 8-pixel em: 16 px is its crisp size. */
 #pit .pit-focus.mac-window .charm-lever { padding-left: 12px; padding-right: 8px; }
@@ -160,7 +160,7 @@
   #pit .mac-window.desk-deal-room > .pit-counterparty { display: none; }
   #pit .mac-window .dr-price { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   #pit .pit-focus.mac-window:is(.desk-haggle, .desk-charm, .desk-verdict):has([data-action="start-rizz"], [data-action="stop-rizz"]),
-  #pit .pit-focus.mac-window.desk-verdict { --win-reserve: 640px; }
+  #pit .pit-focus.mac-window.desk-verdict { --win-reserve: 660px; }
   #pit .mac-window > .pit-focus-heading { min-height: 46px; padding: 3px 4px; gap: 6px; }
   #pit .mac-window .pit-focus-heading .pit-focus-close { padding: 4px 8px; }
   #pit .mac-window #focus-title { padding: 2px 8px; }
