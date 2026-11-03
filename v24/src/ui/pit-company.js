@@ -424,7 +424,7 @@ export function projectAction(g, card, live = true) {
   const off = live ? '' : 'disabled', shortage = st.rows.find(r => r.short > 0);
   if (built) return '<span class="proj-done">✓ LAUNCHED</span>';
   if (!st.live) return '<span class="proj-done">Closed</span>';
-  const find = shortage ? button('task-source', `Find ${esc(shortage.gpu)}`, `class="proj-find gpu-${shortage.gpu.toLowerCase()}" data-gpu="${shortage.gpu}" data-card="${esc(card.id)}" data-need="${shortage.short}" aria-label="Find ${shortage.short} ${shortage.gpu} on the floor" ${off}`) : '';
+  const find = shortage ? button('task-source', `${mini({ gpu: shortage.gpu, cells: BROKER_SHAPES[shortage.gpu] }, 'find-chip')}<span>Find ${esc(shortage.gpu)}</span>`, `class="proj-find gpu-${shortage.gpu.toLowerCase()}" data-gpu="${shortage.gpu}" data-card="${esc(card.id)}" data-need="${shortage.short}" aria-label="Find ${shortage.short} ${shortage.gpu} on the floor" ${off}`) : '';
   const go = needsReview
     ? button('open-card', 'Review →', `class="proj-go ${st.ready ? 'is-lit' : ''}" data-card="${esc(card.id)}" ${off}`)
     : button('build', 'LAUNCH', `class="proj-go ${st.ready ? 'is-lit' : ''}" data-card="${esc(card.id)}" aria-label="${st.ready ? `Launch ${esc(card.name)}` : `${esc(card.name)}: ${shortage ? `need ${shortage.short} more ${shortage.gpu}` : st.cashNeeded ? `need ${short(st.cashNeeded)} more cash` : 'not ready'}`}" ${st.ready && live ? '' : 'disabled'}`);

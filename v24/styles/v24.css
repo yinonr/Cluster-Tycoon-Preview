@@ -183,3 +183,8 @@
 #pit .hud-gpu strong { font: 700 19px/1 var(--hsc-sans); font-variant-numeric: tabular-nums lining-nums; color: var(--hsc-ink); }
 #pit .hud-gpu-name { font: 700 11px/1.1 var(--hsc-sans); letter-spacing: .03em; }
 #pit .hud-gpu small { font: 400 10px/1.1 var(--hsc-sans); }
+/* Find buttons carry their GPU's Node Tetris chip. */
+#pit .proj-find { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+#pit .proj-find .find-chip { --m: 9px; flex: 0 0 auto; }
+#pit .proj-find:disabled .find-chip { opacity: .5; }
+@media (max-width: 360px) { #pit .proj-find { gap: 4px; padding-left: 8px; padding-right: 8px; } #pit .proj-find .find-chip { --m: 8px; } }
