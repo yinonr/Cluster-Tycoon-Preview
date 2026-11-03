@@ -212,3 +212,7 @@
 @media (max-height: 560px) and (max-width: 768px) {
   #pit .pit-desk-rest { position: sticky; bottom: 0; z-index: 6; background: var(--hsc-paper); }
 }
+
+/* ---- V24.1: a focused desk owns the screen (no background scroll; the desk scrolls inside itself when it is taller) ---- */
+html.is-desk-open, body.is-desk-open { overflow: hidden; overscroll-behavior: none; }
+#pit .pit-focus-scrim { overscroll-behavior: contain; touch-action: none; }

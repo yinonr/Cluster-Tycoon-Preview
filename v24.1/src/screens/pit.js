@@ -145,6 +145,22 @@ function restoreScroll(kept) {
     if (a) board.scrollTop += (a.getBoundingClientRect().top - board.getBoundingClientRect().top) - bk.y;
   }
 }
+// V24.1: a focused interaction (Charm, contract, minigame, any desk) owns the screen. The floor behind it is parked at the top
+// so the broker band lines up, the document cannot be scrolled, and the floor's scroll position returns when it closes.
+// (overflow lock, not position:fixed, so the sticky HUD stays where the desk's top edge expects it.)
+let lockedFrom = null;
+function syncScrollLock(on) {
+  const de = document.documentElement, body = document.body;
+  if (on && lockedFrom === null) {
+    lockedFrom = { x: scrollX, y: scrollY };
+    de.classList.add('is-desk-open'); body.classList.add('is-desk-open');
+    if (lockedFrom.y) scrollTo(lockedFrom.x, 0);
+  } else if (!on && lockedFrom !== null) {
+    de.classList.remove('is-desk-open'); body.classList.remove('is-desk-open');
+    const back = lockedFrom; lockedFrom = null;
+    scrollTo(back.x, back.y);
+  }
+}
 function render() {
   cancelAnimationFrame(meterFrame);
   const focused = remember(document.activeElement), g = store.state;
@@ -236,6 +252,7 @@ function render() {
   // V24: an unchanged project card keeps its DOM node (no restarted animations, focus or hover); only changed cards are replaced.
   if (oldTiles.size) for (const el of root.querySelectorAll('.proj-list > [data-card-id]')) { const old = oldTiles.get(el.dataset.cardId); if (old && old.outerHTML === el.outerHTML) el.replaceWith(old); }
   restoreScroll(kept);
+  syncScrollLock(!!view && !ui.guidanceOpen);
   // The HUD stays live and uncovered during a desk; only the room and the board go inert.
   if (view) for (const el of root.querySelectorAll('.pit-background .pit-main')) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
   const focus = root.querySelector('.pit-focus');
