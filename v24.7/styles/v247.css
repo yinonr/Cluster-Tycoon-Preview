@@ -43,6 +43,7 @@
 #pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) :is(.cta-num, .vault-amt),
 #pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit .cta-num { font-family: var(--hsc-sans); }
 #pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit { font-family: var(--hsc-ui); font-weight: 400; letter-spacing: 0; white-space: normal; }
+#pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) { line-height: 1.15; }
 /* The face is drawn on an 8-pixel em: 16 px is its crisp size. */
 #pit .pit-focus.mac-window .charm-lever { padding-left: 12px; padding-right: 8px; }
 #pit .pit-focus.mac-window .charm-lever > span { white-space: nowrap; }
@@ -168,6 +169,8 @@
   #pit .mac-window .pit-bubble blockquote { font-size: 15px; line-height: 1.22; }
   #pit .mac-window > .pit-focus-body { padding: 10px 10px 8px; }
   #pit .mac-window > .pit-focus-footer { min-height: 56px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); }
+  #pit .mac-window.desk-news > .pit-focus-footer { flex-wrap: wrap; row-gap: 4px; }
+  #pit .mac-window.desk-news > .pit-focus-footer .round-progress { flex: 1 0 100%; order: -1; margin: 0; text-align: center; }
   /* A minigame still takes the whole phone screen (v221.css), now inside the window frame. */
   #pit .pit-focus-scrim:has(.tt), #pit .pit-focus-scrim:has(.desk-tetris) { top: 0; height: 100dvh; padding: 0; }
   #pit .pit-focus.mac-window.desk-tetris { width: 100%; height: 100%; border-width: 0; box-shadow: none; }
