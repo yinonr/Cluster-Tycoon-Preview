@@ -82,6 +82,11 @@ for (const type of ['pointerdown', 'click', 'keydown', 'keyup']) root.addEventLi
 }, true);
 let sound = prefs.sound === true ? createAudio() : null, last = performance.now(), paintKey = '', returnFocus = null, meterFrame = 0, meterKey = null, meterStart = 0;
 ui.sound = !!sound;
+if (sound && prefs.music) sound.startMusic(); // remembered choice; waits for the first gesture
+function setSound(on) { // the HUD / details toggle: one switch for effects and ambient music
+  sound = on ? createAudio() : null; ui.sound = !!sound; prefs.sound = !!sound; prefs.music = !!sound; prefs.save();
+  if (on) sound.startMusic(); else createAudio().stopMusic();
+}
 
 // The local best lives under its own versioned key; storage may be blocked, so every access is guarded.
 const BEST = `${V7.key}-best`;
@@ -174,7 +179,7 @@ function render() {
         audio: new Proxy({}, { get: (_, key) => (...args) => sound?.[key]?.(...args) }),
         name: () => ui.entry === 'found' ? training.state?.name || null : g?.company.name || null,
         story: false, training: true, // V22.1: name the company, then straight to Babur (no Week 0 procurement desk)
-        sound: { get on() { return !!sound; }, set(on) { if (on && !sound) sound = createAudio(); if (!on) { sound?.cutChorus?.(); sound = null; } ui.sound = !!sound; prefs.sound = !!sound; prefs.save(); } },
+        sound: { get on() { return !!sound; }, set(on) { if (on && !sound) sound = createAudio(); if (!on) { sound?.cutChorus?.(); sound?.stopMusic?.(); sound = null; } ui.sound = !!sound; prefs.sound = !!sound; prefs.save(); } },
         motion: { get on() { return prefs.motion ?? !matchMedia('(prefers-reduced-motion: reduce)').matches; }, set(on) { prefs.motion = !!on; prefs.save(); } },
         found(name) {
           const error = nameError(name); if (error) return error;
@@ -529,7 +534,7 @@ root.addEventListener('click', e => {
   if (a === 'founder-intro-next' && training.state && ui.founderIntro) { ui.founderIntro = ui.founderIntro < FOUNDER_INTRO.length ? ui.founderIntro + 1 : 0; render(); return; }
   if (ui.guidanceOpen) return;
   if (a === 'start') { fresh(seed()); return; }
-  if (a === 'sound') { sound = sound ? null : createAudio(); ui.sound = !!sound; prefs.sound = !!sound; prefs.save(); render(); return; }
+  if (a === 'sound') { setSound(!sound); render(); return; }
   if (!g || store.error) return;
   if (training.state) {
     if (a === 'training-complete' || a === 'training-skip') { completeTraining(a === 'training-skip'); return; }

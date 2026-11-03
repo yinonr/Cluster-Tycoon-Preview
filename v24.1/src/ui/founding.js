@@ -20,8 +20,8 @@ export function guidePreferences(storage) {
   try { data = JSON.parse(storage.getItem(GUIDE_KEY)) || {}; } catch { /* session-only fallback */ }
   // V10.18: the opening's SOUND and MOTION switches are remembered (undefined: not chosen yet).
   const pick = v => (typeof v === 'boolean' ? v : undefined);
-  const prefs = { intro: data.intro === true, founded: data.founded === true, welcome: data.welcome === true, sound: pick(data.sound), motion: pick(data.motion), seen: new Set(Array.isArray(data.seen) ? data.seen.filter(k => k in TIPS || k==='floor-arrival') : []) };
-  prefs.save = () => { try { storage.setItem(GUIDE_KEY, JSON.stringify({ intro: prefs.intro, founded: prefs.founded, welcome: prefs.welcome, sound: prefs.sound, motion: prefs.motion, seen: [...prefs.seen] })); } catch { /* do not block an otherwise playable session */ } };
+  const prefs = { intro: data.intro === true, founded: data.founded === true, welcome: data.welcome === true, sound: pick(data.sound), music: data.music === true, motion: pick(data.motion), seen: new Set(Array.isArray(data.seen) ? data.seen.filter(k => k in TIPS || k==='floor-arrival') : []) };
+  prefs.save = () => { try { storage.setItem(GUIDE_KEY, JSON.stringify({ intro: prefs.intro, founded: prefs.founded, welcome: prefs.welcome, sound: prefs.sound, music: prefs.music, motion: prefs.motion, seen: [...prefs.seen] })); } catch { /* do not block an otherwise playable session */ } };
   return prefs;
 }
 export function nextTip(g, ui, prefs) {

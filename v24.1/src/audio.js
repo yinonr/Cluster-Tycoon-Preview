@@ -2,7 +2,23 @@
 // The trading bell, board clatter, stamp thud, dot-matrix chatter, phone ring,
 // room murmur, bulletin alert, and the intro's pile-up of phones.
 
-export function createAudio() {
+// V24.1 ambient music: one quiet procedural loop on the same context and master bus as the effects.
+// MUSIC_VOLUME scales every music voice; raise it a little at a time (0.022 is deliberately too quiet to notice).
+export const MUSIC_VOLUME = 0.022;
+const MUSIC_BPM = 90;
+// Four bars of Am7 - Fmaj7 - Cmaj7 - G6: [bass Hz, pad Hz x3, pluck [beat, Hz] or null]
+const MUSIC_BARS = [
+  [110, [261.63, 329.63, 392], [3, 659.25]],
+  [87.31, [220, 261.63, 329.63], [2, 523.25]],
+  [130.81, [246.94, 329.63, 392], [3, 783.99]],
+  [98, [246.94, 293.66, 329.63], null],
+];
+
+let shared = null;
+// One engine per page: toggling sound or starting a new game reuses the same context and the same loop.
+export function createAudio() { return shared || (shared = buildAudio()); }
+
+function buildAudio() {
   let ctx = null;
   let master = null;
   let room = null;
@@ -13,6 +29,8 @@ export function createAudio() {
   let chorus = null;   // while open, every sound routes here so it can be cut at once
   let swell = null;
   const out = () => chorus || master;
+  let music = null;          // { bus, filter, timer, nextT, step } while the loop is running
+  let musicWanted = false;
   try { muted = localStorage.getItem('hsc-tycoon-preview-v24-1-muted') === '1'; } catch { /* storage unavailable */ }
 
   function ensure() {
@@ -33,6 +51,7 @@ export function createAudio() {
   const unlock = () => {
     gestured = true;
     ensure();
+    if (musicWanted && !music) api.startMusic();
     if (roomWanted && !room) api.startRoom();
   };
   window.addEventListener('pointerdown', unlock);
@@ -80,7 +99,72 @@ export function createAudio() {
     s.stop(t0 + dur + 0.05);
   }
 
+  const beat = 60 / MUSIC_BPM, AHEAD = 1.2;
+  function voice(type, freq, t0, attack, hold, peak) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + attack + hold);
+    o.connect(g).connect(music.filter);
+    o.start(t0); o.stop(t0 + attack + hold + 0.05);
+  }
+  function scheduleMusic() {
+    if (!music || !ctx) return;
+    while (music.nextT < ctx.currentTime + AHEAD) {
+      const b = music.step % 16, bar = MUSIC_BARS[b >> 2], k = b & 3, t = music.nextT;
+      if (k === 0) bar[1].forEach((f, i) => voice('triangle', f, t + i * 0.03, 1.4, 2.3, 0.5));
+      if (k === 0 || k === 2) voice('sine', bar[0], t, 0.08, 1.1, 0.9);
+      if (bar[2] && bar[2][0] === k) voice('sine', bar[2][1], t, 0.03, 1.3, 0.35);
+      music.nextT += beat; music.step++;
+    }
+  }
+  function runMusic() {
+    if (!music || music.timer) return;
+    music.nextT = Math.max(music.nextT, ctx.currentTime + 0.1);
+    scheduleMusic();
+    music.timer = setInterval(scheduleMusic, 250);
+  }
+  function pauseMusic() { if (music?.timer) { clearInterval(music.timer); music.timer = 0; } }
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx) return;
+    if (document.hidden) { pauseMusic(); if (music) ctx.suspend().catch(() => {}); }
+    else if (musicWanted && music) { ctx.resume().then(runMusic, () => {}); }
+  });
+
   const api = {
+    // Quiet ambient loop. Waits for a user gesture; safe to call repeatedly (never a second loop).
+    startMusic() {
+      musicWanted = true;
+      try {
+        if (!ensure()) return;
+        if (!music) {
+          const bus = ctx.createGain(), filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass'; filter.frequency.value = 1100; filter.Q.value = 0.4;
+          bus.gain.value = 0;
+          filter.connect(bus).connect(master);
+          music = { bus, filter, timer: 0, nextT: 0, step: 0 };
+        }
+        const t = ctx.currentTime;
+        music.bus.gain.cancelScheduledValues(t);
+        music.bus.gain.setValueAtTime(music.bus.gain.value, t);
+        music.bus.gain.linearRampToValueAtTime(MUSIC_VOLUME, t + 3);
+        if (!document.hidden) runMusic();
+      } catch { /* music is optional: the game carries on without it */ }
+    },
+    stopMusic() {
+      musicWanted = false;
+      if (!music || !ctx) return;
+      try {
+        pauseMusic();
+        const t = ctx.currentTime, m = music;
+        m.bus.gain.cancelScheduledValues(t);
+        m.bus.gain.setValueAtTime(m.bus.gain.value, t);
+        m.bus.gain.linearRampToValueAtTime(0, t + 0.8);
+      } catch { /* ignore */ }
+    },
+    get musicPlaying() { return !!(music && music.timer); },
+
     get muted() { return muted; },
     toggle() {
       muted = !muted;
