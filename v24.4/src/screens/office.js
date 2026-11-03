@@ -253,7 +253,7 @@ export default function office(root, ctx) {
             <p id="s1-error" class="s1-error" aria-live="polite"></p>
             <button type="submit" class="s1-start" disabled>${GLYPH.sound}<span>Start</span></button>
           </form>`}
-          <button type="button" class="s1-skip">${named() ? 'Skip intro' : 'Start without the intro'}</button>
+          <button type="button" class="s1-skip">Skip training <span aria-hidden="true">→</span></button>
         </div>
       </section>
       <div class="op-hud">
@@ -311,7 +311,16 @@ export default function office(root, ctx) {
   }
   $(root, '.s1-form')?.addEventListener('submit', (e) => { e.preventDefault(); begin(ctx.story); });
   if (named()) $(root, '.s1-start').addEventListener('click', () => begin(true));
-  $(root, '.s1-skip').addEventListener('click', () => (named() ? finish() : (nameError(input.value) ? paintName() : begin(false))));
+  // V24.4: SKIP TRAINING names the company if needed, then goes straight to the Round 1 floor (the controller's own skip).
+  $(root, '.s1-skip').addEventListener('click', () => {
+    if (stage !== 'window') return;
+    if (!named()) {
+      if (nameError(input.value)) { paintName(); return; }
+      const result = ctx.found(input.value);
+      if (result !== true) { $(root, '#s1-error').textContent = result || 'Choose another name.'; input.focus(); return; }
+    }
+    if (ctx.skipTraining) { stop(); ctx.skipTraining(); } else finish();
+  });
   (input || $(root, '.s1-start')).focus({ preventScroll: true });
 
   // The camera pulls back from the glass into the office, as the website's cold open does: the same view shrinks

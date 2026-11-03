@@ -17,7 +17,7 @@ import { NODE_GPUS, nodeGroups } from '../tycoon/integration.js';
 import { taskDeck } from '../tycoon/task-navigation.js';
 import { mini, BROKER_SHAPES } from './tetris.js';
 import { sourcingQuote, sourcingLeft } from '../tycoon/founder-market.js';
-import { money, short, rewardLine, laneOf, laneLabel, competesWith, reservedOf, rackStock, buildChange, plural, PILOT_TIMING, infrastructureTerms, rackDeliveryLine, pilotStamp } from './pit-ledger.js';
+import { money, short, rewardLine, laneOf, laneLabel, laneHeading, competesWith, reservedOf, rackStock, buildChange, plural, PILOT_TIMING, infrastructureTerms, rackDeliveryLine, pilotStamp } from './pit-ledger.js';
 
 const cardBlurb = (g, card) => !g.arcade.practice && ordinaryTask(card) && card.blurb === 'Research IP for your company; results integrate at the bell.' ? 'Research IP for your company; results integrate at the bell.' : card.blurb || '';
 const gcls = gpu => `gpu-${String(gpu).toLowerCase()}`;
@@ -311,7 +311,7 @@ export function cardDeskView(g, ui) {
   const runway=run?`<p class="cd-runway" role="alert">⚠ ${short(run.gap)} short next round</p>`:'';
   const businessPlan = next ? `<details class="business-plan"><summary>Next: ${esc(next.name)}</summary><p>After delivery, when the model prerequisite is met. Model ${esc(MODEL_NAMES[next.level])}. ${Object.entries(next.recipe).map(([k,n])=>`${n} ${k}`).join(' + ')} · ${money(next.capital)} capital. Adds ${money(next.revenue)}/round base before operating costs and outcomes.</p></details>` : '';
   const body = `<div class="desk-center"><article class="card-desk mat-paper lane-${lane} ${st.ready ? 'is-ready' : ''}" data-card-id="${esc(card.id)}">` +
-    `<header class="cd-head"><span>${esc(laneLabel(card).toUpperCase())}${card.kind === 'agi' ? ' · AGI ATTEMPT' : card.flagship ? ' · FLAGSHIP' : card.tier ? ` · TIER ${card.tier}` : ''}</span>${card.mixed ? `<span class="fc-mixed">${ordinaryTask(card) && !g.arcade.practice ? 'MIXED · integrates at the bell' : 'MIXED · integration at the bell'}</span>` : ''}${card.until && st.live ? fuse(card.until, card.at, now) : ''}</header>` +
+    `<header class="cd-head"><span>${laneText(card, true)}${card.kind === 'agi' ? ' · AGI ATTEMPT' : card.flagship ? ' · FLAGSHIP' : card.tier ? ` · TIER ${card.tier}` : ''}</span>${card.mixed ? `<span class="fc-mixed">${ordinaryTask(card) && !g.arcade.practice ? 'MIXED · integrates at the bell' : 'MIXED · integration at the bell'}</span>` : ''}${card.until && st.live ? fuse(card.until, card.at, now) : ''}</header>` +
     `<p class="cd-reward">${esc(rewardLine(g, card))}</p><p class="cd-what">${esc(whatLine(card, g))}</p>${stakes}${binding}` +
     `<section class="cd-action" aria-label="Requirements and stock"><p class="cd-capital-status"><b>${!st.live ? 'CLOSED' : st.ready ? 'READY TO LAUNCH' : 'NEED GPUs'}</b></p>` +
     `<div class="cd-rows">${rows}</div>${slotsHTML(g, card, { live: !built, big: true })}</section>` +
@@ -431,9 +431,10 @@ export function projectAction(g, card, live = true) {
   const cashShort = '';
   return `<span class="proj-actions">${find}${cashShort}${go}</span>`;
 }
+const laneText = (card, plain = false) => { const h = laneHeading(card); return h ? `${esc(h.name)}${plain ? ' — ' : ' <span class="proj-purpose">— '}${plain ? esc(h.purpose) : `${esc(h.purpose)}</span>`}` : esc(laneLabel(card).toUpperCase()); };
 export function projectTile(g, card, { live = true, pinned = false, fresh = false, lesson = false, selected = false } = {}) {
   const st = cardState(g, card), built = card.status === 'built', lane = laneOf(card);
-  const head = `<header class="proj-head"><span class="proj-lane">${esc(laneLabel(card).toUpperCase())}${card.kind === 'agi' ? ' · AGI' : card.flagship ? ' · FLAGSHIP' : ''}</span>${card.until && !built && st.live ? fuse(card.until, card.at, g.arcade.time) : ''}${built ? '' : button('pin-project', pinned ? '★' : '☆', `class="proj-pin" data-card="${esc(card.id)}" aria-pressed="${pinned}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${esc(card.name)}" ${live ? '' : 'disabled'}`)}</header>`;
+  const head = `<header class="proj-head"><span class="proj-lane">${laneText(card)}${card.kind === 'agi' ? ' · AGI' : card.flagship ? ' · FLAGSHIP' : ''}</span>${card.until && !built && st.live ? fuse(card.until, card.at, g.arcade.time) : ''}${built ? '' : button('pin-project', pinned ? '★' : '☆', `class="proj-pin" data-card="${esc(card.id)}" aria-pressed="${pinned}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${esc(card.name)}" ${live ? '' : 'disabled'}`)}</header>`;
   const name = live && !built ? button('open-card', esc(card.name), `class="proj-name" data-card="${esc(card.id)}"`) : `<b class="proj-name">${esc(card.name)}</b>`;
   const b = built ? g.company.builds.find(x => x.card === card.id) : null, change = b ? buildChange(g, b) : null;
   return `<article class="proj lane-${lane} kind-${esc(card.kind || card.lane)} ${st.missing ? 'is-missing' : ''} ${fresh ? 'is-new' : ''} ${st.ready ? 'is-ready' : canFill(st) && st.live ? 'has-stock' : ''} ${pinned ? 'is-pinned' : ''} ${lesson ? 'is-lesson' : ''} ${selected ? 'is-selected' : ''} ${built ? 'is-built' : ''}" data-card-id="${esc(card.id)}"${selected ? ' aria-current="true"' : ''}>${head}${name}<p class="proj-reward"><span class="proj-k">${built ? 'DONE' : 'EARNS'}</span>${esc(change ? `${change.head} ${change.text}` : rewardLine(g, card))}</p><div class="proj-needs">${st.rows.map(r => needRow(g, card, built ? { ...r, held: r.need } : r, live && !built)).join('')}</div><footer class="proj-foot">${projectAction(g, card, live)}</footer></article>`;
@@ -449,7 +450,7 @@ export function projectsPanel(g, ui = {}, live = true) {
   const list = [...open].sort((x, y) => (y.id === pin) - (x.id === pin) || seq.get(x.id) - seq.get(y.id));
   const built = [];
   const badge = projectsBadge(g), collapsed = !!ui.projectsCollapsed;
-  const toggle = button('toggle-projects', `<span class="proj-tab-label">Projects</span>${badge ? `<b class="proj-badge" aria-label="${badge} ready">${badge}</b>` : ''}<span class="proj-tab-count">${open.length}</span>`, `class="proj-tab" aria-expanded="${!collapsed}" aria-label="${collapsed ? 'Show' : 'Hide'} projects: ${open.length} open, ${badge} ready to act on"`);
+  const toggle = button('toggle-projects', `<span class="proj-tab-label">Projects</span>${badge ? `<b class="proj-badge" aria-label="${badge} ready">${badge}</b>` : ''}<span class="proj-tab-count">${open.length}</span>`, `class="proj-tab${ui.arrival ? ' is-first-target' : ''}" aria-expanded="${!collapsed}" aria-label="${collapsed ? 'Show' : 'Hide'} projects: ${open.length} open, ${badge} ready to act on"`);
   const pinned = pin && open.find(c => c.id === pin), seen = ui.seenCards, fresh = c => !!seen && !seen.has(c.id);
   const html = list.map(c => projectTile(g, c, { live, pinned: c.id === pin, fresh: fresh(c), lesson: c.id === ui.lessonCard, selected: !ui.lessonCard && c.id === ui.taskId })).join('');
   if (seen) for (const c of open) seen.add(c.id);

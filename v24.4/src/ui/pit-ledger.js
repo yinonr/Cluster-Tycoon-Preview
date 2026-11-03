@@ -28,6 +28,9 @@ export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many
 // ---- Objective cards ------------------------------------------------------------------------
 export const laneOf = card => (card.lane in LANE ? card.lane : 'opportunity');
 export const laneLabel = card => card.scenario ? (card.scenario.total > 1 ? `${card.scenario.label} ${card.scenario.stage + 1}/${card.scenario.total}` : card.scenario.label) : card.strategic ? `Stage ${card.strategic.stage + 1}/${card.strategic.total}` : card.lane === 'opportunity' ? ({ pilot: 'Pilot', rush: 'Rush', partner: 'Partnership', contract: 'Customer', benchmark: 'Benchmark', arbitrage: 'Arbitrage', licensing: 'Licensing', capacity: 'Capacity', hailmary: 'Hail Mary' }[card.kind] || 'Opportunity') : LANE[card.lane].label;
+// V24.4: the three core categories say what they are for. Descriptive only; rewards are whatever the card says.
+export const LANE_PURPOSE = Object.freeze({ product: 'EARN $$$', infra: 'EARN GPUs', research: 'AI BREAKTHROUGH' });
+export const laneHeading = card => LANE_PURPOSE[card.lane] && !card.scenario && !card.strategic && card.lane !== 'opportunity' ? { name: laneLabel(card).toUpperCase(), purpose: LANE_PURPOSE[card.lane] } : null;
 const pct = x => `${Math.round(x * 100)}%`;
 export const PILOT_TIMING = 'Trial fee and customer decision at 100% online. Partial integration delays both.';
 export const pilotStamp = b => b?.pilotResult === 'customer' ? 'WON' : b?.pilotResult === 'failed' ? 'PAID' : 'PENDING';

@@ -196,6 +196,11 @@ function render() {
           ui.panel = 'floor'; ui.cardId = null; ui.shared = null; clearInputs(); delete ui.pendingSeed; ui.founderIntro = 1;
           prefs.founded = true; prefs.save(); return true;
         },
+        skipTraining() {
+          officeCleanup?.(); officeCleanup = null; prefs.intro = true; prefs.welcome = true; prefs.save();
+          if (training.state) { delete ui.founderIntro; completeTraining(true); return; }
+          introInputUntil = performance.now() + 650; ui.entry = introReturn; introReturn = null; render();
+        },
         done() {
           officeCleanup?.(); officeCleanup = null; prefs.intro = true; prefs.save();
           introInputUntil = performance.now() + 650;
@@ -538,7 +543,7 @@ root.addEventListener('click', e => {
   if (a === 'rename-startup') { ui.guide = 'rename'; ui.nameDraft = training.state?.name || g.company.name; render(); return; }
   if (a === 'new-game') { ui.guide = null; ui.entry = null; ui.panel = 'floor'; clearInputs(); if (!training.state && !charmActor(g)?.negotiation.running) act(g => { if (g.arcade.active || g.arcade.signing) return false; g.arcade.confirm = { restart: true }; return true; }); render(); return; }
   if (a === 'help') { if (!g || charmActor(g)?.negotiation.running) return; ui.guideReturnFocus = remember(b); ui.guide = 'help'; render(); return; }
-  if (!training.state && ['task-source','focus-supplier','open-card'].includes(a)) {prefs.seen.add('floor-arrival');prefs.save();}
+  if (!training.state && ['task-source','focus-supplier','open-card','toggle-projects','pin-project','task-prev','task-next','build','fill'].includes(a)) {prefs.seen.add('floor-arrival');prefs.save();}
   if (a === 'training-skip' && training.state) { delete ui.founderIntro; completeTraining(true); return; }
   if (a === 'founder-intro-next' && training.state && ui.founderIntro) { ui.founderIntro = ui.founderIntro < FOUNDER_INTRO.length ? ui.founderIntro + 1 : 0; render(); return; }
   if (ui.guidanceOpen) return;
