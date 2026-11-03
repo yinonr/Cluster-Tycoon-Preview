@@ -212,7 +212,7 @@ export function stage(g,ui={}) {
         </div>
         <div class="pit-desk-rest">
           ${control(live,'open-market','pit-ledger',`<span class="pit-ledger-tag">MARKET</span><b>${lots.length} live</b><i aria-hidden="true">→</i>${marketLine(g,t)}`,`data-filter="all" data-context="all" aria-label="Market ledger: ${lots.length} broker quotes"`)}
-          ${control(live&&g.phase==='floor','finish-review','pit-bell',`<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6c-1.4 0-2.4 1-2.4 2.3v1.1C11.9 10.6 9 15.3 9 21v6.2L5.8 31h28.4L31 27.2V21c0-5.7-2.9-10.4-8.6-11.6V8.3C22.4 7 21.4 6 20 6z"/><circle cx="20" cy="33.4" r="3"/></svg><span>End round${fast?`<small class="bell-fast">+${fast}% fast close</small>`:''}</span>`,'aria-label="End round: ring the bell"')}
+          ${control(live&&g.phase==='floor','finish-review','pit-bell',`<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6c-1.4 0-2.4 1-2.4 2.3v1.1C11.9 10.6 9 15.3 9 21v6.2L5.8 31h28.4L31 27.2V21c0-5.7-2.9-10.4-8.6-11.6V8.3C22.4 7 21.4 6 20 6z"/><circle cx="20" cy="33.4" r="3"/></svg><span>End round${fast?`<small class="bell-fast"><b>+${fast}%</b><i> fast close</i></small>`:''}</span>`,'aria-label="End round: ring the bell"')}
         </div>
       </div>
       <aside class="pit-board projects-board">${projectsPanel(g,ui,live)}</aside>

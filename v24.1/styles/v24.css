@@ -188,3 +188,27 @@
 #pit .proj-find .find-chip { --m: 9px; flex: 0 0 auto; }
 #pit .proj-find:disabled .find-chip { opacity: .5; }
 @media (max-width: 360px) { #pit .proj-find { gap: 4px; padding-left: 8px; padding-right: 8px; } #pit .proj-find .find-chip { --m: 8px; } }
+
+/* ---- End round bell: the label and the fast-close status stack inside the button and never spill out ---------- */
+#pit .pit-desk-rest .pit-bell { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; padding: 4px 6px; }
+#pit .pit-bell svg { flex: 0 0 auto; width: 30px; height: 30px; }
+#pit .pit-bell span { display: flex; flex-direction: column; align-items: center; gap: 1px; max-width: 100%; text-align: center; font: 700 13px/1.1 var(--hsc-sans); letter-spacing: .01em; white-space: nowrap; }
+#pit .pit-bell .bell-fast { display: block; max-width: 100%; font: 700 11px/1.1 var(--hsc-sans); letter-spacing: 0; text-transform: none; color: #17602A; overflow: hidden; text-overflow: ellipsis; }
+#pit .pit-bell .bell-fast b { font: inherit; } #pit .pit-bell .bell-fast i { font-style: normal; }
+@media (hover: hover) { #pit .pit-bell:hover .bell-fast { color: #9BE507; } }
+@media (max-width: 768px) {
+  #pit .pit-desk-rest { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(76px, auto); }
+  #pit .pit-bell span { font-size: 12px; }
+}
+/* Narrow or short screens: the bell alone, with its accessible label (End round is the button's aria-label). */
+@media (max-width: 360px), (max-height: 520px) {
+  #pit .pit-bell { min-width: 56px; padding: 4px; }
+  #pit .pit-bell span { font-size: 0; gap: 0; }
+  #pit .pit-bell .bell-fast { font-size: 11px; }
+  #pit .pit-bell .bell-fast i { display: none; }
+  #pit .pit-bell svg { width: 28px; height: 28px; }
+}
+/* Short viewports: the market / End round bar stays reachable at the bottom edge instead of scrolling off. */
+@media (max-height: 560px) and (max-width: 768px) {
+  #pit .pit-desk-rest { position: sticky; bottom: 0; z-index: 6; background: var(--hsc-paper); }
+}
