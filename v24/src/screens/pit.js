@@ -217,9 +217,12 @@ function render() {
   const challenge = !training.state && new URLSearchParams(location.search).get('challenge') === '1' && urlSeed() !== null && !ui.challengeDismissed && ui.entry !== 'found';
   const referenceRounds=Number(new URLSearchParams(location.search).get('rounds'));
   const challengeContext=Number.isInteger(referenceRounds)&&referenceRounds>=1&&referenceRounds<=10?` The shared bag was earned over ${referenceRounds} rounds.`:'';
-  const kept = keepScroll();
+  const kept = keepScroll(), oldTiles = new Map([...root.querySelectorAll('.proj-list > [data-card-id]')].map(el => [el.dataset.cardId, el]));
   root.innerHTML = `<div class="pit-background">${training.state ? trainingStage(training.state, ui) : stage(g, ui)}</div>${view && !ui.guidanceOpen ? focusFrame(g, view) : ''}${challenge ? `<aside class="challenge-invite" role="note">Same market. Build your biggest total bag.${challengeContext} Your run starts with five rounds; earn each extra round. Seed ${urlSeed()} is ready. <button type="button" data-action="start-challenge">Start a fresh challenge</button><button type="button" data-action="dismiss-challenge" aria-label="Dismiss challenge notice">×</button></aside>` : ''}<span class="pit-announcement" role="status" aria-live="polite">${!training.state && g.arcade.message?.text ? esc(`${g.company.name}: ${g.arcade.message.text}`) : ''}</span>`;
+  // V24: an unchanged project card keeps its DOM node (no restarted animations, focus or hover); only changed cards are replaced.
+  if (oldTiles.size) for (const el of root.querySelectorAll('.proj-list > [data-card-id]')) { const old = oldTiles.get(el.dataset.cardId); if (old && old.outerHTML === el.outerHTML) el.replaceWith(old); }
   restoreScroll(kept);
+  if (ui.projectsScrollHome) { ui.projectsScrollHome = false; const list = root.querySelector('.proj-list'); if (list) { list.scrollLeft = 0; list.scrollTop = 0; } }
   // The HUD stays live and uncovered during a desk; only the room and the board go inert.
   if (view) for (const el of root.querySelectorAll('.pit-background .pit-main')) { el.inert = true; el.setAttribute('aria-hidden', 'true'); }
   const focus = root.querySelector('.pit-focus');
@@ -357,7 +360,9 @@ function focusTaskSupply(g,d) {
   if (training.state || g.phase!=='floor' || g.arcade.active || g.arcade.signing || g.arcade.confirm || !['H100','H200','B200'].includes(d.gpu)) return false;
   const card=g.arcade.objectives.find(c=>c.id===d.card);
   if (!card || !taskView.choose(g,card.id)) return false;
-  ui.taskId=card.id;ui.taskLane=card.lane;ui.taskRound=g.q;ui.panel='floor';ui.floorGpu=d.gpu;ui.floorNeed=Math.max(1,Number(d.need)||1);ui.floorPage=0;
+  ui.taskId=card.id;ui.taskLane=card.lane;ui.taskRound=g.q;ui.panel='floor';ui.floorGpu=d.gpu;
+  // V24: Find selects this project and pins it at the top once; it stays there until another Find or star, or it launches.
+  if (ui.pinId!==card.id) { pins.set(g,card.id); ui.pinId=card.id; ui.projectsScrollHome=true; }ui.floorNeed=Math.max(1,Number(d.need)||1);ui.floorPage=0;
   // Deliberate Find: freeze the matching live lots in a fixed order (lots that cover the shortfall first, cheapest first).
   {const need=ui.floorNeed,pr=l=>l.negotiation?.price??l.ask;ui.findIds=firmDesks(g).filter(x=>x.lot&&x.lot.gpu===d.gpu).map(x=>x.lot)
     .sort((x,y)=>((y.qty>=need)-(x.qty>=need))||(x.qty>=need?pr(x)-pr(y):y.qty-x.qty)||(x.id<y.id?-1:1)).map(l=>l.id);}
@@ -367,7 +372,7 @@ function focusTaskSupply(g,d) {
   clearInputs();const clock=last;render();last=clock;
   const target=root.querySelector('[data-floor-filter]') || root.querySelector('[data-task-area]');
   target?.focus({preventScroll:true});
-  if (innerWidth<=768) target?.scrollIntoView({block:'center',behavior:'auto'});
+  if (innerWidth<=768) target?.scrollIntoView({block:'nearest',behavior:'auto'}); // never pushes the pinned project out of view
   return true;
 }
 function completeTraining(skip = false) {

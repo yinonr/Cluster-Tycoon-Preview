@@ -1,7 +1,7 @@
 {
   "version": "HSC V24 usability, CTA hierarchy and Board Update badges",
   "baseline_commit": "da8ab2e5da86b1fbbe79af700998d9ccfa04cebd",
-  "source_commit": "87aa55f001378da9ed84cb2376c6a505c781c713",
+  "source_commit": "56302be7186515407a8b7fbca20d359e96aec7e1",
   "source_path": "v21/",
   "babur_art": {
     "status": "ready",
@@ -31,7 +31,7 @@
     "hsc-tycoon-preview-v24-best-7",
     "hsc-tycoon-preview-v24-pin"
   ],
-  "source_date": "2026-11-02T18:22:48-08:00",
+  "source_date": "2026-11-02T18:38:59-08:00",
   "transforms": {
     "preview_storage": "Only the V21 save/sound key strings may change to the isolated save_namespace; no gameplay values change.",
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
@@ -95,7 +95,7 @@
     "src/media.js": "44d3f646e5d9e0c971c5b0a005d767ed9ed3d08e20da761442ee816858dff719",
     "src/screens/arcade-input.js": "9e5ffa8b5040bd491f70fa0a6e26664be6e7410adb61f2356b9d631b8fdec75a",
     "src/screens/office.js": "9d93946c4bfeb79dbb256380f45c159ec6ae807bfe5937093643471064e44bd9",
-    "src/screens/pit.js": "cfeeea24a1cec74550edc83177a1e32c8292001f129edbde62769877c5f3df12",
+    "src/screens/pit.js": "e04494c10561784a73b47f96ac739a2cb5324c320c5d7dc141a0d89b2569eb64",
     "src/screens/tetris-input.js": "944af0e2c39aee9bc7f104d96b2cbdc087eb618dbe16e2c96cb72bfa85d87b57",
     "src/tycoon/arcade-buyers.js": "e7891ee851240249cf224c1f03cc6bc0f6ccc010fa72b2d876dd19f408602750",
     "src/tycoon/arcade-negotiation.js": "4db4be5d130f39e8369d4345a5bf3fb4eb0579cded1745cc335888a04bca2d5e",
@@ -154,7 +154,7 @@
     "src/ui/moonshot.js": "ca5b58101f549ce98d0195775b433e0f9cd53b459478958c9797df6debc60b76",
     "src/ui/offers.js": "3607723df41dcb5b2c27101d7f0c9680890c6b08944eb84746063890a640bea5",
     "src/ui/pit-charm.js": "371aaa5903c4962d505ee718a3928902aac961e6842d85decb320ba109701c25",
-    "src/ui/pit-company.js": "7a9e0e5b43dbb2dc0f01f06d6496900b268b548badeb81ebb9c97196e85d993a",
+    "src/ui/pit-company.js": "2f715af2d301516feb97d2c46948b571f2aed09887931226741f00f5a664ff9f",
     "src/ui/pit-deals.js": "26bcd8b7877896902e0d56b78778ce96e50e8a83a5a6a85f6ffadac39c9f5aaf",
     "src/ui/pit-fx.js": "5238a7074ae8dc2d41cb1d3f9fd527f0113668ebabc03be94220379f136a717e",
     "src/ui/pit-ledger.js": "a86ea4566812755aaed3cd53d0662d7347bc122a6011e5765f3f99fe8a86344e",
@@ -252,7 +252,7 @@
     "src/media.js": "44d3f646e5d9e0c971c5b0a005d767ed9ed3d08e20da761442ee816858dff719",
     "src/screens/arcade-input.js": "9e5ffa8b5040bd491f70fa0a6e26664be6e7410adb61f2356b9d631b8fdec75a",
     "src/screens/office.js": "9d93946c4bfeb79dbb256380f45c159ec6ae807bfe5937093643471064e44bd9",
-    "src/screens/pit.js": "cfeeea24a1cec74550edc83177a1e32c8292001f129edbde62769877c5f3df12",
+    "src/screens/pit.js": "e04494c10561784a73b47f96ac739a2cb5324c320c5d7dc141a0d89b2569eb64",
     "src/screens/tetris-input.js": "944af0e2c39aee9bc7f104d96b2cbdc087eb618dbe16e2c96cb72bfa85d87b57",
     "src/tycoon/arcade-buyers.js": "e7891ee851240249cf224c1f03cc6bc0f6ccc010fa72b2d876dd19f408602750",
     "src/tycoon/arcade-negotiation.js": "4db4be5d130f39e8369d4345a5bf3fb4eb0579cded1745cc335888a04bca2d5e",
@@ -311,7 +311,7 @@
     "src/ui/moonshot.js": "ca5b58101f549ce98d0195775b433e0f9cd53b459478958c9797df6debc60b76",
     "src/ui/offers.js": "3607723df41dcb5b2c27101d7f0c9680890c6b08944eb84746063890a640bea5",
     "src/ui/pit-charm.js": "371aaa5903c4962d505ee718a3928902aac961e6842d85decb320ba109701c25",
-    "src/ui/pit-company.js": "7a9e0e5b43dbb2dc0f01f06d6496900b268b548badeb81ebb9c97196e85d993a",
+    "src/ui/pit-company.js": "2f715af2d301516feb97d2c46948b571f2aed09887931226741f00f5a664ff9f",
     "src/ui/pit-deals.js": "26bcd8b7877896902e0d56b78778ce96e50e8a83a5a6a85f6ffadac39c9f5aaf",
     "src/ui/pit-fx.js": "5238a7074ae8dc2d41cb1d3f9fd527f0113668ebabc03be94220379f136a717e",
     "src/ui/pit-ledger.js": "a86ea4566812755aaed3cd53d0662d7347bc122a6011e5765f3f99fe8a86344e",

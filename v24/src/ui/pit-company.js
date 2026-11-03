@@ -443,9 +443,10 @@ export function projectsPanel(g, ui = {}, live = true) {
   const pin = ui.pinId || null, open = g.phase === 'floor' ? openCards(g).filter(c => !ui.onlyCards || ui.onlyCards.includes(c.id)) : [];
   // V22.1 stable queue: pinned first, then the order each project first appeared this round. New projects
   // join at the bottom; readiness and stock changes never reshuffle; built projects leave the list.
-  const order = ui.projectOrder ||= [];
-  for (const c of open) if (!order.includes(c.id)) order.push(c.id);
-  const list = [...open].sort((x, y) => (y.id === pin) - (x.id === pin) || order.indexOf(x.id) - order.indexOf(y.id));
+  // V24: the order never depends on view history or market state: the pinned project first, then the engine's own
+  // creation order (objectives array), which only ever grows at the end and loses launched or expired cards.
+  const seq = new Map(g.arcade.objectives.map((o, i) => [o.id, i]));
+  const list = [...open].sort((x, y) => (y.id === pin) - (x.id === pin) || seq.get(x.id) - seq.get(y.id));
   const built = [];
   const badge = projectsBadge(g), collapsed = !!ui.projectsCollapsed;
   const toggle = button('toggle-projects', `<span class="proj-tab-label">Projects</span>${badge ? `<b class="proj-badge" aria-label="${badge} ready">${badge}</b>` : ''}<span class="proj-tab-count">${open.length}</span>`, `class="proj-tab" aria-expanded="${!collapsed}" aria-label="${collapsed ? 'Show' : 'Hide'} projects: ${open.length} open, ${badge} ready to act on"`);
