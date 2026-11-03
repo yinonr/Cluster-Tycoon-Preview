@@ -1,0 +1,277 @@
+/* V24 visual hierarchy. Yellow (Note) is the one primary action on a screen: ink text on yellow, an ink
+   border and a hard shadow. Light blue is the secondary, optional action. Everything else keeps its V23
+   treatment. Buttons stay in Pixelify Sans (the repository's Chicago-style Macintosh face: no Pix Chicago
+   file ships with the game); money inside a button switches to News Cycle so figures stay legible. */
+:root { --v24-primary: var(--hsc-note); --v24-secondary: #CFE3F4; --v24-secondary-hover: #B7D4EC; }
+
+/* ---- Primary ---------------------------------------------------------------------------------------------- */
+#pit .pit-focus .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice),
+#pit .pit-stage .training-primary.training-primary, #pit .founding-dialog .founding-primary:not(:disabled),
+#pit .projects-panel .proj-go.is-lit:not(:disabled), #pit .projects-panel .proj-go.is-stock:not(:disabled),
+#pit .pit-focus .tt-key.ch-send:not(:disabled),
+#pit.is-lesson .pit-focus .charm-lever:not(:disabled),
+#pit .pit-focus .mat-stamp.is-lit.is-lit {
+  background: var(--v24-primary); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); border-radius: 4px;
+  box-shadow: 3px 3px 0 var(--hsc-ink); font-family: var(--hsc-ui); font-weight: 700; text-shadow: none; filter: none;
+}
+#pit .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) :is(b, span, .vault-amt, .vault-lock),
+#pit.is-lesson .charm-lever:not(:disabled) :is(span, small) { color: inherit; }
+#pit .pit-focus-footer .rail-commit:not(:disabled) .vault-lock { filter: none; }
+@media (hover: hover) {
+  #pit .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice):hover, #pit .training-primary:hover, #pit .proj-go.is-lit:not(:disabled):hover,
+  #pit .proj-go.is-stock:not(:disabled):hover, #pit .ch-send:not(:disabled):hover, #pit.is-lesson .charm-lever:not(:disabled):hover, #pit .mat-stamp.is-lit:hover {
+    background: #F2C744; color: var(--hsc-ink); border-color: var(--hsc-ink);
+  }
+}
+#pit :is(.pit-focus-footer .rail-commit, .training-primary, .proj-go, .ch-send, .charm-lever, .mat-stamp):active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--hsc-ink); }
+#pit .mat-stamp.is-lit { transform: rotate(-1.5deg); }
+/* Figures inside a primary action: a text face, tabular digits, never the pixel face. */
+#pit .mat-stamp .cta-num { margin-left: .45em; }
+#pit .cta-num { font: 700 1.08em/1 var(--hsc-sans); letter-spacing: 0; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+/* The lesson's guided action keeps one gentle nudge; nothing flashes. */
+@media (prefers-reduced-motion: no-preference) {
+  #pit.is-lesson .charm-lever:not(:disabled), #pit .proj-tab.is-lesson-target { animation: v24-nudge 1.6s ease-in-out infinite; }
+}
+@keyframes v24-nudge { 0%, 100% { box-shadow: 3px 3px 0 var(--hsc-ink); } 50% { box-shadow: 3px 3px 0 var(--hsc-ink), 0 0 0 5px color-mix(in srgb, var(--v24-primary) 70%, transparent); } }
+
+/* ---- Secondary --------------------------------------------------------------------------------------------- */
+#pit .proj-find, #pit .v221-dd {
+  background: var(--v24-secondary); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: 2px 2px 0 var(--hsc-ink);
+}
+@media (hover: hover) { #pit .proj-find:hover, #pit .v221-dd:hover { background: var(--v24-secondary-hover); color: var(--hsc-ink); } }
+
+/* ---- Projects panel: contrast without darkening the panel -------------------------------------------------- */
+/* A launch that is not ready reads as waiting, in ink, not as faint grey. */
+#pit .proj-go:disabled { color: var(--hsc-ink); border: 2px dashed var(--hsc-ink); background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--hsc-ink) 7%, transparent) 4px 5px), var(--hsc-paper); }
+/* NEW was yellow on the lane colour (lowest contrast on the amber infrastructure header): ink tag instead. */
+#pit .proj.is-new .proj-lane::after { color: var(--hsc-paper); background: var(--hsc-ink); padding: 1px 4px; margin-left: 4px; }
+#pit .proj-lane { color: var(--hsc-ink); }
+#pit .need-count b { color: var(--hsc-ink); }
+/* The lesson points at the real Projects control. */
+#pit .proj-tab.is-lesson-target { background: var(--v24-primary); color: var(--hsc-ink); outline: 2px solid var(--hsc-ink); outline-offset: -4px; }
+#pit .proj-tab.is-lesson-target .proj-tab-count { color: var(--hsc-ink); }
+
+/* ---- Wording per layout (the compact Projects bar on phones) ---------------------------------------------- */
+#pit .say-phone { display: none; }
+@media (max-width: 768px) { #pit .say-phone { display: inline; } #pit .say-wide { display: none; } }
+
+/* ---- Founder intro: edit the name before trading ---------------------------------------------------------- */
+#pit .v24-edit-name { display: block; margin: 4px auto 0; padding: 6px 10px; min-height: 36px; border: 0; background: none; color: var(--hsc-ink); font: 700 13px/1 var(--hsc-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* ---- Network Mania: ATTEMPT INTEGRATION --------------------------------------------------------------------- */
+#pit .ch-send { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+#pit .ch-send:disabled { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px dashed var(--hsc-ink); box-shadow: none; opacity: 1; }
+#pit .ch-send-hint { font: 700 12px/1 var(--hsc-sans); letter-spacing: 0; text-transform: none; }
+#pit .ch-send-hint[hidden] { display: none; }
+
+/* ---- Cluster Snake: the head is an arrow pointing where the stream is going ------------------------------- */
+#pit .ks-cell.is-head::after { width: auto; height: auto; inset: 14%; left: 14%; right: 14%; top: 14%; bottom: 14%; background: var(--hsc-note);
+  clip-path: polygon(50% 0, 100% 100%, 50% 74%, 0 100%); transform-origin: 50% 50%; }
+#pit .ks-cell.is-head.dir-up::after { transform: none; left: 14%; top: 14%; bottom: 14%; right: 14%; }
+#pit .ks-cell.is-head.dir-right::after { transform: rotate(90deg); left: 14%; top: 14%; bottom: 14%; right: 14%; }
+#pit .ks-cell.is-head.dir-down::after { transform: rotate(180deg); left: 14%; top: 14%; bottom: 14%; right: 14%; }
+#pit .ks-cell.is-head.dir-left::after { transform: rotate(-90deg); left: 14%; top: 14%; bottom: 14%; right: 14%; }
+
+/* ---- Board update: three numbers, then what you finished ---------------------------------------------------- */
+#pit .v24-board { display: flex; flex-direction: column; gap: 14px; }
+#pit .v24-board .bu-hero { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border: 2px solid var(--hsc-ink); box-shadow: var(--hsc-shadow-sm); background: var(--hsc-paper); }
+#pit .v24-board .bu-big { margin: 0; padding: 10px 12px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+#pit .v24-board .bu-big + .bu-big { border-left: 2px solid var(--hsc-ink); }
+#pit .v24-board .bu-big span { font: 700 12px/1.1 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .v24-board .bu-big b { font: 600 clamp(22px, 3.2vw, 34px)/1.05 var(--hsc-serif); font-variant-numeric: lining-nums tabular-nums; color: var(--hsc-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#pit .v24-board .bu-change { background: var(--hsc-ink); }
+#pit .v24-board .bu-change span, #pit .v24-board .bu-change b { color: var(--hsc-paper); }
+#pit .v24-board .bu-minus { font-style: normal; }
+#pit .v24-board .bu-own { grid-column: 1 / -1; margin: 0; padding: 5px 12px; border-top: 2px solid var(--hsc-ink); font: 400 13px/1.2 var(--hsc-sans); color: var(--hsc-ink); text-align: right; }
+#pit .v24-board .bu-support { margin: -4px 0 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font: 400 13px/1.3 var(--hsc-sans); color: var(--hsc-grey); }
+#pit .v24-board .bu-support b { color: var(--hsc-ink); font: 700 14px/1.2 var(--hsc-sans); font-variant-numeric: tabular-nums; }
+#pit .v24-board .news-next { margin: 0; }
+#pit .v24-board .v24-quiet { margin: 0; font: 400 14px/1.3 var(--hsc-sans); color: var(--hsc-grey); }
+
+#pit .bu-badges h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 8px; font: 700 12px/1 var(--hsc-ui); letter-spacing: .1em; color: var(--hsc-ink); }
+#pit .bu-badges h3 b { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; background: var(--hsc-ink); color: var(--hsc-paper); font: 700 13px/1 var(--hsc-sans); border-radius: 11px; }
+#pit .bu-badge-grid { list-style: none; margin: 0; padding: 4px 2px 6px; display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 12px 10px; max-height: 300px; overflow-y: auto; overscroll-behavior: contain; }
+#pit .bu-badge { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+#pit .bu-badge-plate { width: 64px; height: 64px; display: grid; place-items: center; background: var(--hsc-coupon); border: 2px solid var(--hsc-ink); border-radius: 8px;
+  box-shadow: inset 0 0 0 3px var(--hsc-coupon), inset 0 0 0 4px var(--hsc-ink), 2px 2px 0 var(--hsc-ink); }
+#pit .badge-art { width: 48px; height: 48px; fill: var(--hsc-ink); display: block; }
+#pit .bu-badge-name { width: 100%; font: 700 11px/1.15 var(--hsc-sans); color: var(--hsc-ink); text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: no-preference) {
+  #pit .bu-badge-plate { animation: v24-stamp .2s cubic-bezier(.2, 1.4, .4, 1) backwards; animation-delay: calc(var(--i, 0) * 35ms); }
+}
+@keyframes v24-stamp { from { transform: scale(1.4) rotate(-10deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+#pit .bu-more { border-top: 2px solid var(--hsc-ink); padding-top: 8px; }
+#pit .bu-more > summary { cursor: pointer; font: 700 13px/1.2 var(--hsc-sans); color: var(--hsc-ink); min-height: 32px; display: flex; align-items: center; }
+#pit .bu-more .bu-exact { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 14px; margin: 8px 0 0; font: 400 13px/1.3 var(--hsc-sans); }
+#pit .bu-more .bu-exact dt { color: var(--hsc-grey); } #pit .bu-more .bu-exact dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+#pit .bu-more .bu-integ-head { margin: 8px 0 2px; font: 700 13px/1.3 var(--hsc-sans); }
+
+@media (max-width: 768px) {
+  #pit .v24-board .bu-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  #pit .v24-board .bu-cash { grid-column: 1 / -1; border-bottom: 2px solid var(--hsc-ink); }
+  #pit .v24-board .bu-big + .bu-big { border-left: 0; }
+  #pit .v24-board .bu-valuation { border-left: 2px solid var(--hsc-ink) !important; }
+  #pit .v24-board .bu-big b { font-size: clamp(20px, 6.4vw, 28px); }
+  #pit .bu-badge-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); max-height: 236px; }
+  #pit .bu-badge-plate { width: 56px; height: 56px; } #pit .badge-art { width: 42px; height: 42px; }
+}
+@media (max-width: 360px) { #pit .v24-board .bu-big { padding: 8px; } #pit .v24-board .bu-big b { font-size: 19px; } }
+
+/* ---- Guided dialogue: Babur's lesson bubble was Note yellow too; it is cream now so yellow means "act". ----- */
+#pit .v22-training .babur-dialogue { background: var(--hsc-coupon); }
+
+/* ---- The lesson's Charm desk keeps a single yellow action -------------------------------------------------- */
+#pit.is-lesson.lesson-charm-first .pit-focus .pit-focus-footer .rail-commit:not(:disabled),
+#pit.is-lesson.lesson-charm-done .pit-focus .charm-lever:not(:disabled) {
+  background: var(--v24-secondary); color: var(--hsc-ink); box-shadow: 2px 2px 0 var(--hsc-ink); animation: none;
+}
+
+
+/* In the lesson, the lesson card's Find is the guided next move ("Let's find some more GPUs"). */
+#pit .projects-panel .proj.is-lesson .proj-find:not(:disabled) { background: var(--v24-primary); box-shadow: 3px 3px 0 var(--hsc-ink); }
+/* The lesson term sheet: once Charm has moved the terms, accepting is the next move. */
+#pit.is-lesson.lesson-term-charmed .pit-focus [data-action="accept-term"] { background: var(--v24-primary); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: 3px 3px 0 var(--hsc-ink); }
+#pit.is-lesson.lesson-term-charmed .pit-focus .charm-lever:not(:disabled) { background: var(--v24-secondary); box-shadow: 2px 2px 0 var(--hsc-ink); animation: none; }
+
+/* ---- Cleanup pass: primary labels in a text face (the pixel face compressed "Start Round 5"), hover stays yellow -- */
+#pit .pit-focus .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice),
+#pit .pit-stage .training-primary.training-primary, #pit .founding-dialog .founding-primary:not(:disabled),
+#pit .projects-panel .proj-go.is-lit:not(:disabled), #pit .projects-panel .proj-go.is-stock:not(:disabled),
+#pit .pit-focus .tt-key.ch-send:not(:disabled), #pit.is-lesson .pit-focus .charm-lever:not(:disabled),
+#pit .pit-focus .mat-stamp.is-lit.is-lit, #pit .projects-panel .proj.is-lesson .proj-find:not(:disabled) {
+  font-family: var(--hsc-sans); font-weight: 700; font-size: 17px; line-height: 1.15; letter-spacing: .01em;
+}
+#pit .pit-focus .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) :is(b, span) { font: inherit; letter-spacing: inherit; }
+#pit .projects-panel .proj-go.is-lit:not(:disabled), #pit .projects-panel .proj-go.is-stock:not(:disabled), #pit .projects-panel .proj.is-lesson .proj-find:not(:disabled) { font-size: 15px; }
+#pit.is-lesson .pit-focus .charm-lever:not(:disabled) small { font: 700 11px/1.2 var(--hsc-sans); }
+/* Board update footer at phone widths: "New run" never truncates; the round counter wraps instead. */
+@media (max-width: 420px) {
+  #pit .desk-news .pit-focus-footer .rail-quiet { flex: 0 0 auto; max-width: none; white-space: nowrap; overflow: visible; padding: 6px 8px; }
+  #pit .desk-news .pit-focus-footer .round-progress { flex: 1 1 0; min-width: 0; font-size: 12px; line-height: 1.15; text-align: center; white-space: normal; }
+  #pit .desk-news .pit-focus-footer .rail-commit { flex: 0 0 auto; max-width: none; white-space: nowrap; padding: 8px 10px; font-size: 15px; }
+}
+/* The 48 H100 lesson on phones: Evan's line, then the project with its yellow Find, then the brokers, so the
+   primary action is on the first screen at 320–390 px instead of below the broker grid. */
+@media (max-width: 768px) {
+  #pit .v221-training.step-large .pit-room { display: contents; }
+  #pit .v221-training.step-large .pit-hintbar { order: 0; }
+  #pit .v221-training.step-large .pit-board { order: 1; }
+  #pit .v221-training.step-large .pit-hall { order: 2; }
+}
+/* Completion screens: a quiet hint that the whole screen continues (the yellow button still works). */
+#pit .pit-focus-footer .tap-hint { margin-right: auto; font: 700 13px/1.2 var(--hsc-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--hsc-ink); opacity: .75; white-space: nowrap; }
+@media (max-width: 360px) { #pit .pit-focus-footer .tap-hint { font-size: 11px; letter-spacing: 0; } }
+@media (max-width: 768px) {
+  #pit .pit-focus-footer:has(.tap-hint) { flex-wrap: wrap; row-gap: 6px; }
+  #pit .pit-focus-footer .tap-hint { flex: 1 0 100%; order: -1; margin: 0; text-align: center; }
+}
+
+/* ---- GPU quantities: the Node Tetris chip, the model, and a legible owned/needed count ----------------------- */
+#pit .need-row { gap: 6px; padding: 4px 6px; }
+#pit .need-chip { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 30px; }
+#pit .need-chip .tt-mini { --m: 12px; }
+#pit .need-chip.is-missing .tt-mini { opacity: .6; filter: saturate(.7); }
+#pit .need-gpu { font: 700 13px/1 var(--hsc-sans); letter-spacing: .02em; color: var(--hsc-ink); background: var(--hsc-paper); border: 1.5px solid var(--hsc-ink); padding: 2px 5px; border-radius: 2px; }
+#pit .need-count { font: 400 14px/1.1 var(--hsc-sans); font-variant-numeric: tabular-nums lining-nums; color: var(--hsc-ink); }
+#pit .need-count b { font: 700 18px/1 var(--hsc-sans); color: var(--hsc-ink); }
+#pit .need-row.is-short .need-count b { color: #A3221B; }
+#pit .need-count .need-short { font-size: 13px; }
+#pit .contract-chip { --m: 11px; margin: 0 2px; }
+@media (max-width: 360px) { #pit .need-count .need-short { display: none; } #pit .need-count b { font-size: 16px; } }
+/* HUD stock: the chip was already there; the model and count now read as clearly as the Projects rows. */
+#pit .hud-gpu strong { font: 700 19px/1 var(--hsc-sans); font-variant-numeric: tabular-nums lining-nums; color: var(--hsc-ink); }
+#pit .hud-gpu-name { font: 700 11px/1.1 var(--hsc-sans); letter-spacing: .03em; }
+#pit .hud-gpu small { font: 400 10px/1.1 var(--hsc-sans); }
+/* Find buttons carry their GPU's Node Tetris chip. */
+#pit .proj-find { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+#pit .proj-find .find-chip { --m: 9px; flex: 0 0 auto; }
+#pit .proj-find:disabled .find-chip { opacity: .5; }
+@media (max-width: 360px) { #pit .proj-find { gap: 4px; padding-left: 8px; padding-right: 8px; } #pit .proj-find .find-chip { --m: 8px; } }
+
+/* ---- End round bell: the label and the fast-close status stack inside the button and never spill out ---------- */
+#pit .pit-desk-rest .pit-bell { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; padding: 4px 6px; }
+#pit .pit-bell svg { flex: 0 0 auto; width: 30px; height: 30px; }
+#pit .pit-bell span { display: flex; flex-direction: column; align-items: center; gap: 1px; max-width: 100%; text-align: center; font: 700 13px/1.1 var(--hsc-sans); letter-spacing: .01em; white-space: nowrap; }
+#pit .pit-bell .bell-fast { display: block; max-width: 100%; font: 700 11px/1.1 var(--hsc-sans); letter-spacing: 0; text-transform: none; color: #17602A; overflow: hidden; text-overflow: ellipsis; }
+#pit .pit-bell .bell-fast b { font: inherit; } #pit .pit-bell .bell-fast i { font-style: normal; }
+@media (hover: hover) { #pit .pit-bell:hover .bell-fast { color: #9BE507; } }
+@media (max-width: 768px) {
+  #pit .pit-desk-rest { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(76px, auto); }
+  #pit .pit-bell span { font-size: 12px; }
+}
+/* Narrow or short screens: the bell alone, with its accessible label (End round is the button's aria-label). */
+@media (max-width: 360px), (max-height: 520px) {
+  #pit .pit-bell { min-width: 56px; padding: 4px; }
+  #pit .pit-bell span { font-size: 0; gap: 0; }
+  #pit .pit-bell .bell-fast { font-size: 11px; }
+  #pit .pit-bell .bell-fast i { display: none; }
+  #pit .pit-bell svg { width: 28px; height: 28px; }
+}
+/* Short viewports: the market / End round bar stays reachable at the bottom edge instead of scrolling off. */
+@media (max-height: 560px) and (max-width: 768px) {
+  #pit .pit-desk-rest { position: sticky; bottom: 0; z-index: 6; background: var(--hsc-paper); }
+}
+
+/* ---- V24.1: a focused desk owns the screen (no background scroll; the desk scrolls inside itself when it is taller) ---- */
+html.is-desk-open, body.is-desk-open { overflow: hidden; overscroll-behavior: none; }
+#pit .pit-focus-scrim { overscroll-behavior: contain; touch-action: none; }
+
+/* V24.1: unreadable-save recovery screen (legible, one yellow primary action). */
+#pit .pit-error { max-width: 520px; padding: 32px 20px; margin: 0 auto; color: var(--hsc-ink, #1a1a1a); }
+#pit .pit-error h1 { font-size: 28px; line-height: 1.15; margin: 0 0 14px; color: var(--hsc-ink, #1a1a1a); }
+#pit .pit-error p { font-size: 17px; line-height: 1.45; margin: 0 0 12px; color: var(--hsc-ink, #1a1a1a); }
+#pit .rec-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 22px; }
+#pit .rec-actions button { min-height: 52px; padding: 12px 18px; border: 2px solid var(--hsc-ink, #1a1a1a); border-radius: 0; font: 700 17px/1.2 'News Cycle', sans-serif; letter-spacing: .02em; color: var(--hsc-ink, #1a1a1a); cursor: pointer; }
+#pit .rec-actions .rec-primary { background: var(--hsc-note); box-shadow: 3px 3px 0 var(--hsc-ink, #1a1a1a); }
+#pit .rec-actions .rec-secondary { background: var(--v24-secondary); }
+
+/* V24.1: broker desks taller than the equal-height rows from v221.css overlapped the row below (dense floors on short
+   desktop windows). Rows follow their desks and the grid scrolls inside its own box when they do not all fit. */
+#pit .v22-floor .v22-booths.v222-floor { grid-template-rows: none; overflow-y: auto; overscroll-behavior: contain; }
+
+/* V24.2: the supplier contract and receipt state asking price, saving and final price on one line (no new panel, no yellow). */
+#pit .contract-was { color: var(--hsc-ink); opacity: .6; text-decoration: line-through; text-decoration-thickness: 1.5px; white-space: nowrap; }
+#pit .contract-save { color: #174f30; font-weight: 800; white-space: nowrap; }
+
+/* ---- V24.4: two ways to sell. QUICK SELL (the one yellow action) beside CHARM (the dark lever); stacked on phones. -- */
+#pit .qs-avail { display:flex; align-items:center; gap:6px; }
+#pit .qs-choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; width:100%; max-width:560px; }
+#pit .qs-option { display:grid; grid-template-rows:auto auto 1fr auto auto; justify-items:center; gap:4px; padding:12px 10px; border:2px solid var(--hsc-ink); background:var(--hsc-paper); text-align:center; min-width:0; }
+#pit .qs-opt-tag { font:700 12px/1 var(--hsc-ui); letter-spacing:.14em; }
+#pit .qs-opt-line { margin:0; font:13px/1.25 var(--hsc-sans); color:var(--hsc-grey); overflow-wrap:anywhere; }
+#pit .qs-opt-line b { color:var(--hsc-ink); }
+#pit .qs-opt-num { font:400 30px/1.05 var(--hsc-term); align-self:center; white-space:nowrap; }
+#pit .qs-opt-vs { font:12px/1.2 var(--hsc-sans); color:var(--hsc-grey); min-height:1.2em; }
+#pit .qs-opt-num small { font:700 11px/1 var(--hsc-ui); letter-spacing:.08em; color:var(--hsc-grey); vertical-align:middle; }
+#pit .qs-option .qs-sell, #pit .qs-option .qs-charm-go { width:100%; min-width:0; min-height:48px; justify-content:center; }
+#pit .qs-option .qs-sell { font-size:16px !important; letter-spacing:.08em; }
+#pit .qs-charm-go { display:flex; align-items:center; gap:8px; font:700 16px/1 var(--hsc-ui); letter-spacing:.12em; cursor:pointer; }
+#pit .qs-charm-go:disabled { background:#e8e5dc; color:#77746b; border-color:#b9b5aa; box-shadow:none; cursor:not-allowed; }
+#pit .qs-opt-charm.is-off { border-style:dashed; }
+#pit .qs-opt-charm.is-held { background:var(--hsc-paper); box-shadow:inset 0 0 0 2px var(--hsc-paper), inset 0 0 0 4px var(--hsc-ink); }
+@media (max-width:420px) {
+  #pit .qs-choices { grid-template-columns:1fr; gap:10px; }
+  #pit .qs-option { grid-template-columns:minmax(0,1fr) auto; grid-template-rows:auto auto auto auto; justify-items:start; text-align:left; column-gap:10px; padding:10px; }
+  #pit .qs-opt-tag { grid-column:1; } #pit .qs-opt-line { grid-column:1; }
+  #pit .qs-opt-num { grid-column:2; grid-row:1 / 3; justify-self:end; font-size:26px; }
+  #pit .qs-opt-vs { grid-column:2; grid-row:3; justify-self:end; text-align:right; }
+  #pit .qs-option .qs-sell, #pit .qs-option .qs-charm-go { grid-column:1 / -1; }
+}
+/* The resale desk: the offer plate names the block and what Quick Sell pays; the receipt leads with proceeds and the bonus. */
+#pit .resale-offer .resale-block { display:inline-flex; align-items:center; gap:4px; }
+#pit .resale-offer .resale-quick { display:block; margin-top:4px; font:12px/1.2 var(--hsc-sans); color:var(--hsc-grey); }
+#pit .resale-bonus { color:inherit; font-weight:700; }
+#pit .resale-sums { display:grid; gap:6px; margin:8px 0 4px; text-align:center; }
+#pit .resale-sums div { display:grid; gap:2px; }
+#pit .resale-sums dt { font:700 11px/1 var(--hsc-ui); letter-spacing:.12em; color:var(--hsc-grey); }
+#pit .resale-sums dd { margin:0; }
+#pit .resale-sums .resale-bonus { font:700 18px/1.2 var(--hsc-sans); }
+#pit .resale-sums .resale-bonus small { font-weight:400; font-size:12px; color:var(--hsc-grey); }
+#pit .resale-sums dd.money-hero { font:400 44px/1 var(--hsc-term); }
+@media (max-width:420px) { #pit .resale-sums dd.money-hero { font-size:36px; } }
+#pit .pit-focus .plate.their.resale-offer { display:grid !important; grid-template-columns:minmax(0,1fr) !important; grid-template-rows:auto !important; grid-template-areas:"head" "total" "sub" "quick" !important; align-content:center; gap:6px; text-align:left; }
+#pit .pit-focus .resale-offer .resale-quick { grid-area:quick; }
+#pit .resale-offer .plate-head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+#pit .resale-offer .plate-total { justify-self:start; width:auto; }
+#pit .resale-offer .plate-sub, #pit .resale-offer .resale-quick { font:13px/1.3 var(--hsc-sans); letter-spacing:0; width:auto; }
