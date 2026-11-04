@@ -1,0 +1,6 @@
+Pix Chicago (pixChicago.ttf, version 1.00), by Etienne Desclides. Chosen by HSC's designer as the interface typeface.
+Source: https://www.dafont.com/pix-chicago.font (labelled "100% Free" there). Glyphs and metrics are unmodified; the file is renamed, its tables
+re-aligned and its corrupt glyph-name list dropped, because browsers refuse the original (tools/v247-qa/repack-font.py).
+The download contains no licence text or readme; the font's own metadata names only "atn."; its embedding flag (fsType) is 0.
+No explicit restriction on web embedding was found. DaFont says its label is only an indication, so written permission
+from the author is still worth having before the public launch.
