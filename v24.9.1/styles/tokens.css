@@ -1,0 +1,83 @@
+/* =============================================================================
+   HAIGHT STREET COMPUTE: DESIGN TOKENS
+   Source: Notion "Digital Experience" page (art direction, print & screens,
+   light & color, wardrobe). The page names materials and typefaces but not hex
+   values. Hexes marked UNCONFIRMED are derived from the art direction and
+   should be replaced with the approved values when available.
+   Everything else in the game reads only these variables.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;          /* one deliberate look on a dark mahogany ground */
+
+  /* --- Print: "Warm paper, black ink, one spot color." ---------------------- */
+  --paper: #EFE6D2;            /* warm paper (UNCONFIRMED hex) */
+  --paper-2: #E5D9BF;          /* second sheet / carbon */
+  --paper-3: #D6C7A6;          /* aged edge */
+  --ink: #1B1814;              /* black ink, warm */
+  --ink-2: #3A342C;
+  --ink-soft: rgba(27, 24, 20, .62);
+  --spot: #24533F;             /* the one spot color: green velvet (UNCONFIRMED) */
+  --spot-ink: #F4EEDD;
+
+  /* --- Light & color: green velvet, amber screens, granite, brass, mahogany --- */
+  --velvet: #2C5A43;
+  --velvet-deep: #173527;
+  --amber: #FFB547;
+  --amber-dim: #9A6416;
+  --terminal: #7CF29A;
+  --terminal-dim: #2F7A47;
+  --glass: #0E120D;            /* CRT glass */
+  --granite: #8E867A;
+  --granite-light: #BDB4A5;
+  --granite-dark: #4D4740;
+  --marble: #E8DFCC;
+  --brass: #B8913F;
+  --brass-light: #DDBC6E;
+  --mahogany: #5A2A1E;
+  --mahogany-deep: #3A1911;
+  --beige: #D8CCB2;            /* the machines are beige */
+  --beige-dark: #B3A587;
+  --lamp: rgba(255, 196, 110, .22);
+
+  /* --- Rubber stamp ink (oxblood; physical stamp, not print) (UNCONFIRMED) -- */
+  --stamp: #A8261C;
+
+  /* --- Lanyards: one color per side of the market (UNCONFIRMED hexes) ------- */
+  --side-buy: #C4552D;         /* buyers: terracotta */
+  --side-sell: #2F6B4F;        /* sellers: green */
+  --side-money: #6E2B3A;       /* the money: burgundy */
+  --side-raise: #45607F;       /* founders raising: slate */
+  --house: #C9A13B;            /* house jackets: clerks, runners, MC */
+
+  /* --- Type: "Cheltenham for headlines over News Gothic for text." -----------
+     Licensed faces are listed first; if HSC's font kit is loaded they win.
+     The free stand-ins are loaded from Google Fonts in index.html.            */
+  --font-headline: 'ITC Cheltenham', 'Cheltenham', 'Cheltenham Std', 'Merriweather', Georgia, serif;
+  --font-text: 'News Gothic', 'News Gothic MT', 'News Gothic Std', 'News Cycle', 'Arial Narrow', Arial, sans-serif;
+  --font-ui: 'Chicago', 'ChicagoFLF', 'Jersey 10', 'Geneva', monospace;         /* 1984 desktop */
+  --font-terminal: 'VT323', 'Courier New', monospace;                                /* green/amber CRT */
+  --font-dot: 'DotGothic16', 'VT323', monospace;                                    /* dot-matrix */
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  /* --- Stroke, radius, depth ------------------------------------------------ */
+  --rule: 1.5px solid var(--ink);
+  --rule-double: 4px double var(--ink);
+  --radius: 2px;
+  --radius-btn: 7px;           /* Mac OS 1 rounded-rect button */
+  --shadow-hard: 3px 3px 0 var(--ink);
+  --shadow-paper: 0 1px 0 rgba(0,0,0,.08), 0 10px 24px -8px rgba(40, 24, 8, .45);
+
+  /* --- V10.5 founder: one colour per GPU, one per objective lane ------------- */
+  --h100: #4FB873; --h100-hi: #A8ECB9; --h100-deep: #1D5A35; --h100-die: #123A22;   /* green */
+  --h200: #4F8FE0; --h200-hi: #A9CBFF; --h200-deep: #1B3B72; --h200-die: #0F2348;   /* blue */
+  --b200: #C97A3D; --b200-hi: #F3C98A; --b200-deep: #6A3A14; --b200-die: #3D220C;   /* copper */
+  --lane-product: #2BB3A3; --lane-product-deep: #0E5A52;     /* teal */
+  --lane-research: #9A7BEA; --lane-research-deep: #47308C;   /* violet */
+  --lane-infra: #F2BE2E; --lane-infra-deep: #7A5A08;         /* amber */
+  --lane-opportunity: #E0503C; --lane-opportunity-deep: #7D1D16; /* red ticket */
+
+  /* --- Motion --------------------------------------------------------------- */
+  --ease-slam: cubic-bezier(.2, 1.6, .4, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+}
