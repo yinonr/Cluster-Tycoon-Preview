@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="5 0.5 36.6 47" width="36.60" height="47.00" role="img" aria-label="Haight Street Compute">
+<rect x="23.4" y="1" width="1.4" height="9" rx="0.7" fill="#0b0f0d"/>
+  <path d="M21.2 25 H26.6 V46 Q26.6 47 25.6 47 H22.2 Q21.2 47 21.2 46 Z" fill="#0b0f0d"/>
+  <g stroke="#0b0f0d" stroke-width="1.9" stroke-linejoin="round" fill="#ffffff">
+    <path d="M9.46 2.26 L33.54 13.14 Q35.00 13.80 35.00 15.40 L35.00 19.40 Q35.00 21.00 33.50 20.45 L9.50 11.75 Q8.00 11.20 8.00 9.60 L8.00 3.20 Q8.00 1.60 9.46 2.26 Z"/>
+    <path d="M7.55 21.81 L39.05 13.99 Q40.60 13.60 40.60 15.20 L40.60 20.00 Q40.60 21.60 39.05 21.99 L7.55 29.81 Q6.00 30.20 6.00 28.60 L6.00 23.80 Q6.00 22.20 7.55 21.81 Z"/>
+  </g>
+</svg>
