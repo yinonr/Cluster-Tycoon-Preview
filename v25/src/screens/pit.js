@@ -233,7 +233,7 @@ function render() {
     if (deck.card) taskView.choose(g,deck.card.id);
     ui.taskId=deck.card?.id || null;ui.taskLane=deck.card?.lane || null;ui.taskRound=g.q;
   }
-  if (ui.seenRound !== `${g.seed}:${g.q}`) { ui.seenRound = `${g.seed}:${g.q}`; ui.seenCards = new Set(openCards(g).map(c => c.id)); ui.projectOrder = []; }
+  if (ui.seenRound !== `${g.seed}:${g.q}`) { ui.seenRound = `${g.seed}:${g.q}`; ui.seenCards = new Set(openCards(g).map(c => c.id)); ui.projectOrder = []; ui.projectGpus = Object.create(null); }
   ui.pinId = training.state ? null : pins.read(g); ui.projectsCollapsed = training.state ? false : pins.collapsed;
   ui.arrival = !training.state && g.phase==='floor' && g.q===1 && !g.arcade.purchases.length && !prefs.seen.has('floor-arrival');
   ui.trainingCanSkip = !!training.state;
@@ -424,6 +424,8 @@ function focusTaskSupply(g,d) {
   const card=g.arcade.objectives.find(c=>c.id===d.card);
   if (!card || !taskView.choose(g,card.id)) return false;
   ui.taskId=card.id;ui.taskLane=card.lane;ui.taskRound=g.q;ui.panel='floor';ui.floorGpu=d.gpu;
+  // View-only selection: the row and Find control share it across floor rerenders.
+  ui.projectGpus[card.id]=d.gpu;
   ui.floorNeed=Math.max(1,Number(d.need)||1);ui.floorPage=0;
   // Deliberate Find: freeze the matching live lots in a fixed order (lots that cover the shortfall first, cheapest first).
   {const need=ui.floorNeed,pr=l=>l.negotiation?.price??l.ask;ui.findIds=firmDesks(g).filter(x=>x.lot&&x.lot.gpu===d.gpu).map(x=>x.lot)

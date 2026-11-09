@@ -407,21 +407,22 @@ export const roundsLeft = g => campaignLimit(g) - g.q;
 // ---- V22 Projects panel: every open project at once, GPU needs as Node Tetris shapes ----------------
 // Filled = GPUs this project holds or could take from free stock; outlined = still missing. A missing
 // row lights the matching brokers on the floor. Pinning is a view aid, never required to build.
-export function needRow(g, card, r, live = true) {
+export function needRow(g, card, r, live = true, selected = null) {
   const have = Math.min(r.need, r.held + r.free), missing = r.need - have;
   // V24: one Node Tetris chip per GPU type (solid when covered, faded colour when short), the model, and owned/needed.
   const inner = `<span class="need-chip ${missing ? 'is-missing' : 'is-have'}">${mini({ gpu: r.gpu, cells: BROKER_SHAPES[r.gpu] })}</span><span class="need-gpu">${esc(r.gpu)}</span><span class="need-count"><b>${have}</b>/${r.need}${missing ? `<em class="need-short"> · need ${missing}</em>` : '<em class="need-ok"> ✓</em>'}</span>`;
   const cls = `need-row ${gcls(r.gpu)} ${missing ? 'is-short' : 'is-covered'}`;
-  if (live && missing && card.status === 'open') return button('task-source', inner, `class="${cls}" data-gpu="${r.gpu}" data-card="${esc(card.id)}" data-need="${missing}" aria-label="${have} of ${r.need} ${r.gpu}. Light up brokers selling ${r.gpu}"`);
+  if (live && missing && card.status === 'open') return button('task-source', inner, `class="${cls}" ${selected === null ? '' : `aria-pressed="${selected}"`} data-gpu="${r.gpu}" data-card="${esc(card.id)}" data-need="${missing}" aria-label="${have} of ${r.need} ${r.gpu}. Light up brokers selling ${r.gpu}"`);
   return `<span class="${cls}" role="img" aria-label="${have} of ${r.need} ${r.gpu}">${inner}</span>`;
 }
 const projectReady = st => st.live && st.ready;
 // V22.2: one primary button with one meaning. Ordinary projects LAUNCH in one tap (enabled only when the
 // shared pool and cash cover it); review projects open their desk. A shortage adds a separate Find control.
-export function projectAction(g, card, live = true) {
+const projectFindRow = (st, gpu) => st.rows.find(r => r.gpu === gpu && r.short > 0) || st.rows.find(r => r.short > 0);
+export function projectAction(g, card, live = true, selectedGpu = null) {
   const st = cardState(g, card), built = card.status === 'built';
   const needsReview = !!(card.agiStakes || card.kind === 'agi' || card.kind === 'hire' || card.reward?.hire || card.moonshot !== undefined || card.scenario || card.strategic || researchRunway(g, card));
-  const off = live ? '' : 'disabled', shortage = st.rows.find(r => r.short > 0);
+  const off = live ? '' : 'disabled', shortage = projectFindRow(st, selectedGpu);
   if (built) return '<span class="proj-done">✓ LAUNCHED</span>';
   if (!st.live) return '<span class="proj-done">Closed</span>';
   const find = shortage ? button('task-source', `${mini({ gpu: shortage.gpu, cells: BROKER_SHAPES[shortage.gpu] }, 'find-chip')}<span>Find ${esc(shortage.gpu)}</span>`, `class="proj-find gpu-${shortage.gpu.toLowerCase()}" data-gpu="${shortage.gpu}" data-card="${esc(card.id)}" data-need="${shortage.short}" aria-label="Find ${shortage.short} ${shortage.gpu} on the floor" ${off}`) : '';
@@ -432,12 +433,13 @@ export function projectAction(g, card, live = true) {
   return `<span class="proj-actions">${find}${cashShort}${go}</span>`;
 }
 const laneText = (card, plain = false) => { const h = laneHeading(card); return h ? `${esc(h.name)}${plain ? ' — ' : ' <span class="proj-purpose">— '}${plain ? esc(h.purpose) : `${esc(h.purpose)}</span>`}` : esc(laneLabel(card).toUpperCase()); };
-export function projectTile(g, card, { live = true, pinned = false, fresh = false, lesson = false, selected = false } = {}) {
+export function projectTile(g, card, { live = true, pinned = false, fresh = false, lesson = false, selected = false, selectedGpu = null } = {}) {
   const st = cardState(g, card), built = card.status === 'built', lane = laneOf(card);
+  const findGpu = projectFindRow(st, selectedGpu)?.gpu;
   const head = `<header class="proj-head"><span class="proj-lane">${laneText(card)}${card.kind === 'agi' ? ' · AGI' : card.flagship ? ' · FLAGSHIP' : ''}</span>${card.until && !built && st.live ? fuse(card.until, card.at, g.arcade.time) : ''}${built ? '' : button('pin-project', pinned ? '★' : '☆', `class="proj-pin" data-card="${esc(card.id)}" aria-pressed="${pinned}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${esc(card.name)}" ${live ? '' : 'disabled'}`)}</header>`;
   const name = live && !built ? button('open-card', esc(card.name), `class="proj-name" data-card="${esc(card.id)}"`) : `<b class="proj-name">${esc(card.name)}</b>`;
   const b = built ? g.company.builds.find(x => x.card === card.id) : null, change = b ? buildChange(g, b) : null;
-  return `<article class="proj lane-${lane} kind-${esc(card.kind || card.lane)} ${st.missing ? 'is-missing' : ''} ${fresh ? 'is-new' : ''} ${st.ready ? 'is-ready' : canFill(st) && st.live ? 'has-stock' : ''} ${pinned ? 'is-pinned' : ''} ${lesson ? 'is-lesson' : ''} ${selected ? 'is-selected' : ''} ${built ? 'is-built' : ''}" data-card-id="${esc(card.id)}"${selected ? ' aria-current="true"' : ''}>${head}${name}<p class="proj-reward"><span class="proj-k">${built ? 'DONE' : 'EARNS'}</span>${esc(change ? `${change.head} ${change.text}` : rewardLine(g, card))}</p><div class="proj-needs">${st.rows.map(r => needRow(g, card, built ? { ...r, held: r.need } : r, live && !built)).join('')}</div><footer class="proj-foot">${projectAction(g, card, live)}</footer></article>`;
+  return `<article class="proj lane-${lane} kind-${esc(card.kind || card.lane)} ${st.missing ? 'is-missing' : ''} ${fresh ? 'is-new' : ''} ${st.ready ? 'is-ready' : canFill(st) && st.live ? 'has-stock' : ''} ${pinned ? 'is-pinned' : ''} ${lesson ? 'is-lesson' : ''} ${selected ? 'is-selected' : ''} ${built ? 'is-built' : ''}" data-card-id="${esc(card.id)}"${selected ? ' aria-current="true"' : ''}>${head}${name}<p class="proj-reward"><span class="proj-k">${built ? 'DONE' : 'EARNS'}</span>${esc(change ? `${change.head} ${change.text}` : rewardLine(g, card))}</p><div class="proj-needs">${st.rows.map(r => needRow(g, card, built ? { ...r, held: r.need } : r, live && !built, r.gpu === findGpu)).join('')}</div><footer class="proj-foot">${projectAction(g, card, live, findGpu)}</footer></article>`;
 }
 export function projectsBadge(g) { return g.phase === 'floor' ? openCards(g).filter(c => projectReady(cardState(g, c))).length : 0; }
 export function projectsPanel(g, ui = {}, live = true) {
@@ -452,9 +454,9 @@ export function projectsPanel(g, ui = {}, live = true) {
   const badge = projectsBadge(g), collapsed = !!ui.projectsCollapsed;
   const toggle = button('toggle-projects', `<span class="proj-tab-label">Projects</span>${badge ? `<b class="proj-badge" aria-label="${badge} ready">${badge}</b>` : ''}<span class="proj-tab-count">${open.length}</span>`, `class="proj-tab${ui.arrival ? ' is-first-target' : ''}" aria-expanded="${!collapsed}" aria-label="${collapsed ? 'Show' : 'Hide'} projects: ${open.length} open, ${badge} ready to act on"`);
   const pinned = pin && open.find(c => c.id === pin), seen = ui.seenCards, fresh = c => !!seen && !seen.has(c.id);
-  const html = list.map(c => projectTile(g, c, { live, pinned: c.id === pin, fresh: fresh(c), lesson: c.id === ui.lessonCard, selected: !ui.lessonCard && c.id === ui.taskId })).join('');
+  const html = list.map(c => projectTile(g, c, { live, pinned: c.id === pin, fresh: fresh(c), lesson: c.id === ui.lessonCard, selected: !ui.lessonCard && c.id === ui.taskId, selectedGpu: ui.projectGpus?.[c.id] })).join('');
   if (seen) for (const c of open) seen.add(c.id);
-  return `<section class="projects-panel ${collapsed ? 'is-collapsed' : ''}" data-task-area aria-label="Projects">${toggle}${collapsed ? (pinned ? `<div class="proj-pinned-mini">${projectTile(g, pinned, { live, pinned: true })}</div>` : '')
+  return `<section class="projects-panel ${collapsed ? 'is-collapsed' : ''}" data-task-area aria-label="Projects">${toggle}${collapsed ? (pinned ? `<div class="proj-pinned-mini">${projectTile(g, pinned, { live, pinned: true, selected: pinned.id === ui.taskId, selectedGpu: ui.projectGpus?.[pinned.id] })}</div>` : '')
     : `<div class="proj-list" data-keep-scroll="projects">${html || '<p class="proj-empty">No open projects this round.</p>'}${built.map(c => projectTile(g, c, { live: false })).join('')}</div><div class="task-context-status">${statusRow(g)}</div>`}</section>`;
 }
 // The pinned target rides along on every desk so shopping never loses sight of it.

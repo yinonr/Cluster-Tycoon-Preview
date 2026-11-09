@@ -148,7 +148,7 @@
 #pit .proj-needs { display:grid; gap:4px; }
 #pit .need-row { display:flex; align-items:center; gap:8px; width:100%; padding:3px 6px; border:1px solid transparent; background:none; text-align:left; font:inherit; color:var(--hsc-ink); }
 #pit button.need-row { cursor:pointer; border-color:var(--hsc-grey-light); }
-#pit button.need-row:hover { background:var(--hsc-note); border-color:var(--hsc-ink); }
+#pit button.need-row:hover, #pit .proj.is-selected button.need-row[aria-pressed="true"] { background:var(--hsc-note); border-color:var(--hsc-ink); }
 #pit .need-pieces { display:flex; align-items:flex-end; gap:3px; min-width:0; }
 #pit .need-piece .tt-mini { --m:9px; }
 #pit .need-piece.is-missing .tt-mini i { background:var(--hsc-paper); border:1.5px dashed var(--hsc-ink); opacity:.7; }
