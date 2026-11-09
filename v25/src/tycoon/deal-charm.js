@@ -50,7 +50,9 @@ function outcome(g, x, k, tier, precision = 'perfect') {
     if (tier === 'hit') return { price: round10k(price * (1 + B.up[k] * m) + gap * B.gap[k] * m) };
     const f = B[tier][k]; return f === null ? { walk: true } : { price: round10k(price * f) };
   }
-  const T = DEAL_CHARM.term, t = x.t, floor = Math.max(100, Math.round(t.floorPct * .5 / 50) * 50);
+  // A small compute-for-equity offer may already ask less than 1%.
+  // A successful pitch must never raise that existing ask to the usual floor.
+  const T = DEAL_CHARM.term, t = x.t, floor = Math.min(t.pct, Math.max(100, Math.round(t.floorPct * .5 / 50) * 50));
   if (tier === 'hit') {
     if (T.more[k]) return { pct: t.pct, more: 1 + T.more[k] * m };
     return { pct: Math.max(floor, t.pct - Math.max(50, Math.round((t.pct - floor) * T.cut[k] * m / 50) * 50)) };

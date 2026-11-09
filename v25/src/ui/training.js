@@ -53,7 +53,7 @@ export function trainingLine(session) {
   return ({meet:B('Let’s get your first GPU. Tap the H100 broker.'),h100:B('Tap the H100 broker.'),
     h200:B('H200 spotted. See if you can charm your way to a deal.'),model:E(EVAN_LINES.model),node:E('Fit the nodes into the rack. Full rows come online.'),
     network:E(EVAN_LINES.network),cable:E('Connect every node to the switch, then attempt integration.'),
-    funding:B(a.signing?.kind==='term'||a.confirm?.termId ? 'Charm them. Watch the equity.' : 'Charm your way to a better term sheet.'),large:E(EVAN_LINES.large),snake:E(EVAN_LINES.snake),
+    funding:B(a.signing?.kind==='term'||a.confirm?.termId ? 'Charm them. Watch the equity.' : 'Five million bucks! But they want HALF your company… Think you can Charm them?'),large:E(EVAN_LINES.large),snake:E(EVAN_LINES.snake),
     ready:B('You’re quite the Cluster Tycoon. Let’s trade some GPUs.')})[step] || B('');
 }
 export const trainingGuidance = session => trainingLine(session).text;

@@ -62,7 +62,7 @@ const pins = pinStore(storage);
 // A lesson can never write the campaign record, even when replayed mid-round.
 const store = {
   get state() { return training.state?.practice || campaign.state; },
-  get error() { return campaign.error || (training.state ? training.error : '') || ui.handoffError || ''; },
+  get error() { return campaign.error || training.error || ui.handoffError || ''; },
   act(fn) { return training.state ? training.act(t => trainingMutate(t, fn)) : campaign.act(fn); },
 };
 if (campaign.state && !training.state) campaign.act(recoverRizz);
