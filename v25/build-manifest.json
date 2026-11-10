@@ -1,7 +1,7 @@
 {
   "version": "HSC V25 personality restoration reviewer",
   "baseline_commit": "f85dfa00aff718f5d1103012d449d32f729d3201",
-  "source_commit": "812784eaffc146479315f598a31d7b87b00a2572",
+  "source_commit": "92cb059b4dea56352b6bec722f8620fb68dfd05f",
   "source_path": "v21/",
   "babur_art": {
     "status": "ready",
@@ -31,7 +31,7 @@
     "hsc-tycoon-preview-v25-best-7",
     "hsc-tycoon-preview-v25-pin"
   ],
-  "source_date": "2026-11-09T14:55:52-08:00",
+  "source_date": "2026-11-09T17:14:33-08:00",
   "transforms": {
     "preview_storage": "Only the V21 save/sound key strings may change to the isolated save_namespace; no gameplay values change.",
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
@@ -164,7 +164,7 @@
     "src/ui/pit-stage.js": "ff6d952410b43001d9232eab17aae3579f96911a0a3b308e24ea53c903d350e2",
     "src/ui/results.js": "ffa56f29185831574b67a852d9f0602a47d31f7c5e52c89823b1fdf0851b1da5",
     "src/ui/scenarios.js": "3c1bcb31d0405ce63f3c0f132dc214e0b7ef27edba0b47ae3ef3042418f45583",
-    "src/ui/scorecard.js": "cab498d45234962e6087b75653557936f79d4d83a05437697c745a84c0921640",
+    "src/ui/scorecard.js": "ae6993362d8e414e8684f3f586f01700dd9406ea73c459c0a737b3d0d2387a33",
     "src/ui/tetris.js": "b4f68c69d053d7c23351a7ecab9c8d985bb942b48bd251c651928ebeb41fc604",
     "src/ui/training.js": "e21cb6a1c71999d5e70dc0158503d4e45b167c283b447dc7f389532f1faee3e7",
     "src/ui/workshop.js": "e16e4e126f288c16e229837d84150f3b3397db3f1476ee5096571e5b78f11940",
@@ -325,7 +325,7 @@
     "src/ui/pit-stage.js": "ff6d952410b43001d9232eab17aae3579f96911a0a3b308e24ea53c903d350e2",
     "src/ui/results.js": "ffa56f29185831574b67a852d9f0602a47d31f7c5e52c89823b1fdf0851b1da5",
     "src/ui/scenarios.js": "3c1bcb31d0405ce63f3c0f132dc214e0b7ef27edba0b47ae3ef3042418f45583",
-    "src/ui/scorecard.js": "cab498d45234962e6087b75653557936f79d4d83a05437697c745a84c0921640",
+    "src/ui/scorecard.js": "ae6993362d8e414e8684f3f586f01700dd9406ea73c459c0a737b3d0d2387a33",
     "src/ui/tetris.js": "b4f68c69d053d7c23351a7ecab9c8d985bb942b48bd251c651928ebeb41fc604",
     "src/ui/training.js": "e21cb6a1c71999d5e70dc0158503d4e45b167c283b447dc7f389532f1faee3e7",
     "src/ui/workshop.js": "e16e4e126f288c16e229837d84150f3b3397db3f1476ee5096571e5b78f11940",

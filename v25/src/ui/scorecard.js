@@ -2,6 +2,7 @@ import { resultRounds, resultLabel, resultAmounts } from './results.js';
 // A self-contained, client-side final receipt. All text comes from the finalized game state.
 import { MODEL_NAMES, focusOf } from '../tycoon/founder.js';
 import { short, pctOf } from './pit-ledger.js';
+export const PLAY_URL = 'https://hscompute.com/game/';
 export const challengeUrl = (seed, href = location.href, rounds = 5) => {
   const u = new URL('./', href);
   u.search = `?seed=${Number(seed) >>> 0}`;
@@ -27,7 +28,7 @@ const SERIF = 'Gelasio, Georgia, serif', SANS = '"News Cycle", "Arial Narrow", A
 const LOCKUP = typeof Image === 'undefined' ? null : Object.assign(new Image(), { src: new URL('../../brand/logo/hsc-lockup-ink.svg', import.meta.url).href });
 export const scorecardReady = typeof document === 'undefined' ? Promise.resolve() : Promise.all([
   LOCKUP.decode().catch(() => {}),
-  ...['400 180px Gelasio', 'italic 400 46px Gelasio', '700 26px "News Cycle"', '400 26px "News Cycle"', '900 36px Doto'].map(f => document.fonts?.load(f).catch(() => {})),
+  ...['400 180px Gelasio', 'italic 400 46px Gelasio', '700 26px "News Cycle"', '400 26px "News Cycle"', '900 36px Doto', '400 32px "Pix Chicago"'].map(f => document.fonts?.load(f).catch(() => {})),
 ]).then(() => true);
 const ellipsize = (c, text, max) => { let t = text; while (t.length > 1 && c.measureText(t).width > max) t = t.slice(0, -2) + '…'; return t; };
 const fitSize = (c, text, max, start, min, font) => { let size = start; for (; size > min; size--) { c.font = font(size); if (c.measureText(text).width <= max) break; } return size; };
@@ -69,12 +70,20 @@ export function scorecardCanvas(g) {
   c.font = `italic 400 46px ${SERIF}`; c.fillText(ellipsize(c, m.name, W), L, 314);
   c.font = `400 28px ${SANS}`; c.fillStyle = shut ? INK : GREY; c.fillText(ellipsize(c, m.title || m.kind, W), L, 354);
   // The details, in the deck's small-label voice.
-  c.fillStyle = INK; c.font = `700 26px ${SANS}`; c.fillText(`Ownership ${pctOf(m.ownership)}`, L, 506);
-  c.font = `400 24px ${SANS}`; c.fillText(ellipsize(c, `${m.focus} · Model ${m.model}`, 820), L, 542);
+  c.fillStyle = INK; c.font = `700 26px ${SANS}`; c.fillText(`Ownership ${pctOf(m.ownership)}`, L, 410);
+  c.font = `400 24px ${SANS}`; c.fillText(ellipsize(c, `${m.focus} · Model ${m.model}`, 820), L, 448);
   c.fillStyle = GREY; c.font = `400 22px ${SANS}`;
-  c.fillText(m.retained > 0 ? `Paper equity ${short(m.retained)} · Cash proceeds ${short(m.realized)}` : `Cash proceeds ${short(m.realized)}`, L, 576);
+  c.fillText(m.retained > 0 ? `Paper equity ${short(m.retained)} · Cash proceeds ${short(m.realized)}` : `Cash proceeds ${short(m.realized)}`, L, 480);
   // The original HSC lockup (ink, on paper), bottom right with clear space.
-  if (LOCKUP?.complete && LOCKUP.naturalWidth) c.drawImage(LOCKUP, R - 236, 630 - 56 - 83, 236, 83);
+  if (LOCKUP?.complete && LOCKUP.naturalWidth) c.drawImage(LOCKUP, R - 190, 400, 190, 67);
+  // Compact CTA footer; the result and company remain the visual headline.
+  c.strokeStyle = INK; c.lineWidth = 2; c.beginPath(); c.moveTo(L, 510); c.lineTo(R, 510); c.stroke();
+  c.fillStyle = INK; c.textAlign = 'left'; c.font = `400 24px ${SANS}`;
+  c.fillText('Step onto the trading floor', L, 546);
+  c.font = '400 32px "Pix Chicago", monospace';
+  c.fillText('PLAY CLUSTER TYCOON ↗', L, 590);
+  c.textAlign = 'right'; c.font = `700 32px ${SANS}`;
+  c.fillText('hscompute.com/game/', R, 590);
   return canvas;
 }
 export const scorecardDataUrl = g => scorecardCanvas(g).toDataURL('image/png');
@@ -86,7 +95,7 @@ export function scorecardFile(g) {
 // V22.6: under $1M the caption showed eight decimals of a million; show whole dollars instead.
 export const scoreMillions = cents => cents<100000000 ? `$${Math.round(cents/100).toLocaleString('en-US')}` : cents<100000000000 ? `$${(cents/100000000).toLocaleString('en-US',{maximumFractionDigits:2})}M` : `$${(cents/100000000000).toLocaleString('en-US',{maximumFractionDigits:2})}B`;
 export function shareCopy(g, href) {
-  const m=scorecardModel(g),url=challengeUrl(m.seed, href, m.rounds),score=scoreMillions(m.wealth);
+  const m=scorecardModel(g),url=PLAY_URL,score=scoreMillions(m.wealth);
   // V22.1 approved copy; the challenge link still follows so the share keeps working.
-  return {url,caption:`My total exit: ${score} in Cluster Tycoon. ${url}`};
+  return {url,caption:`My total exit: ${score} in Cluster Tycoon. Step onto the trading floor. PLAY CLUSTER TYCOON ↗ ${url}`};
 }
