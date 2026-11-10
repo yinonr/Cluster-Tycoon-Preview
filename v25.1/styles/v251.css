@@ -24,9 +24,11 @@
 #pit .v251-board .news-mast b { white-space: nowrap; }
 @media (max-width: 420px) {
   #pit .v251-board .news-mast b { font-size: clamp(18px, 6vw, 24px); }
-  #pit .v251-board .bu-level { padding: 12px 12px 10px; }
+  #pit .v251-board .bu-level { padding: 12px 12px 10px; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   #pit .v251-board .bu-level-value { font-size: clamp(32px, 11vw, 44px); }
-  #pit .v251-board .bu-delta { font-size: 15px; }
+  #pit .v251-board .bu-delta { font-size: 15px; justify-self: start; }
+  #pit .v251-board .news-mast { flex-direction: column; align-items: stretch; gap: 6px; }
+  #pit .v251-board .news-mast span { width: 100%; line-height: 1.3; word-break: normal; }
 }
 
 /* ---- Tutorial hand-off: Evan signs off, Babur opens the real floor (same bubble size for both) ------------------- */
@@ -60,7 +62,7 @@
 @media (max-width: 640px) { #pit .v22-floor .v22-investors { justify-content: flex-start; } }
 
 /* ---- Network Mania lesson: Lay is a keyboard-cursor control the lesson never uses (taps place cables) ------------- */
-#pit .arc-cable.is-training [data-arc-key="lay"] { display: none; }
+#pit .pit-focus:has(.arc-cable.is-training) .pit-focus-footer [data-arc-key="lay"] { display: none; }
 
 /* ---- Phones: two-line Pix Chicago CTAs ("Sign contract · Pay …") had glyph rows touching at line-height 1.15 ------- */
 @media (max-width: 640px) {
@@ -69,3 +71,8 @@
 /* Lesson, some nodes connected: ATTEMPT stays available (a partial attempt is scored, then retried) but drops the yellow
    "go" look until every node is connected, as the lesson instructs. */
 #pit .pit-focus .tt-key.ch-send.is-partial:not(:disabled) { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: 2px 2px 0 var(--hsc-ink); }
+
+/* Keep the approved entry label together on the smallest phones. */
+@media (max-width: 360px) {
+  #pit [data-action="training-complete"].training-primary { padding-inline: 8px; font-size: 13px; white-space: nowrap; }
+}

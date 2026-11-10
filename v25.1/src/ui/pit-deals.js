@@ -469,7 +469,7 @@ function reportView(g) {
   // When runway is short (the HUD's own red threshold), cash leads instead, so danger is never dressed up as a win.
   const s = companyStats(g), danger = s.runway !== Infinity && s.runway < 2;
   const dv = r.valueBefore > 0 ? r.value - r.valueBefore : 0, dir = dv > 0 ? 'up' : dv < 0 ? 'down' : 'flat';
-  const delta = r.valueBefore > 0 ? `<span class="bu-delta is-${dir}" aria-label="Valuation change ${esc(signed(dv))}">${dir === 'up' ? '▲' : dir === 'down' ? '▼' : '='} ${dv < 0 ? '−' : dv > 0 ? '+' : ''}${esc(compact(Math.abs(dv)).replace('−', ''))}${dv ? ` · ${dv > 0 ? '+' : '−'}${Math.round(Math.abs(dv) / r.valueBefore * 100)}%` : ''}</span>` : '';
+  const delta = r.valueBefore > 0 ? `<span class="bu-delta is-${dir}" aria-label="Valuation change ${esc(signed(dv))}">${dir === 'up' ? '▲' : dir === 'down' ? '▼' : '='} ${dv < 0 ? '−' : dv > 0 ? '+' : ''}${esc(compact(Math.abs(dv)).replace('−', ''))}${dv ? ` · ${dv > 0 ? '+' : '−'}${Math.abs(dv) / r.valueBefore * 100 < 1 ? '&lt;1' : Math.round(Math.abs(dv) / r.valueBefore * 100)}%` : ''}</span>` : '';
   const chip = (label, cents, tone = '', exact = money(cents)) => `<span class="bu-chip ${tone}"><i>${label}</i><b title="${esc(exact)}" aria-label="${esc(`${label} ${exact}`)}">${esc(compact(cents))}</b></span>`;
   const row = `<p class="bu-row">${danger ? '' : chip('Cash', now)}${chip('Net', change, change < 0 ? 'neg' : 'pos', signed(change))}${r.expiredQty ? `<span class="bu-chip neg is-expired"><i>Expired</i><b title="${esc(`${plural(r.expiredQty, 'GPU')} · ${money(r.expiredCost)}`)}">${esc(plural(r.expiredQty, 'GPU'))} · ${esc(compact(-r.expiredCost))}</b></span>` : ''}<span class="bu-chip"><i>You own</i><b>${pctOf(r.founderPct)}</b></span></p>`;
   const hero = danger

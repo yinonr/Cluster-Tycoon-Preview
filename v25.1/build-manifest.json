@@ -1,7 +1,7 @@
 {
   "version": "HSC V25.1 usability and game feel reviewer",
-  "baseline_commit": "93c7948ea688d1adb6ee34b3b62024805b622c29",
-  "source_commit": "986bd5b2a25652fdbc6055e6a3dbb22d844f2743",
+  "baseline_commit": "ea7dd285843677adc111ec25604ae1329addb017",
+  "source_commit": "f83f3fc6e953615c08869c44eef77407fac029ed",
   "source_path": "v21/",
   "babur_art": {
     "status": "ready",
@@ -31,7 +31,7 @@
     "hsc-tycoon-preview-v25-1-best-7",
     "hsc-tycoon-preview-v25-1-pin"
   ],
-  "source_date": "2026-11-09T18:35:00-08:00",
+  "source_date": "2026-11-09T19:52:44-08:00",
   "transforms": {
     "preview_storage": "Only the V21 save/sound key strings may change to the isolated save_namespace; no gameplay values change.",
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
@@ -158,7 +158,7 @@
     "src/ui/offers.js": "3607723df41dcb5b2c27101d7f0c9680890c6b08944eb84746063890a640bea5",
     "src/ui/pit-charm.js": "b1b0e90a87e1e786c688b27e61eb9bc7b3dc3b5e369f865ce1a4437630be5ace",
     "src/ui/pit-company.js": "deba0048bf7610e0b59f7f6c38426d4d9b752a817541b7f0ba2b37eecdae9dd4",
-    "src/ui/pit-deals.js": "6dcff076cd47317b655bf99cefad0a7e32398ad82b06833dec94d6007025ab32",
+    "src/ui/pit-deals.js": "381ca094db7f2717ecd8caa1cf25b82959e71978d8a7f678d11f2962f979df1b",
     "src/ui/pit-fx.js": "5238a7074ae8dc2d41cb1d3f9fd527f0113668ebabc03be94220379f136a717e",
     "src/ui/pit-ledger.js": "e6dc32fb3404f8e5633773a25ab73d583e6077d6d8b108d196a8389eb6265810",
     "src/ui/pit-stage.js": "1b994409fa35068db2ef6121db31c97bc730bbc502c8951d6760fd14c0d00574",
@@ -196,7 +196,7 @@
     "styles/v222.css": "63a4cce7c4b63bd149a59b750d00e529993ff2e43b4a483e87a37a238afe7a1e",
     "styles/v24.css": "50007bf395b0655c64f91909c4c988a8d055653967db06a73ab7ab11102cff29",
     "styles/v247.css": "bdeb09dea70e7e694a6c91cdaf8d47e1e038039f601994ea666cbed762f8a632",
-    "styles/v251.css": "e5e60ea208cc71230c9a187d51fe006c530ea86c345d1e976a163a21226e5dd8",
+    "styles/v251.css": "80d59a8d79072c0ead0aa9006edc984647ccd05c08caa2a6d5e02ec478eb35b4",
     "styles/world.css": "f2ba10196461bd06e4012a92a6ce05fded047a4cb34958a83ae78801047a1378"
   },
   "files": {
@@ -320,7 +320,7 @@
     "src/ui/offers.js": "3607723df41dcb5b2c27101d7f0c9680890c6b08944eb84746063890a640bea5",
     "src/ui/pit-charm.js": "b1b0e90a87e1e786c688b27e61eb9bc7b3dc3b5e369f865ce1a4437630be5ace",
     "src/ui/pit-company.js": "deba0048bf7610e0b59f7f6c38426d4d9b752a817541b7f0ba2b37eecdae9dd4",
-    "src/ui/pit-deals.js": "6dcff076cd47317b655bf99cefad0a7e32398ad82b06833dec94d6007025ab32",
+    "src/ui/pit-deals.js": "381ca094db7f2717ecd8caa1cf25b82959e71978d8a7f678d11f2962f979df1b",
     "src/ui/pit-fx.js": "5238a7074ae8dc2d41cb1d3f9fd527f0113668ebabc03be94220379f136a717e",
     "src/ui/pit-ledger.js": "e6dc32fb3404f8e5633773a25ab73d583e6077d6d8b108d196a8389eb6265810",
     "src/ui/pit-stage.js": "1b994409fa35068db2ef6121db31c97bc730bbc502c8951d6760fd14c0d00574",
@@ -358,7 +358,7 @@
     "styles/v222.css": "63a4cce7c4b63bd149a59b750d00e529993ff2e43b4a483e87a37a238afe7a1e",
     "styles/v24.css": "50007bf395b0655c64f91909c4c988a8d055653967db06a73ab7ab11102cff29",
     "styles/v247.css": "bdeb09dea70e7e694a6c91cdaf8d47e1e038039f601994ea666cbed762f8a632",
-    "styles/v251.css": "e5e60ea208cc71230c9a187d51fe006c530ea86c345d1e976a163a21226e5dd8",
+    "styles/v251.css": "80d59a8d79072c0ead0aa9006edc984647ccd05c08caa2a6d5e02ec478eb35b4",
     "styles/world.css": "f2ba10196461bd06e4012a92a6ce05fded047a4cb34958a83ae78801047a1378"
   }
 }
