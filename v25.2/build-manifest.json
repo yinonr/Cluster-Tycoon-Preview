@@ -1,7 +1,7 @@
 {
   "version": "HSC V25.2 Network Mania piece visibility reviewer",
-  "baseline_commit": "c164b34e0a78fff5aba881e9151a1a977b536b30",
-  "source_commit": "4eb7c4ee8ce73ea8da83ae62317fd5e563e90a52",
+  "baseline_commit": "4eb7c4ee8ce73ea8da83ae62317fd5e563e90a52",
+  "source_commit": "9c4df4dce3aa30c15bcab997fbda304f17fe8f5d",
   "source_path": "v21/",
   "babur_art": {
     "status": "ready",
@@ -31,7 +31,7 @@
     "hsc-tycoon-preview-v25-2-best-7",
     "hsc-tycoon-preview-v25-2-pin"
   ],
-  "source_date": "2026-11-10T00:16:31-08:00",
+  "source_date": "2026-11-10T10:26:59-08:00",
   "transforms": {
     "preview_storage": "Only the V21 save/sound key strings may change to the isolated save_namespace; no gameplay values change.",
     "index.html": "Four canonical/social URL substitutions and robots noindex,nofollow,noarchive; no gameplay markup changes.",
@@ -83,7 +83,7 @@
     "fonts/pixelify-sans-latin-ext-700-normal.woff2": "ff161050f286bc34badde88366fc2e0312c7739f1b8a20eb5957e90cf90adb8f",
     "fonts/vt323-latin-400-normal.woff2": "8ddbebcc1048154132e1d78eb9b1f7850bca1b7d857035ccf1cb4318ebc615b6",
     "fonts/vt323-latin-ext-400-normal.woff2": "4435f062ebe744d097d0d618ac5ad6b8ea25ee3bd6004c5369c24518e70af1f0",
-    "index.html": "5894fdbe4d42b6efaaa02ab91bdab861a381e1fa449a1b6da972c2e1caa2f158",
+    "index.html": "f129443a1929def2cb382781028f0049b11f711035f13d55b375a6d1ebbb9a29",
     "media/hsc-film-preview-360.mp4": "41989c8591434703b4b0498d6aa34881b487f2bdf1aaa13d831aef23d87b5acb",
     "media/hsc-film-preview-540.mp4": "82dc86366e2bf0cd71fb3b436cb94f0153d26a0e0a166517584f26014eb4308c",
     "media/hsc-film-preview-poster.jpg": "ccc040a076cb1a444a6efd08cd6d349892d718e43330093933138df982e7bf03",
@@ -245,7 +245,7 @@
     "fonts/pixelify-sans-latin-ext-700-normal.woff2": "ff161050f286bc34badde88366fc2e0312c7739f1b8a20eb5957e90cf90adb8f",
     "fonts/vt323-latin-400-normal.woff2": "8ddbebcc1048154132e1d78eb9b1f7850bca1b7d857035ccf1cb4318ebc615b6",
     "fonts/vt323-latin-ext-400-normal.woff2": "4435f062ebe744d097d0d618ac5ad6b8ea25ee3bd6004c5369c24518e70af1f0",
-    "index.html": "3875c118d9b8ee799bfe91f9d90b6e724e033e899e5bc9640cca10dde26e5787",
+    "index.html": "29381861bd17a0a501424efe9389fa87b4dad4a03f94f400da5be72fc2a1427b",
     "media/hsc-film-preview-360.mp4": "41989c8591434703b4b0498d6aa34881b487f2bdf1aaa13d831aef23d87b5acb",
     "media/hsc-film-preview-540.mp4": "82dc86366e2bf0cd71fb3b436cb94f0153d26a0e0a166517584f26014eb4308c",
     "media/hsc-film-preview-poster.jpg": "ccc040a076cb1a444a6efd08cd6d349892d718e43330093933138df982e7bf03",
