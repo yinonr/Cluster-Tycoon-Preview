@@ -1,0 +1,93 @@
+/* ======================================================================================================================
+   V25.1 targeted usability pass. Loaded last. 1-bit tokens only (hsc.css); nothing here changes game rules.
+   ====================================================================================================================== */
+
+/* ---- Board Update as a level end: valuation and the completed-project art lead ---------------------------------- */
+#pit .v251-board .bu-level { margin: 2px 0 0; padding: 14px 16px 12px; border: 2px solid var(--hsc-ink); box-shadow: var(--hsc-shadow);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 2px 14px; background: var(--hsc-paper); }
+#pit .v251-board .bu-level-label { grid-column: 1 / -1; margin: 0; font: 700 12px/1.1 var(--hsc-ui); letter-spacing: .12em; color: var(--hsc-grey); }
+#pit .v251-board .bu-level-value { font: 600 clamp(38px, 7vw, 58px)/1 var(--hsc-serif); font-variant-numeric: lining-nums tabular-nums; color: var(--hsc-ink); white-space: nowrap; }
+#pit .v251-board .bu-delta { justify-self: end; align-self: center; padding: 5px 9px 4px; border: 2px solid var(--hsc-ink);
+  font: 700 17px/1 var(--hsc-sans); font-variant-numeric: tabular-nums; color: var(--hsc-ink); white-space: nowrap; }
+#pit .v251-board .bu-delta.is-up { background: var(--hsc-ink); color: var(--hsc-paper); }
+#pit .v251-board .bu-delta.is-down { background: var(--hsc-paper); border-style: dashed; }
+#pit .v251-board .bu-level-sub { grid-column: 1 / -1; margin: 4px 0 0; font: 700 14px/1.2 var(--hsc-sans); color: var(--hsc-grey); }
+/* Short runway: cash leads, framed in the dither the game uses for risk. */
+#pit .v251-board .bu-level.is-danger { border-width: 3px; background: linear-gradient(var(--hsc-paper), var(--hsc-paper)) padding-box, var(--pat-50) border-box; border-color: transparent; outline: 2px solid var(--hsc-ink); outline-offset: -2px; }
+#pit .v251-board .bu-level.is-danger .bu-level-label { color: var(--hsc-ink); }
+#pit .v251-board .bu-badges { margin: 4px 0 0; }
+#pit .v251-board .bu-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; }
+#pit .v251-board .bu-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 8px; border: 1.5px solid var(--hsc-grey-light); background: var(--hsc-paper); white-space: nowrap; }
+#pit .v251-board .bu-chip i { font: 700 11px/1 var(--hsc-sans); font-style: normal; color: var(--hsc-grey); }
+#pit .v251-board .bu-chip b { font: 700 15px/1 var(--hsc-sans); font-variant-numeric: tabular-nums; color: var(--hsc-ink); }
+#pit .v251-board .bu-chip.is-expired { border: 1.5px dashed var(--hsc-ink); }
+#pit .v251-board .news-mast b { white-space: nowrap; }
+@media (max-width: 420px) {
+  #pit .v251-board .news-mast b { font-size: clamp(18px, 6vw, 24px); }
+  #pit .v251-board .bu-level { padding: 12px 12px 10px; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  #pit .v251-board .bu-level-value { font-size: clamp(32px, 11vw, 44px); }
+  #pit .v251-board .bu-delta { font-size: 15px; justify-self: start; }
+  #pit .v251-board .news-mast { flex-direction: column; align-items: stretch; gap: 6px; }
+  #pit .v251-board .news-mast span { width: 100%; line-height: 1.3; word-break: normal; }
+}
+
+/* ---- Tutorial hand-off: Evan signs off, Babur opens the real floor (same bubble size for both) ------------------- */
+#pit .v251-farewell :is(.evan-dialogue, .babur-dialogue) p { font: 600 clamp(18px, 2vw, 22px)/1.3 var(--hsc-serif); }
+#pit .v251-farewell :is(.evan-guide, .babur-guide) { width: 100%; }
+
+/* ---- Unbuilt GPUs at the bell: the HUD chip pulses (game clock ≤10 s), faster with an amber ring at ≤5 s ---------- */
+@keyframes v251-expiring { 0%, 100% { background-color: var(--hsc-paper); } 50% { background-color: var(--hsc-note); } }
+#pit .pit-hud .hud-gpu.is-expiring { animation: v251-expiring 1.2s ease-in-out infinite; }
+#pit .pit-hud .hud-gpu.is-expiring-soon { animation-duration: .7s; box-shadow: 0 0 0 3px var(--amber, #FFB547), var(--hsc-shadow-sm); }
+@media (prefers-reduced-motion: reduce) {
+  #pit .pit-hud .hud-gpu.is-expiring { animation: none; background-color: var(--hsc-note); }
+  #pit .pit-hud .hud-gpu.is-expiring-soon { box-shadow: 0 0 0 3px var(--amber, #FFB547), var(--hsc-shadow-sm); }
+}
+
+/* ---- Minigame briefing: plain paragraphs had no font rule and fell back to Times --------------------------------- */
+#pit .tt-card > p:not([class]) { font-family: var(--hsc-sans); }
+
+/* ---- GPU names on Find buttons: Pix Chicago's 2 reads as an 8 at this size ("Find H800"); the name uses the sans ---- */
+#pit .proj-find .gpu-id { font: 700 1.05em/1 var(--hsc-sans); letter-spacing: .02em; }
+
+/* ---- Shared GPU pool: a ready project whose GPUs another ready project also needs says so ----------------------- */
+#pit .proj.is-ready.is-shared .proj-head::after { content: 'READY · SHARED'; }
+
+/* ---- Narrow floors: desks in arrival order (live and sold first, empty seats last). New arrivals append, so no card
+   moves under a finger; a deliberate Find still brings its matches forward with an inline order. ------------------ */
+@media (max-width: 640px) {
+  #pit .v22-floor .v222-floor .v222-desk { order: var(--arrive, 999); }
+}
+/* Phones: investor seats start at the left, so a second offer never pushes the first sideways. */
+@media (max-width: 640px) { #pit .v22-floor .v22-investors { justify-content: flex-start; } }
+
+/* ---- Network Mania lesson: Lay is a keyboard-cursor control the lesson never uses (taps place cables) ------------- */
+#pit .pit-focus:has(.arc-cable.is-training) .pit-focus-footer [data-arc-key="lay"] { display: none; }
+
+/* ---- Phones: two-line Pix Chicago CTAs ("Sign contract · Pay …") had glyph rows touching at line-height 1.15 ------- */
+@media (max-width: 640px) {
+  #pit .pit-focus.mac-window .mat-stamp.is-lit.is-lit, #pit .pit-focus.mac-window .pit-focus-footer .rail-commit:not(:disabled):not(.term-choice) { line-height: 1.32; }
+}
+/* Lesson, some nodes connected: ATTEMPT stays available (a partial attempt is scored, then retried) but drops the yellow
+   "go" look until every node is connected, as the lesson instructs. */
+#pit .pit-focus .tt-key.ch-send.is-partial:not(:disabled) { background: var(--hsc-paper); color: var(--hsc-ink); border: 2px solid var(--hsc-ink); box-shadow: 2px 2px 0 var(--hsc-ink); }
+
+/* Keep the approved entry label together on the smallest phones. */
+@media (max-width: 360px) {
+  #pit [data-action="training-complete"].training-primary { padding-inline: 8px; font-size: 13px; white-space: nowrap; }
+}
+
+/* ---- V25.2 Network Mania on phones: pieces were small, not faint ---------------------------------------------------
+   The cell size divided the free width by 7 whatever the board's real width, so a 5-wide lesson board used 70% of the
+   space (44 px cells at 320), and the palette icons were 25 px. The cell now divides by the board's own columns, and the
+   palette and the piece in hand are larger. Rules, geometry and desktop sizes are unchanged. */
+@media (max-width: 768px) {
+  #pit .arc-cable .ch-board { --cell: clamp(34px, min(calc((100cqw - 26px) / var(--cols)), calc((100cqh - 150px) / var(--rows))), 64px); }
+  #pit .ch-q svg { width: 38px; height: 38px; }
+  #pit .ch-q.is-hand svg { width: 44px; height: 44px; }
+  #pit .ch-q { min-height: 62px; }
+  #pit .ch-q.is-hand { gap: 7px; padding-bottom: 5px; }
+  #pit .ch-cell .ch-wire { stroke-width: 10.5; }
+  #pit .ch-cell .ch-core { stroke-width: 3.5; }
+  #pit .ch-cell .ch-core.is-lit { stroke-width: 5; }
+}
